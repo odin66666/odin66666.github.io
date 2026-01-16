@@ -3,76 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ Contatore</title>
+    <title>⚡ Contatore Vibrazioni</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-            user-select: none;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root { --bg-dark: #0a0a12; --bg-card: #12121f; --gold: #d4af37; --gold-light: #f4d675; --purple: #7b2cbf; --purple-light: #9d4edd; --green: #10b981; --text: #e8e8e8; --text-dim: #888; }
+        body { font-family: 'Cinzel', serif; background: var(--bg-dark); background-image: radial-gradient(ellipse at top, rgba(123, 44, 191, 0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.1) 0%, transparent 50%); color: var(--text); min-height: 100vh; padding: 15px; user-select: none; }
         .container { max-width: 400px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 1.3rem; color: #ffd700; margin-bottom: 5px; }
-        .header .subtitle { font-size: 0.9rem; color: #888; }
-        
-        .steps { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .step { padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; background: rgba(255,255,255,0.1); color: #888; }
-        .step.active { background: linear-gradient(135deg, #7b2cbf, #ffd700); color: #fff; }
-        .step.done { background: #10b981; color: #fff; }
-        
-        .card { background: rgba(255,255,255,0.05); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(255,215,0,0.3); }
-        
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h1 { font-size: 1.3rem; color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); margin-bottom: 5px; }
+        .header .subtitle { font-size: 0.85rem; color: var(--text-dim); }
+        .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .step { padding: 8px 15px; border-radius: 20px; font-size: 0.75rem; background: rgba(255,255,255,0.1); color: var(--text-dim); transition: all 0.3s; }
+        .step.active { background: linear-gradient(135deg, var(--purple), var(--gold)); color: white; }
+        .step.completed { background: var(--green); color: white; }
+        .card { background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
         .count-display { text-align: center; margin-bottom: 15px; }
-        .count-big { font-size: 4rem; font-weight: bold; color: #ffd700; }
-        .count-total { font-size: 1rem; color: #888; }
-        
-        .progress { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #7b2cbf, #ffd700); transition: width 0.3s; }
-        
-        .message { text-align: center; min-height: 25px; font-size: 1rem; color: #ffd700; margin-bottom: 15px; }
+        .count-big { font-size: 4.5rem; font-weight: bold; background: linear-gradient(135deg, var(--gold), var(--purple-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none; }
+        .count-total { font-size: 1.1rem; color: var(--text-dim); }
+        .progress-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--gold)); transition: width 0.3s ease; }
+        .message { text-align: center; font-size: 1rem; color: var(--gold-light); min-height: 25px; margin-bottom: 15px; }
         .message.warning { color: #ff6b6b; animation: pulse 1s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .affirmation { background: rgba(123,44,191,0.2); border-left: 3px solid #7b2cbf; padding: 12px; border-radius: 0 8px 8px 0; font-style: italic; margin-bottom: 15px; display: none; }
-        .affirmation.show { display: block; }
-        
-        .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .btn { padding: 15px; font-size: 1.2rem; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: #fff; transition: transform 0.1s; }
+        .affirmation-box { background: rgba(123, 44, 191, 0.15); border-left: 3px solid var(--purple); padding: 12px; border-radius: 0 10px 10px 0; font-style: italic; font-size: 0.9rem; margin-bottom: 15px; display: none; }
+        .affirmation-box.show { display: block; }
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        .btn { padding: 15px; font-size: 1.2rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 12px; cursor: pointer; color: white; transition: all 0.15s; }
         .btn:active { transform: scale(0.95); }
-        .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
-        .btn-main { grid-column: span 3; padding: 20px; font-size: 1.3rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #1a1a2e; }
-        
-        .settings { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .toggle { position: relative; width: 50px; height: 26px; }
+        .btn-add { background: linear-gradient(135deg, var(--purple), var(--purple-light)); }
+        .btn-main { grid-column: span 3; padding: 18px; font-size: 1.4rem; background: linear-gradient(135deg, var(--gold), #c9a227); color: #1a1a1a; }
+        .settings { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 0.85rem; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; }
+        .toggle { position: relative; width: 45px; height: 24px; }
         .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.2); border-radius: 26px; transition: 0.3s; }
-        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
-        .toggle input:checked + .toggle-slider { background: #ffd700; }
-        .toggle input:checked + .toggle-slider:before { transform: translateX(24px); }
-        
-        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(255,215,0,0.95), rgba(123,44,191,0.95)); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.2); transition: 0.3s; border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: 0.3s; border-radius: 50%; }
+        .toggle input:checked + .toggle-slider { background: var(--gold); }
+        .toggle input:checked + .toggle-slider:before { transform: translateX(21px); }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95)); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
         .overlay.show { opacity: 1; pointer-events: all; }
-        .overlay-icon { font-size: 5rem; margin-bottom: 20px; }
-        .overlay-title { font-size: 1.8rem; color: #1a1a2e; margin-bottom: 10px; }
-        .overlay-sub { font-size: 1rem; color: rgba(0,0,0,0.7); margin-bottom: 30px; text-align: center; }
-        .btn-close { padding: 15px 40px; background: #1a1a2e; color: #ffd700; border: 2px solid #ffd700; border-radius: 30px; font-size: 1.1rem; cursor: pointer; }
-        
-        .debug { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #0f0; font-size: 10px; padding: 5px; max-height: 100px; overflow: auto; display: none; }
+        .overlay-icon { font-size: 5rem; margin-bottom: 15px; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .overlay-title { font-size: 1.8rem; color: #1a1a1a; margin-bottom: 10px; }
+        .overlay-sub { font-size: 1rem; color: rgba(0,0,0,0.7); margin-bottom: 25px; text-align: center; }
+        .btn-close { padding: 15px 35px; background: #1a1a1a; color: var(--gold); border: 2px solid var(--gold); border-radius: 30px; font-family: 'Cinzel', serif; font-size: 1.1rem; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="workName">⚡ Lavoro</h1>
-            <div class="subtitle" id="stepTitle">STEP 1: Vibrazioni</div>
+            <h1 id="workName">⚡ Lavoro Magico</h1>
+            <div class="subtitle" id="stepTitle">Step 1: Vibrazioni</div>
         </div>
         
-        <div class="steps">
+        <div class="step-indicator">
             <div class="step active" id="step1">🔊 Vibrazioni</div>
             <div class="step" id="step2">✍️ Affermazioni</div>
         </div>
@@ -83,17 +68,17 @@
                 <div class="count-total">di <span id="totalCount">40</span></div>
             </div>
             
-            <div class="progress">
+            <div class="progress-bar">
                 <div class="progress-fill" id="progressFill" style="width: 0%"></div>
             </div>
             
             <div class="message" id="message"></div>
             
-            <div class="affirmation" id="affirmationBox">
+            <div class="affirmation-box" id="affirmationBox">
                 <span id="affirmationText">"..."</span>
             </div>
             
-            <div class="buttons">
+            <div class="btn-grid">
                 <button class="btn btn-add" onclick="addCount(1)">+1</button>
                 <button class="btn btn-add" onclick="addCount(5)">+5</button>
                 <button class="btn btn-add" onclick="addCount(10)">+10</button>
@@ -101,7 +86,7 @@
             </div>
             
             <div class="settings">
-                <span style="color: #888;">🔊 Suoni</span>
+                <span>🔊 Suoni</span>
                 <label class="toggle">
                     <input type="checkbox" id="soundToggle" checked>
                     <span class="toggle-slider"></span>
@@ -117,22 +102,15 @@
         <button class="btn-close" onclick="saveAndClose()">✅ Salva e Chiudi</button>
     </div>
     
-    <div class="debug" id="debug"></div>
-    
+    <audio id="audio10" preload="auto"></audio>
+    <audio id="audio20" preload="auto"></audio>
+    <audio id="audio30" preload="auto"></audio>
+    <audio id="audio40" preload="auto"></audio>
     <audio id="audioLast" preload="auto"></audio>
     <audio id="audioComplete" preload="auto"></audio>
     
     <script>
-        // Debug
-        function log(msg) {
-            console.log('[COUNTER]', msg);
-            const d = document.getElementById('debug');
-            d.innerHTML += msg + '<br>';
-            d.scrollTop = d.scrollHeight;
-        }
-        
-        // State
-        let S = {
+        let state = {
             step: 1,
             vibCount: 0,
             vibTotal: 40,
@@ -140,131 +118,114 @@
             affTotal: 3,
             affText: '',
             workId: '',
-            workName: 'Lavoro',
+            workName: '',
             audioUrl: '',
+            lang: 'it',
             sound: true
         };
         
         function init() {
-            log('Init...');
-            
-            // Telegram WebApp
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
-                log('Telegram WebApp ready');
-            } else {
-                log('WARNING: No Telegram WebApp!');
             }
             
-            // Parse URL params
             const p = new URLSearchParams(window.location.search);
-            S.workId = p.get('work_id') || '';
-            S.vibTotal = parseInt(p.get('total')) || 40;
-            S.affTotal = parseInt(p.get('aff_reps')) || 3;
-            S.affText = decodeURIComponent(p.get('affirmation') || '');
-            S.workName = decodeURIComponent(p.get('name') || 'Lavoro');
-            S.audioUrl = p.get('audio_url') || '';
+            state.workId = p.get('work_id') || '';
+            state.vibTotal = parseInt(p.get('total')) || 40;
+            state.affTotal = parseInt(p.get('aff_reps')) || 3;
+            state.affText = decodeURIComponent(p.get('affirmation') || '');
+            state.workName = decodeURIComponent(p.get('name') || 'Lavoro');
+            state.audioUrl = p.get('audio_url') || '';
+            state.lang = p.get('lang') || 'it';
             
-            log('workId=' + S.workId + ', vibTotal=' + S.vibTotal + ', affTotal=' + S.affTotal);
-            
-            // Update UI
-            document.getElementById('workName').textContent = S.workName;
-            document.getElementById('totalCount').textContent = S.vibTotal;
-            if (S.affText) {
-                document.getElementById('affirmationText').textContent = '"' + S.affText + '"';
+            document.getElementById('workName').textContent = state.workName;
+            document.getElementById('totalCount').textContent = state.vibTotal;
+            if (state.affText) {
+                document.getElementById('affirmationText').textContent = '"' + state.affText + '"';
             }
-            
-            // Hide step 2 if no affirmations
-            if (S.affTotal <= 0) {
+            if (state.affTotal <= 0) {
                 document.getElementById('step2').style.display = 'none';
             }
             
-            // Load audio
-            if (S.audioUrl) {
-                const lang = p.get('lang') || 'it';
-                document.getElementById('audioLast').src = S.audioUrl + '/' + lang + '/last.mp3';
-                document.getElementById('audioComplete').src = S.audioUrl + '/' + lang + '/complete.mp3';
-            }
-            
+            loadAudio();
             updateUI();
         }
         
+        function loadAudio() {
+            if (!state.audioUrl) return;
+            [10, 20, 30, 40].forEach(n => {
+                const el = document.getElementById('audio' + n);
+                if (el) el.src = state.audioUrl + '/' + state.lang + '/' + n + '.mp3';
+            });
+            document.getElementById('audioLast').src = state.audioUrl + '/' + state.lang + '/last.mp3';
+            document.getElementById('audioComplete').src = state.audioUrl + '/' + state.lang + '/complete.mp3';
+        }
+        
         function addCount(n) {
-            S.sound = document.getElementById('soundToggle').checked;
+            state.sound = document.getElementById('soundToggle').checked;
             
-            if (S.step === 1) {
-                // Step 1: Vibrations
-                if (S.vibCount >= S.vibTotal) return;
+            if (state.step === 1) {
+                if (state.vibCount >= state.vibTotal) return;
+                const prev = state.vibCount;
+                state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
                 
-                const prev = S.vibCount;
-                S.vibCount = Math.min(S.vibCount + n, S.vibTotal);
-                
-                // Sound on last
-                if (S.sound && S.vibCount === S.vibTotal - 1 && prev !== S.vibTotal - 1) {
-                    playAudio('audioLast');
-                }
-                
+                if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
                 updateUI();
                 
-                // Done with step 1?
-                if (S.vibCount >= S.vibTotal) {
-                    log('Step 1 complete');
-                    if (S.affTotal > 0) {
+                if (state.vibCount >= state.vibTotal) {
+                    if (state.affTotal > 0) {
                         setTimeout(switchToAffirmations, 800);
                     } else {
                         setTimeout(showComplete, 500);
                     }
                 }
             } else {
-                // Step 2: Affirmations
-                if (S.affCount >= S.affTotal) return;
+                if (state.affCount >= state.affTotal) return;
+                const prev = state.affCount;
+                state.affCount = Math.min(state.affCount + n, state.affTotal);
                 
-                const prev = S.affCount;
-                S.affCount = Math.min(S.affCount + n, S.affTotal);
-                
-                // Sound on last
-                if (S.sound && S.affCount === S.affTotal - 1 && prev !== S.affTotal - 1) {
+                if (state.sound && state.affCount === state.affTotal - 1 && prev < state.affTotal - 1) {
                     playAudio('audioLast');
                 }
-                
                 updateUI();
                 
-                // Done?
-                if (S.affCount >= S.affTotal) {
-                    log('Step 2 complete');
+                if (state.affCount >= state.affTotal) {
                     setTimeout(showComplete, 500);
                 }
             }
         }
         
+        function checkMilestone(prev, curr, total) {
+            if (curr === total - 1 && prev < total - 1) { playAudio('audioLast'); return; }
+            for (const m of [10, 20, 30, 40]) {
+                if (prev < m && curr >= m && m <= total) { playAudio('audio' + m); return; }
+            }
+        }
+        
         function switchToAffirmations() {
-            S.step = 2;
-            log('Switching to step 2');
-            
+            state.step = 2;
             document.getElementById('step1').classList.remove('active');
-            document.getElementById('step1').classList.add('done');
+            document.getElementById('step1').classList.add('completed');
             document.getElementById('step2').classList.add('active');
-            document.getElementById('stepTitle').textContent = 'STEP 2: Affermazioni';
+            document.getElementById('stepTitle').textContent = 'Step 2: Affermazioni';
             document.getElementById('mainBtn').textContent = '✍️ RECITA ✍️';
             document.getElementById('affirmationBox').classList.add('show');
-            
             updateUI();
         }
         
         function updateUI() {
-            const current = S.step === 1 ? S.vibCount : S.affCount;
-            const total = S.step === 1 ? S.vibTotal : S.affTotal;
+            const curr = state.step === 1 ? state.vibCount : state.affCount;
+            const total = state.step === 1 ? state.vibTotal : state.affTotal;
             
-            document.getElementById('currentCount').textContent = current;
+            document.getElementById('currentCount').textContent = curr;
             document.getElementById('totalCount').textContent = total;
-            document.getElementById('progressFill').style.width = Math.round((current / total) * 100) + '%';
+            document.getElementById('progressFill').style.width = Math.round((curr / total) * 100) + '%';
             
-            // Message
-            const left = total - current;
+            const left = total - curr;
             const msg = document.getElementById('message');
             if (left === 0) {
-                msg.textContent = S.step === 1 && S.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
+                msg.textContent = state.step === 1 && state.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
                 msg.className = 'message';
             } else if (left === 1) {
                 msg.textContent = '⚡ ULTIMA! ⚡';
@@ -280,65 +241,31 @@
         
         function playAudio(id) {
             const a = document.getElementById(id);
-            if (a && a.src) {
-                a.currentTime = 0;
-                a.play().catch(e => log('Audio error: ' + e));
-            }
+            if (a && a.src) { a.currentTime = 0; a.play().catch(() => {}); }
         }
         
         function showComplete() {
-            log('Showing complete overlay');
-            if (S.sound) playAudio('audioComplete');
+            if (state.sound) playAudio('audioComplete');
             document.getElementById('overlay').classList.add('show');
         }
         
         function saveAndClose() {
-            log('Saving and closing...');
-            
             const data = {
                 action: 'counter_complete',
-                work_id: S.workId,
-                vibrations: S.vibCount,
-                affirmations: S.affCount,
-                total_vibrations: S.vibTotal,
-                total_affirmations: S.affTotal
+                work_id: state.workId,
+                vibrations: state.vibCount,
+                affirmations: state.affCount,
+                total_vibrations: state.vibTotal,
+                total_affirmations: state.affTotal
             };
             
-            const jsonData = JSON.stringify(data);
-            log('Data to send: ' + jsonData);
-            
-            // Send to Telegram
             if (window.Telegram && window.Telegram.WebApp) {
-                try {
-                    log('Calling sendData...');
-                    window.Telegram.WebApp.sendData(jsonData);
-                    log('sendData called successfully!');
-                    
-                    // Close after a small delay
-                    setTimeout(function() {
-                        log('Closing WebApp...');
-                        window.Telegram.WebApp.close();
-                    }, 500);
-                } catch (e) {
-                    log('ERROR: ' + e.message);
-                    alert('Errore: ' + e.message);
-                }
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                setTimeout(() => window.Telegram.WebApp.close(), 300);
             } else {
-                log('Telegram WebApp not available');
                 alert('Completato! Chiudi manualmente.');
             }
         }
-        
-        // Show debug on triple tap
-        let tapCount = 0;
-        document.addEventListener('click', function() {
-            tapCount++;
-            setTimeout(function() { tapCount = 0; }, 500);
-            if (tapCount >= 3) {
-                const d = document.getElementById('debug');
-                d.style.display = d.style.display === 'none' ? 'block' : 'none';
-            }
-        });
         
         init();
     </script>
