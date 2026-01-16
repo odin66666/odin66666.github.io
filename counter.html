@@ -515,14 +515,24 @@
         function resetCount() { if (confirm('Azzerare?')) { currentCount = 0; localStorage.setItem(`counter_${workId}`, 0); updateDisplay(); } }
         function toggleSound() { soundEnabled = document.getElementById('soundToggle').checked; }
         function forceComplete() { if (confirm('Completare?')) { currentCount = totalCount; localStorage.setItem(`counter_${workId}`, currentCount); updateDisplay(); showCompleted(); } }
-        function showCompleted() { document.getElementById('completedOverlay').classList.add('show'); if (soundEnabled) playAudio('audioComplete'); }
+        function showCompleted() { 
+            document.getElementById('completedOverlay').classList.add('show'); 
+            if (soundEnabled) playAudio('audioComplete'); 
+        }
         function closeAndSave() {
             localStorage.removeItem(`counter_${workId}`);
-            if (tg && tg.sendData) { 
-                tg.sendData(JSON.stringify({ action: 'counter_complete', work_id: workId, count: currentCount, total: totalCount })); 
-                setTimeout(() => tg.close(), 500);
+            console.log('[WEBAPP] Invio dati...', { workId, currentCount, totalCount });
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.sendData) { 
+                window.Telegram.WebApp.sendData(JSON.stringify({ 
+                    action: 'counter_complete', 
+                    work_id: workId, 
+                    count: currentCount, 
+                    total: totalCount 
+                })); 
+                setTimeout(() => window.Telegram.WebApp.close(), 500);
+            } else { 
+                alert('Dati salvati! Chiudi questa finestra.'); 
             }
-            else { alert('Completato! (Test mode - dati non inviati)'); } }
         }
         
         init();
