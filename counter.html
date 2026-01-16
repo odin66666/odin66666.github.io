@@ -304,7 +304,7 @@
             state.workId = p.get('work_id') || '';
             state.vibTotal = parseInt(p.get('total')) || parseInt(p.get('vibrations')) || 40;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.audioUrl = p.get('audio_url') || '';
+            state.audioUrl = decodeURIComponent(p.get('audio_url') || '');
             state.lang = p.get('lang') || 'it';
             
             const name = decodeURIComponent(p.get('name') || 'Lavoro');
@@ -332,14 +332,20 @@
         }
         
         function loadAudio() {
-            if (!state.audioUrl) return;
+            if (!state.audioUrl) {
+                console.log('[AUDIO] No audioUrl!');
+                return;
+            }
             const base = state.audioUrl + '/' + state.lang + '/';
+            console.log('[AUDIO] Base URL:', base);
+            
             document.getElementById('audio10').src = base + '10.mp3';
             document.getElementById('audio20').src = base + '20.mp3';
             document.getElementById('audio30').src = base + '30.mp3';
             document.getElementById('audio40').src = base + '40.mp3';
             document.getElementById('audioLast').src = base + 'last.mp3';
             document.getElementById('audioComplete').src = base + 'complete.mp3';
+            console.log('[AUDIO] Files loaded');
         }
         
         function addCount(n) {
