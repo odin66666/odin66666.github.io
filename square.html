@@ -261,7 +261,7 @@
             // IMPORTANTE: usa vibrations dal server, non calcolare localmente!
             state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 1;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.audioUrl = p.get('audio_url') || '';
+            state.audioUrl = decodeURIComponent(p.get('audio_url') || '');
             state.lang = p.get('lang') || 'it';
             
             const affText = decodeURIComponent(p.get('affirmation') || '');
@@ -377,15 +377,24 @@
         }
         
         function loadAudio() {
-            if (!state.audioUrl) return;
+            if (!state.audioUrl) {
+                console.log('[AUDIO] No audioUrl!');
+                return;
+            }
             const base = state.audioUrl + '/' + state.lang + '/';
-            console.log('[AUDIO] Loading from:', base);
+            console.log('[AUDIO] Base URL:', base);
+            console.log('[AUDIO] Loading files...');
+            
             [10, 20, 30, 40, 50, 100].forEach(n => {
                 const el = document.getElementById('audio' + n);
-                if (el) el.src = base + n + '.mp3';
+                if (el) {
+                    el.src = base + n + '.mp3';
+                    console.log('[AUDIO] Set audio' + n + ':', el.src);
+                }
             });
             document.getElementById('audioLast').src = base + 'last.mp3';
             document.getElementById('audioComplete').src = base + 'complete.mp3';
+            console.log('[AUDIO] All files set');
         }
         
         function addCount(n) {
