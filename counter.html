@@ -277,6 +277,12 @@
             console.log('[COUNTER] URL:', window.location.href);
             console.log('[COUNTER] Search:', window.location.search);
             
+            // DEBUG VISIVO - mostra URL nella pagina
+            const debugDiv = document.createElement('div');
+            debugDiv.style.cssText = 'background:#000;color:#0f0;font-size:10px;padding:5px;margin:10px 0;word-break:break-all;max-height:100px;overflow:auto;';
+            debugDiv.innerHTML = '<b>URL:</b> ' + window.location.href + '<br><b>Search:</b> ' + window.location.search;
+            document.querySelector('.container').prepend(debugDiv);
+            
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
@@ -287,9 +293,12 @@
             
             // DEBUG: mostra tutti i parametri
             console.log('[COUNTER] All params:');
+            let paramDebug = '';
             for (const [key, value] of p.entries()) {
                 console.log('  ', key, '=', value);
+                paramDebug += key + '=' + value.substring(0,30) + '<br>';
             }
+            debugDiv.innerHTML += '<br><b>Params:</b><br>' + paramDebug;
             
             // Leggi parametri
             state.workId = p.get('work_id') || '';
