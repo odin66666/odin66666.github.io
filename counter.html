@@ -484,10 +484,12 @@
         }
         
         function checkAndPlaySound(prev, curr) {
+            // PENULTIMA prima dei milestone
+            if (curr === totalCount - 1 && prev !== totalCount - 1) { playAudio('audioLast'); return; }
+            // Milestone ogni 10
             for (const m of [10,20,30,40,50,60,70,80,90,100,108]) {
                 if (prev < m && curr >= m && m <= totalCount) { playAudio(`audio${m}`); return; }
             }
-            if (curr === totalCount - 1) playAudio('audioLast');
             if (curr === totalCount) setTimeout(() => playAudio('audioComplete'), 500);
         }
         
@@ -516,8 +518,11 @@
         function showCompleted() { document.getElementById('completedOverlay').classList.add('show'); if (soundEnabled) playAudio('audioComplete'); }
         function closeAndSave() {
             localStorage.removeItem(`counter_${workId}`);
-            if (tg) { tg.sendData(JSON.stringify({ action: 'counter_complete', work_id: workId, count: currentCount, total: totalCount })); tg.close(); }
-            else { alert('Completato!'); window.close(); }
+            if (tg && tg.sendData) { 
+                tg.sendData(JSON.stringify({ action: 'counter_complete', work_id: workId, count: currentCount, total: totalCount })); 
+                setTimeout(() => tg.close(), 500);
+            }
+            else { alert('Completato! (Test mode - dati non inviati)'); } }
         }
         
         init();
