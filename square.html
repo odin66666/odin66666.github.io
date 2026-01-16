@@ -40,13 +40,34 @@
         .step.completed { background: var(--green); color: white; }
         .square-container { display: flex; justify-content: center; margin: 10px 0; position: relative; }
         .square-grid { display: grid; gap: 2px; background: var(--bg-card); padding: 8px; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); position: relative; }
-        .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-weight: bold; transition: all 0.3s; position: relative; }
-        .cell.completed { background: rgba(16, 185, 129, 0.3); color: var(--green); }
-        .cell.completed::after { content: "✓"; position: absolute; font-size: 0.6em; color: var(--green); top: 1px; right: 2px; }
-        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); animation: glow 2s infinite; }
-        .cell.path { position: relative; }
-        .cell.path::before { content: ""; position: absolute; width: 3px; height: 3px; background: var(--purple); border-radius: 50%; opacity: 0.5; }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } }
+        /* Celle normali (da fare) - OSCURATE */
+        .cell { 
+            display: flex; align-items: center; justify-content: center; 
+            background: rgba(0,0,0,0.6); 
+            border-radius: 4px; 
+            font-weight: bold; 
+            transition: all 0.3s; 
+            position: relative;
+            color: rgba(255,255,255,0.3);
+        }
+        /* Celle completate - ILLUMINATE */
+        .cell.completed { 
+            background: rgba(16, 185, 129, 0.4); 
+            color: var(--green); 
+            box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.3);
+        }
+        .cell.completed::after { 
+            content: "✓"; position: absolute; font-size: 0.5em; color: var(--green); top: 1px; right: 2px; 
+        }
+        /* Cella corrente - EVIDENZIATA */
+        .cell.current { 
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.6), rgba(123, 44, 191, 0.6)); 
+            border: 2px solid var(--gold); 
+            box-shadow: 0 0 15px var(--gold);
+            animation: glow 2s infinite; 
+            color: white;
+        }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 10px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } }
         .path-line { position: absolute; background: var(--purple); opacity: 0.4; z-index: 1; pointer-events: none; }
         .day-info { background: var(--bg-card); border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
         .day-info h2 { color: var(--gold); font-size: 1rem; margin-bottom: 8px; }
@@ -156,7 +177,6 @@
     <audio id="audioComplete" preload="auto"></audio>
     
     <script>
-        // Griglie dei quadrati magici
         const GRIDS = {
             saturn: [[4,9,2],[3,5,7],[8,1,6]],
             jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
@@ -193,40 +213,33 @@
             sound: true
         };
         
-        // Genera percorso MATERIALE (serpentina verticale da alto-destra)
+        // MATERIALE: Serpentina VERTICALE da ALTO-DESTRA
+        // Prima colonna (da destra): alto → basso
+        // Poi: basso → alto, e così via
         function getMaterialPath(size) {
             const path = [];
             for (let col = size - 1; col >= 0; col--) {
                 const colFromRight = size - 1 - col;
                 if (colFromRight % 2 === 0) {
-                    // Colonne pari (da destra): alto → basso
-                    for (let row = 0; row < size; row++) {
-                        path.push([row, col]);
-                    }
+                    for (let row = 0; row < size; row++) path.push([row, col]);
                 } else {
-                    // Colonne dispari: basso → alto
-                    for (let row = size - 1; row >= 0; row--) {
-                        path.push([row, col]);
-                    }
+                    for (let row = size - 1; row >= 0; row--) path.push([row, col]);
                 }
             }
             return path;
         }
         
-        // Genera percorso SPIRITUALE (serpentina verticale da basso-sinistra)
+        // SPIRITUALE: Serpentina ORIZZONTALE da BASSO-DESTRA
+        // Prima riga (dal basso): destra → sinistra
+        // Poi: sinistra → destra, e così via
         function getSpiritualPath(size) {
             const path = [];
-            for (let col = 0; col < size; col++) {
-                if (col % 2 === 0) {
-                    // Colonne pari: basso → alto
-                    for (let row = size - 1; row >= 0; row--) {
-                        path.push([row, col]);
-                    }
+            for (let row = size - 1; row >= 0; row--) {
+                const rowFromBottom = size - 1 - row;
+                if (rowFromBottom % 2 === 0) {
+                    for (let col = size - 1; col >= 0; col--) path.push([row, col]);
                 } else {
-                    // Colonne dispari: alto → basso
-                    for (let row = 0; row < size; row++) {
-                        path.push([row, col]);
-                    }
+                    for (let col = 0; col < size; col++) path.push([row, col]);
                 }
             }
             return path;
@@ -245,7 +258,8 @@
             state.day = parseInt(p.get('day')) || 1;
             state.completed = parseInt(p.get('completed')) || 0;
             state.direction = p.get('direction') || 'material';
-            state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 111;
+            // IMPORTANTE: usa vibrations dal server, non calcolare localmente!
+            state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 1;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
             state.audioUrl = p.get('audio_url') || '';
             state.lang = p.get('lang') || 'it';
@@ -254,12 +268,12 @@
             const mantra = decodeURIComponent(p.get('mantra') || '');
             const pron = decodeURIComponent(p.get('pronunciation') || '');
             
-            // UI
             const planet = PLANETS[state.planet] || PLANETS.sun;
             document.getElementById('planetSymbol').textContent = planet.symbol;
             document.getElementById('squareTitle').textContent = 'QUADRATO ' + planet.name;
             document.getElementById('currentDay').textContent = state.day;
             document.getElementById('totalDays').textContent = planet.days;
+            // Mostra vibrazioni dal parametro
             document.getElementById('todayVibrations').textContent = state.vibTotal;
             document.getElementById('counterTotal').textContent = state.vibTotal;
             
@@ -285,23 +299,20 @@
             const size = grid.length;
             const container = document.getElementById('squareGrid');
             
-            // Dimensione celle in base al quadrato
             let cellSize = size <= 4 ? 42 : (size <= 6 ? 36 : (size <= 7 ? 30 : 26));
             let fontSize = size <= 4 ? '0.85rem' : (size <= 6 ? '0.75rem' : (size <= 7 ? '0.65rem' : '0.55rem'));
             
             container.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellSize + 'px)';
             container.innerHTML = '';
             
-            // Genera il percorso corretto
             const path = state.direction === 'material' ? getMaterialPath(size) : getSpiritualPath(size);
             
-            // Crea mappa posizione -> giorno
+            // Mappa posizione -> giorno nel percorso
             const positionToDay = {};
             path.forEach((pos, idx) => {
                 positionToDay[pos[0] + ',' + pos[1]] = idx + 1;
             });
             
-            // Crea le celle
             for (let row = 0; row < size; row++) {
                 for (let col = 0; col < size; col++) {
                     const val = grid[row][col];
@@ -319,13 +330,13 @@
                     } else if (dayNum === state.day) {
                         cell.classList.add('current');
                     }
+                    // Celle future restano oscurate (default)
                     
                     cell.textContent = val;
                     container.appendChild(cell);
                 }
             }
             
-            // Disegna linee del percorso
             drawPath(path, cellSize, size);
         }
         
@@ -356,6 +367,11 @@
                 line.style.transformOrigin = '0 50%';
                 line.style.transform = 'rotate(' + angle + 'deg)';
                 
+                // Linee completate più visibili
+                if (i + 1 <= state.completed) {
+                    line.style.background = 'rgba(16, 185, 129, 0.6)';
+                }
+                
                 container.appendChild(line);
             }
         }
@@ -363,6 +379,7 @@
         function loadAudio() {
             if (!state.audioUrl) return;
             const base = state.audioUrl + '/' + state.lang + '/';
+            console.log('[AUDIO] Loading from:', base);
             [10, 20, 30, 40, 50, 100].forEach(n => {
                 const el = document.getElementById('audio' + n);
                 if (el) el.src = base + n + '.mp3';
@@ -449,7 +466,11 @@
         
         function playAudio(id) {
             const a = document.getElementById(id);
-            if (a && a.src) { a.currentTime = 0; a.play().catch(() => {}); }
+            if (a && a.src) {
+                console.log('[AUDIO] Playing:', id);
+                a.currentTime = 0;
+                a.play().catch(e => console.log('[AUDIO] Error:', e));
+            }
         }
         
         function showComplete() {
