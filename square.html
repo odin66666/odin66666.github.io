@@ -38,6 +38,12 @@
         .step { padding: 6px 12px; border-radius: 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1); color: var(--text-dim); }
         .step.active { background: linear-gradient(135deg, var(--purple), var(--gold)); color: white; }
         .step.completed { background: var(--green); color: white; }
+        .square-container { display: flex; justify-content: center; margin: 10px 0; }
+        .square-grid { display: grid; gap: 2px; background: var(--bg-card); padding: 8px; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.8rem; font-weight: bold; transition: all 0.3s; }
+        .cell.completed { background: rgba(16, 185, 129, 0.3); color: var(--green); }
+        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.4), rgba(123, 44, 191, 0.4)); border: 2px solid var(--gold); animation: glow 2s infinite; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } }
         .day-info { background: var(--bg-card); border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
         .day-info h2 { color: var(--gold); font-size: 1rem; margin-bottom: 8px; }
         .vibration-count { font-size: 3rem; background: linear-gradient(135deg, var(--gold), var(--purple-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -74,9 +80,12 @@
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: var(--gold); border: 2px solid var(--gold); border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
+        .debug-box { background: #000; color: #0f0; font-size: 9px; padding: 5px; margin: 5px 0; word-break: break-all; max-height: 60px; overflow: auto; border-radius: 5px; }
     </style>
 </head>
 <body>
+    <div id="debugBox" class="debug-box"></div>
+    
     <div class="header">
         <div class="planet-symbol" id="planetSymbol">☉</div>
         <h1 id="squareTitle">QUADRATO DEL SOLE</h1>
@@ -87,6 +96,8 @@
         <div class="step active" id="step1">🔊 Vibrazioni</div>
         <div class="step" id="step2">✍️ Affermazioni</div>
     </div>
+    
+    <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
     <div class="day-info">
         <h2>VIBRAZIONI OGGI</h2>
@@ -144,6 +155,17 @@
     <audio id="audioComplete" preload="auto"></audio>
     
     <script>
+        // Griglie dei quadrati magici
+        const GRIDS = {
+            saturn: [[4,9,2],[3,5,7],[8,1,6]],
+            jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
+            mars: [[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]],
+            sun: [[6,32,3,34,35,1],[7,11,27,28,8,30],[19,14,16,15,23,24],[18,20,22,21,17,13],[25,29,10,9,26,12],[36,5,33,4,2,31]],
+            venus: [[22,47,16,41,10,35,4],[5,23,48,17,42,11,29],[30,6,24,49,18,36,12],[13,31,7,25,43,19,37],[38,14,32,1,26,44,20],[21,39,8,33,2,27,45],[46,15,40,9,34,3,28]],
+            mercury: [[8,58,59,5,4,62,63,1],[49,15,14,52,53,11,10,56],[41,23,22,44,45,19,18,48],[32,34,35,29,28,38,39,25],[40,26,27,37,36,30,31,33],[17,47,46,20,21,43,42,24],[9,55,54,12,13,51,50,16],[64,2,3,61,60,6,7,57]],
+            moon: [[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
+        };
+        
         const PLANETS = {
             saturn: { symbol: '♄', name: 'SATURNO', days: 15 },
             jupiter: { symbol: '♃', name: 'GIOVE', days: 16 },
@@ -162,47 +184,51 @@
             affTotal: 0,
             planet: 'sun',
             day: 1,
+            completed: 0,
             workId: '',
             audioUrl: '',
             lang: 'it',
             sound: true
         };
         
+        function debug(msg) {
+            document.getElementById('debugBox').innerHTML += msg + '<br>';
+        }
+        
         function init() {
-            console.log('[SQUARE] Init...');
-            console.log('[SQUARE] URL:', window.location.href);
-            console.log('[SQUARE] Search:', window.location.search);
+            debug('URL: ' + window.location.href.substring(0, 100));
+            debug('Search: ' + window.location.search.substring(0, 100));
             
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
-                console.log('[SQUARE] Telegram WebApp ready');
+                debug('Telegram OK');
             }
             
             const p = new URLSearchParams(window.location.search);
             
-            // DEBUG: mostra tutti i parametri
-            console.log('[SQUARE] All params:');
-            for (const [key, value] of p.entries()) {
-                console.log('  ', key, '=', value);
+            // Mostra tutti i parametri
+            let params = [];
+            for (const [k, v] of p.entries()) {
+                params.push(k + '=' + v.substring(0, 20));
             }
+            debug('Params: ' + params.join(', '));
             
-            // Leggi parametri - IMPORTANTE: work_id
+            // Leggi parametri
             state.workId = p.get('work_id') || '';
             state.planet = p.get('planet') || 'sun';
             state.day = parseInt(p.get('day')) || 1;
+            state.completed = parseInt(p.get('completed')) || 0;
             state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 111;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
             state.audioUrl = p.get('audio_url') || '';
             state.lang = p.get('lang') || 'it';
             
+            debug('work_id: ' + state.workId);
+            
             const affText = decodeURIComponent(p.get('affirmation') || '');
             const mantra = decodeURIComponent(p.get('mantra') || '');
             const pron = decodeURIComponent(p.get('pronunciation') || '');
-            
-            console.log('[SQUARE] work_id:', state.workId);
-            console.log('[SQUARE] planet:', state.planet);
-            console.log('[SQUARE] vibTotal:', state.vibTotal);
             
             // UI
             const planet = PLANETS[state.planet] || PLANETS.sun;
@@ -223,8 +249,43 @@
                 document.getElementById('step2').style.display = 'none';
             }
             
+            buildGrid();
             loadAudio();
             updateUI();
+        }
+        
+        function buildGrid() {
+            const grid = GRIDS[state.planet];
+            if (!grid) return;
+            
+            const size = grid.length;
+            const container = document.getElementById('squareGrid');
+            
+            // Dimensione celle in base al quadrato
+            let cellSize = size <= 4 ? 45 : (size <= 6 ? 38 : (size <= 7 ? 32 : 28));
+            container.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellSize + 'px)';
+            container.innerHTML = '';
+            
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const val = grid[row][col];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.width = cellSize + 'px';
+                    cell.style.height = cellSize + 'px';
+                    cell.style.fontSize = (cellSize <= 28 ? '0.65rem' : '0.8rem');
+                    
+                    // Evidenzia celle completate e corrente
+                    if (val <= state.completed) {
+                        cell.classList.add('completed');
+                    } else if (val === state.day) {
+                        cell.classList.add('current');
+                    }
+                    
+                    cell.textContent = val;
+                    container.appendChild(cell);
+                }
+            }
         }
         
         function loadAudio() {
@@ -325,7 +386,7 @@
         }
         
         function saveAndClose() {
-            console.log('[SQUARE] Saving...');
+            debug('Saving work_id: ' + state.workId);
             
             const data = {
                 action: 'counter_complete',
@@ -336,19 +397,19 @@
                 total_affirmations: state.affTotal
             };
             
-            console.log('[SQUARE] Data:', JSON.stringify(data));
+            debug('Data: ' + JSON.stringify(data));
             
             if (window.Telegram && window.Telegram.WebApp) {
                 try {
                     window.Telegram.WebApp.sendData(JSON.stringify(data));
-                    console.log('[SQUARE] sendData OK');
+                    debug('sendData OK');
                     setTimeout(() => window.Telegram.WebApp.close(), 300);
                 } catch (e) {
-                    console.error('[SQUARE] sendData error:', e);
+                    debug('ERROR: ' + e.message);
                     alert('Errore: ' + e.message);
                 }
             } else {
-                alert('Completato!\n\nDati: ' + JSON.stringify(data, null, 2));
+                alert('Dati: ' + JSON.stringify(data, null, 2));
             }
         }
         
