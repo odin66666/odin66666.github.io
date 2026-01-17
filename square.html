@@ -40,34 +40,13 @@
         .step.completed { background: var(--green); color: white; }
         .square-container { display: flex; justify-content: center; margin: 10px 0; position: relative; }
         .square-grid { display: grid; gap: 2px; background: var(--bg-card); padding: 8px; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); position: relative; }
-        /* Celle normali (da fare) - OSCURATE */
-        .cell { 
-            display: flex; align-items: center; justify-content: center; 
-            background: rgba(0,0,0,0.6); 
-            border-radius: 4px; 
-            font-weight: bold; 
-            transition: all 0.3s; 
-            position: relative;
-            color: rgba(255,255,255,0.3);
-        }
-        /* Celle completate - ILLUMINATE */
-        .cell.completed { 
-            background: rgba(16, 185, 129, 0.4); 
-            color: var(--green); 
-            box-shadow: inset 0 0 8px rgba(16, 185, 129, 0.3);
-        }
-        .cell.completed::after { 
-            content: "✓"; position: absolute; font-size: 0.5em; color: var(--green); top: 1px; right: 2px; 
-        }
-        /* Cella corrente - EVIDENZIATA */
-        .cell.current { 
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.6), rgba(123, 44, 191, 0.6)); 
-            border: 2px solid var(--gold); 
-            box-shadow: 0 0 15px var(--gold);
-            animation: glow 2s infinite; 
-            color: white;
-        }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 10px var(--gold); } 50% { box-shadow: 0 0 20px var(--gold); } }
+        .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-weight: bold; transition: all 0.3s; position: relative; }
+        .cell.completed { background: rgba(16, 185, 129, 0.3); color: var(--green); }
+        .cell.completed::after { content: "✓"; position: absolute; font-size: 0.6em; color: var(--green); top: 1px; right: 2px; }
+        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); animation: glow 2s infinite; }
+        .cell.path { position: relative; }
+        .cell.path::before { content: ""; position: absolute; width: 3px; height: 3px; background: var(--purple); border-radius: 50%; opacity: 0.5; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } }
         .path-line { position: absolute; background: var(--purple); opacity: 0.4; z-index: 1; pointer-events: none; }
         .day-info { background: var(--bg-card); border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
         .day-info h2 { color: var(--gold); font-size: 1rem; margin-bottom: 8px; }
@@ -87,6 +66,7 @@
         .btn-add { background: linear-gradient(135deg, var(--purple), var(--purple-light)); }
         .btn-vibra { grid-column: span 3; padding: 15px; font-size: 1.2rem; background: linear-gradient(135deg, var(--gold), #c9a227); color: #1a1a1a; }
         .btn-save { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, var(--green), #059669); margin-top: 10px; }
+        .btn-close { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #666, #444); margin-top: 10px; }
         .affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 8px; padding: 10px; margin: 8px 0; font-style: italic; font-size: 0.85rem; color: var(--text); border-left: 3px solid var(--purple); display: none; }
         .affirmation.show { display: block; }
         .message { text-align: center; font-size: 0.9rem; color: var(--gold-light); min-height: 22px; margin: 8px 0; }
@@ -105,6 +85,50 @@
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: var(--gold); border: 2px solid var(--gold); border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
+        
+        /* VIEW ONLY MODE */
+        .view-only-banner {
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        .view-only-info {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-dim); }
+        .info-value { color: var(--gold); font-weight: bold; }
+        .progress-visual {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-visual-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #1a1a1a;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -114,14 +138,40 @@
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <div class="step-indicator">
+    <!-- VIEW ONLY BANNER (nascosto di default) -->
+    <div class="view-only-banner" id="viewOnlyBanner" style="display: none;">
+        ✅ GIORNO GIÀ COMPLETATO
+    </div>
+    
+    <!-- STEP INDICATOR (nascosto in view mode) -->
+    <div class="step-indicator" id="stepIndicator">
         <div class="step active" id="step1">🔊 Vibrazioni</div>
         <div class="step" id="step2">✍️ Affermazioni</div>
     </div>
     
     <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
-    <div class="day-info">
+    <!-- VIEW ONLY INFO (nascosto di default) -->
+    <div class="view-only-info" id="viewOnlyInfo" style="display: none;">
+        <div class="info-row">
+            <span class="info-label">📅 Giorni Completati:</span>
+            <span class="info-value" id="infoCompleted">0 / 36</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">⏳ Giorni Rimanenti:</span>
+            <span class="info-value" id="infoRemaining">36</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">🏁 Data Fine Prevista:</span>
+            <span class="info-value" id="infoEndDate">--</span>
+        </div>
+        <div class="progress-visual">
+            <div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div>
+        </div>
+    </div>
+    
+    <!-- COUNTER MODE INFO -->
+    <div class="day-info" id="dayInfo">
         <h2>VIBRAZIONI OGGI</h2>
         <div class="vibration-count" id="todayVibrations">111</div>
         <div class="vibration-label">volte il mantra</div>
@@ -132,11 +182,12 @@
         <div class="mantra-pronunciation" id="mantraPronunciation">(SUR-ya-yeh)</div>
     </div>
     
-    <div class="affirmation" id="affirmationBox">
+    <div class="affirmation show" id="affirmationBox">
         <span id="affirmationText">"La tua affermazione qui..."</span>
     </div>
     
-    <div class="counter-section">
+    <!-- COUNTER SECTION (nascosto in view mode) -->
+    <div class="counter-section" id="counterSection">
         <div class="counter-display">
             <div class="counter-number" id="counterDisplay">0</div>
             <span class="vibration-label">di <span id="counterTotal">111</span></span>
@@ -161,6 +212,11 @@
         </div>
     </div>
     
+    <!-- CLOSE BUTTON (solo in view mode) -->
+    <div id="closeSection" style="display: none; padding: 10px;">
+        <button class="btn btn-close" onclick="closeWebApp()" style="width: 100%;">← CHIUDI</button>
+    </div>
+    
     <div class="completed-overlay" id="completedOverlay">
         <div class="completed-icon">✧</div>
         <div class="completed-text" id="completedTitle">GIORNO COMPLETATO!</div>
@@ -177,6 +233,7 @@
     <audio id="audioComplete" preload="auto"></audio>
     
     <script>
+        // Griglie dei quadrati magici
         const GRIDS = {
             saturn: [[4,9,2],[3,5,7],[8,1,6]],
             jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
@@ -210,42 +267,48 @@
             workId: '',
             audioUrl: '',
             lang: 'it',
-            sound: true
+            sound: true,
+            viewOnly: false
         };
         
-        // MATERIALE: Serpentina VERTICALE da ALTO-DESTRA
-        // Prima colonna (da destra): alto → basso
-        // Poi: basso → alto, e così via
+        // Genera percorso MATERIALE (serpentina verticale da alto-destra)
         function getMaterialPath(size) {
             const path = [];
             for (let col = size - 1; col >= 0; col--) {
                 const colFromRight = size - 1 - col;
                 if (colFromRight % 2 === 0) {
-                    for (let row = 0; row < size; row++) path.push([row, col]);
+                    for (let row = 0; row < size; row++) {
+                        path.push([row, col]);
+                    }
                 } else {
-                    for (let row = size - 1; row >= 0; row--) path.push([row, col]);
+                    for (let row = size - 1; row >= 0; row--) {
+                        path.push([row, col]);
+                    }
                 }
             }
             return path;
         }
         
-        // SPIRITUALE: Serpentina ORIZZONTALE da BASSO-DESTRA
-        // Prima riga (dal basso): destra → sinistra
-        // Poi: sinistra → destra, e così via
+        // Genera percorso SPIRITUALE (serpentina verticale da basso-sinistra)
         function getSpiritualPath(size) {
             const path = [];
-            for (let row = size - 1; row >= 0; row--) {
-                const rowFromBottom = size - 1 - row;
-                if (rowFromBottom % 2 === 0) {
-                    for (let col = size - 1; col >= 0; col--) path.push([row, col]);
+            for (let col = 0; col < size; col++) {
+                if (col % 2 === 0) {
+                    for (let row = size - 1; row >= 0; row--) {
+                        path.push([row, col]);
+                    }
                 } else {
-                    for (let col = 0; col < size; col++) path.push([row, col]);
+                    for (let row = 0; row < size; row++) {
+                        path.push([row, col]);
+                    }
                 }
             }
             return path;
         }
         
         function init() {
+            console.log('[SQUARE] Init...');
+            
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
@@ -258,22 +321,26 @@
             state.day = parseInt(p.get('day')) || 1;
             state.completed = parseInt(p.get('completed')) || 0;
             state.direction = p.get('direction') || 'material';
-            // IMPORTANTE: usa vibrations dal server, non calcolare localmente!
-            state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 1;
+            state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 111;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.audioUrl = decodeURIComponent(p.get('audio_url') || '');
             state.lang = p.get('lang') || 'it';
+            state.viewOnly = p.get('view_only') === '1' || p.get('view_only') === 'true';
+            
+            // FIX AUDIO: Decodifica correttamente l'URL
+            const rawAudioUrl = p.get('audio_url') || '';
+            state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : '';
+            console.log('[SQUARE] Audio URL:', state.audioUrl);
             
             const affText = decodeURIComponent(p.get('affirmation') || '');
             const mantra = decodeURIComponent(p.get('mantra') || '');
             const pron = decodeURIComponent(p.get('pronunciation') || '');
             
+            // UI base
             const planet = PLANETS[state.planet] || PLANETS.sun;
             document.getElementById('planetSymbol').textContent = planet.symbol;
             document.getElementById('squareTitle').textContent = 'QUADRATO ' + planet.name;
             document.getElementById('currentDay').textContent = state.day;
             document.getElementById('totalDays').textContent = planet.days;
-            // Mostra vibrazioni dal parametro
             document.getElementById('todayVibrations').textContent = state.vibTotal;
             document.getElementById('counterTotal').textContent = state.vibTotal;
             
@@ -283,13 +350,53 @@
             if (affText) {
                 document.getElementById('affirmationText').textContent = '"' + affText + '"';
             }
-            if (state.affTotal <= 0) {
-                document.getElementById('step2').style.display = 'none';
+            
+            // VIEW ONLY MODE
+            if (state.viewOnly) {
+                console.log('[SQUARE] View-only mode attivo');
+                setupViewOnlyMode(planet);
+            } else {
+                // Counter mode normale
+                if (state.affTotal <= 0) {
+                    document.getElementById('step2').style.display = 'none';
+                }
+                loadAudio();
             }
             
             buildGrid();
-            loadAudio();
             updateUI();
+        }
+        
+        function setupViewOnlyMode(planet) {
+            // Mostra banner e info
+            document.getElementById('viewOnlyBanner').style.display = 'block';
+            document.getElementById('viewOnlyInfo').style.display = 'block';
+            
+            // Nascondi elementi del counter
+            document.getElementById('stepIndicator').style.display = 'none';
+            document.getElementById('dayInfo').style.display = 'none';
+            document.getElementById('counterSection').style.display = 'none';
+            document.getElementById('closeSection').style.display = 'block';
+            
+            // Calcola info
+            const remaining = planet.days - state.completed;
+            const progressPct = Math.round((state.completed / planet.days) * 100);
+            
+            // Calcola data fine prevista
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + remaining);
+            const endDateStr = endDate.toLocaleDateString('it-IT', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            // Popola info
+            document.getElementById('infoCompleted').textContent = state.completed + ' / ' + planet.days;
+            document.getElementById('infoRemaining').textContent = remaining;
+            document.getElementById('infoEndDate').textContent = endDateStr;
+            document.getElementById('progressVisual').style.width = progressPct + '%';
+            document.getElementById('progressVisual').textContent = progressPct + '%';
         }
         
         function buildGrid() {
@@ -298,214 +405,10 @@
             
             const size = grid.length;
             const container = document.getElementById('squareGrid');
-            
-            let cellSize = size <= 4 ? 42 : (size <= 6 ? 36 : (size <= 7 ? 30 : 26));
-            let fontSize = size <= 4 ? '0.85rem' : (size <= 6 ? '0.75rem' : (size <= 7 ? '0.65rem' : '0.55rem'));
-            
-            container.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellSize + 'px)';
             container.innerHTML = '';
             
-            const path = state.direction === 'material' ? getMaterialPath(size) : getSpiritualPath(size);
+            // Calcola dimensioni celle
+            const maxWidth = Math.min(window.innerWidth - 40, 350);
+            const cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
             
-            // Mappa posizione -> giorno nel percorso
-            const positionToDay = {};
-            path.forEach((pos, idx) => {
-                positionToDay[pos[0] + ',' + pos[1]] = idx + 1;
-            });
-            
-            for (let row = 0; row < size; row++) {
-                for (let col = 0; col < size; col++) {
-                    const val = grid[row][col];
-                    const dayNum = positionToDay[row + ',' + col];
-                    
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.style.width = cellSize + 'px';
-                    cell.style.height = cellSize + 'px';
-                    cell.style.fontSize = fontSize;
-                    
-                    // Evidenzia in base al giorno nel percorso
-                    if (dayNum <= state.completed) {
-                        cell.classList.add('completed');
-                    } else if (dayNum === state.day) {
-                        cell.classList.add('current');
-                    }
-                    // Celle future restano oscurate (default)
-                    
-                    cell.textContent = val;
-                    container.appendChild(cell);
-                }
-            }
-            
-            drawPath(path, cellSize, size);
-        }
-        
-        function drawPath(path, cellSize, size) {
-            const container = document.getElementById('squareGrid');
-            const gap = 2;
-            const padding = 8;
-            
-            for (let i = 0; i < path.length - 1; i++) {
-                const [r1, c1] = path[i];
-                const [r2, c2] = path[i + 1];
-                
-                const x1 = padding + c1 * (cellSize + gap) + cellSize / 2;
-                const y1 = padding + r1 * (cellSize + gap) + cellSize / 2;
-                const x2 = padding + c2 * (cellSize + gap) + cellSize / 2;
-                const y2 = padding + r2 * (cellSize + gap) + cellSize / 2;
-                
-                const line = document.createElement('div');
-                line.className = 'path-line';
-                
-                const length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-                
-                line.style.width = length + 'px';
-                line.style.height = '2px';
-                line.style.left = x1 + 'px';
-                line.style.top = y1 + 'px';
-                line.style.transformOrigin = '0 50%';
-                line.style.transform = 'rotate(' + angle + 'deg)';
-                
-                // Linee completate più visibili
-                if (i + 1 <= state.completed) {
-                    line.style.background = 'rgba(16, 185, 129, 0.6)';
-                }
-                
-                container.appendChild(line);
-            }
-        }
-        
-        function loadAudio() {
-            if (!state.audioUrl) {
-                console.log('[AUDIO] No audioUrl!');
-                return;
-            }
-            const base = state.audioUrl + '/' + state.lang + '/';
-            console.log('[AUDIO] Base URL:', base);
-            console.log('[AUDIO] Loading files...');
-            
-            [10, 20, 30, 40, 50, 100].forEach(n => {
-                const el = document.getElementById('audio' + n);
-                if (el) {
-                    el.src = base + n + '.mp3';
-                    console.log('[AUDIO] Set audio' + n + ':', el.src);
-                }
-            });
-            document.getElementById('audioLast').src = base + 'last.mp3';
-            document.getElementById('audioComplete').src = base + 'complete.mp3';
-            console.log('[AUDIO] All files set');
-        }
-        
-        function addCount(n) {
-            state.sound = document.getElementById('soundToggle').checked;
-            
-            if (state.step === 1) {
-                if (state.vibCount >= state.vibTotal) return;
-                const prev = state.vibCount;
-                state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
-                
-                if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
-                updateUI();
-                
-                if (state.vibCount >= state.vibTotal) {
-                    if (state.affTotal > 0) {
-                        setTimeout(switchToAffirmations, 800);
-                    } else {
-                        setTimeout(showComplete, 500);
-                    }
-                }
-            } else {
-                if (state.affCount >= state.affTotal) return;
-                const prev = state.affCount;
-                state.affCount = Math.min(state.affCount + n, state.affTotal);
-                
-                if (state.sound && state.affCount === state.affTotal - 1 && prev < state.affTotal - 1) {
-                    playAudio('audioLast');
-                }
-                updateUI();
-                
-                if (state.affCount >= state.affTotal) {
-                    setTimeout(showComplete, 500);
-                }
-            }
-        }
-        
-        function checkMilestone(prev, curr, total) {
-            if (curr === total - 1 && prev < total - 1) { playAudio('audioLast'); return; }
-            for (const m of [10, 20, 30, 40, 50, 100]) {
-                if (prev < m && curr >= m && m <= total) { playAudio('audio' + m); return; }
-            }
-        }
-        
-        function switchToAffirmations() {
-            state.step = 2;
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step1').classList.add('completed');
-            document.getElementById('step2').classList.add('active');
-            document.getElementById('mainBtn').textContent = '✍️ RECITA ✍️';
-            document.getElementById('affirmationBox').classList.add('show');
-            updateUI();
-        }
-        
-        function updateUI() {
-            const curr = state.step === 1 ? state.vibCount : state.affCount;
-            const total = state.step === 1 ? state.vibTotal : state.affTotal;
-            
-            document.getElementById('counterDisplay').textContent = curr;
-            document.getElementById('counterTotal').textContent = total;
-            document.getElementById('progressFill').style.width = Math.round((curr / total) * 100) + '%';
-            
-            const left = total - curr;
-            const msg = document.getElementById('message');
-            if (left === 0) {
-                msg.textContent = state.step === 1 && state.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
-                msg.className = 'message';
-            } else if (left === 1) {
-                msg.textContent = '⚡ ULTIMA! ⚡';
-                msg.className = 'message warning';
-            } else if (left <= 5) {
-                msg.textContent = '⚡ ULTIME ' + left + '! ⚡';
-                msg.className = 'message warning';
-            } else {
-                msg.textContent = '';
-                msg.className = 'message';
-            }
-        }
-        
-        function playAudio(id) {
-            const a = document.getElementById(id);
-            if (a && a.src) {
-                console.log('[AUDIO] Playing:', id);
-                a.currentTime = 0;
-                a.play().catch(e => console.log('[AUDIO] Error:', e));
-            }
-        }
-        
-        function showComplete() {
-            if (state.sound) playAudio('audioComplete');
-            document.getElementById('completedOverlay').classList.add('show');
-        }
-        
-        function saveAndClose() {
-            const data = {
-                action: 'counter_complete',
-                work_id: state.workId,
-                vibrations: state.vibCount,
-                affirmations: state.affCount,
-                total_vibrations: state.vibTotal,
-                total_affirmations: state.affTotal
-            };
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify(data));
-                setTimeout(() => window.Telegram.WebApp.close(), 300);
-            } else {
-                alert('Dati: ' + JSON.stringify(data, null, 2));
-            }
-        }
-        
-        init();
-    </script>
-</body>
-</html>
+            container.style.grid
