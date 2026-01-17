@@ -221,33 +221,26 @@ var state = {
 };
 
 /**
- * MATERIALE: Serpentina per RIGHE
- * - Inizia dalla riga in basso (row = size-1), colonna destra (col = size-1)
- * - Prima riga: da destra a sinistra
- * - Seconda riga: da sinistra a destra
- * - Alterna salendo verso l'alto
- * - Termina in alto
- */
-/**
- * MATERIALE: Serpentina per RIGHE
+ * MATERIALE: Serpentina per COLONNE
  * - Inizia da ALTO-DESTRA (row = 0, col = size-1)
- * - Prima riga: da DESTRA a SINISTRA
- * - Seconda riga: da SINISTRA a DESTRA
- * - Alterna andando verso il basso
- * - Termina in BASSO-SINISTRA
+ * - Prima colonna: dall'ALTO verso il BASSO
+ * - Seconda colonna: dal BASSO verso l'ALTO
+ * - Alterna andando verso sinistra
+ * - Termina a SINISTRA
  */
 function getMaterialPath(size) {
     var path = [];
-    var row, col;
-    for (row = 0; row < size; row++) {
-        if (row % 2 === 0) {
-            // Righe pari: da DESTRA a SINISTRA
-            for (col = size - 1; col >= 0; col--) {
+    var col, row, colFromRight;
+    for (col = size - 1; col >= 0; col--) {
+        colFromRight = (size - 1) - col;
+        if (colFromRight % 2 === 0) {
+            // Colonne pari (da destra): dall'ALTO verso il BASSO
+            for (row = 0; row < size; row++) {
                 path.push([row, col]);
             }
         } else {
-            // Righe dispari: da SINISTRA a DESTRA
-            for (col = 0; col < size; col++) {
+            // Colonne dispari: dal BASSO verso l'ALTO
+            for (row = size - 1; row >= 0; row--) {
                 path.push([row, col]);
             }
         }
@@ -256,26 +249,26 @@ function getMaterialPath(size) {
 }
 
 /**
- * SPIRITUALE: Serpentina per COLONNE
+ * SPIRITUALE: Serpentina per RIGHE
  * - Inizia da BASSO-DESTRA (row = size-1, col = size-1)
- * - Prima colonna: dal BASSO verso l'ALTO
- * - Seconda colonna: dall'ALTO verso il BASSO
- * - Alterna andando verso sinistra
- * - Termina in ALTO-SINISTRA
+ * - Prima riga: da DESTRA a SINISTRA
+ * - Seconda riga: da SINISTRA a DESTRA
+ * - Alterna salendo verso l'alto
+ * - Termina in ALTO
  */
 function getSpiritualPath(size) {
     var path = [];
-    var col, row, colFromRight;
-    for (col = size - 1; col >= 0; col--) {
-        colFromRight = (size - 1) - col;
-        if (colFromRight % 2 === 0) {
-            // Colonne pari (da destra): dal BASSO verso l'ALTO
-            for (row = size - 1; row >= 0; row--) {
+    var row, col, rowFromBottom;
+    for (row = size - 1; row >= 0; row--) {
+        rowFromBottom = (size - 1) - row;
+        if (rowFromBottom % 2 === 0) {
+            // Righe pari (dal basso): da DESTRA a SINISTRA
+            for (col = size - 1; col >= 0; col--) {
                 path.push([row, col]);
             }
         } else {
-            // Colonne dispari: dall'ALTO verso il BASSO
-            for (row = 0; row < size; row++) {
+            // Righe dispari: da SINISTRA a DESTRA
+            for (col = 0; col < size; col++) {
                 path.push([row, col]);
             }
         }
