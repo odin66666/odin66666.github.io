@@ -220,28 +220,57 @@ var state = {
     affirmation: ""
 };
 
+/**
+ * MATERIALE: Serpentina per RIGHE
+ * - Inizia dalla riga in basso (row = size-1), colonna destra (col = size-1)
+ * - Prima riga: da destra a sinistra
+ * - Seconda riga: da sinistra a destra
+ * - Alterna salendo verso l'alto
+ * - Termina in alto
+ */
 function getMaterialPath(size) {
     var path = [];
-    var col, row, colFromRight;
-    for (col = size - 1; col >= 0; col--) {
-        colFromRight = size - 1 - col;
-        if (colFromRight % 2 === 0) {
-            for (row = 0; row < size; row++) { path.push([row, col]); }
+    var row, col, rowFromBottom;
+    for (row = size - 1; row >= 0; row--) {
+        rowFromBottom = (size - 1) - row;
+        if (rowFromBottom % 2 === 0) {
+            // Righe pari (dal basso): da DESTRA a SINISTRA
+            for (col = size - 1; col >= 0; col--) {
+                path.push([row, col]);
+            }
         } else {
-            for (row = size - 1; row >= 0; row--) { path.push([row, col]); }
+            // Righe dispari: da SINISTRA a DESTRA
+            for (col = 0; col < size; col++) {
+                path.push([row, col]);
+            }
         }
     }
     return path;
 }
 
+/**
+ * SPIRITUALE: Serpentina per COLONNE
+ * - Inizia dalla colonna destra (col = size-1), riga in alto (row = 0)
+ * - Prima colonna: dall'alto verso il basso
+ * - Seconda colonna: dal basso verso l'alto
+ * - Alterna andando verso sinistra
+ * - Termina a sinistra
+ */
 function getSpiritualPath(size) {
     var path = [];
-    var col, row;
-    for (col = 0; col < size; col++) {
-        if (col % 2 === 0) {
-            for (row = size - 1; row >= 0; row--) { path.push([row, col]); }
+    var col, row, colFromRight;
+    for (col = size - 1; col >= 0; col--) {
+        colFromRight = (size - 1) - col;
+        if (colFromRight % 2 === 0) {
+            // Colonne pari (da destra): dall'ALTO verso il BASSO
+            for (row = 0; row < size; row++) {
+                path.push([row, col]);
+            }
         } else {
-            for (row = 0; row < size; row++) { path.push([row, col]); }
+            // Colonne dispari: dal BASSO verso l'ALTO
+            for (row = size - 1; row >= 0; row--) {
+                path.push([row, col]);
+            }
         }
     }
     return path;
@@ -419,7 +448,16 @@ function buildGrid() {
     container.style.gridTemplateColumns = "repeat(" + size + ", " + cellSize + "px)";
     container.style.gridTemplateRows = "repeat(" + size + ", " + cellSize + "px)";
     
+    // Usa il percorso corretto in base alla direzione
     var path = state.direction === "material" ? getMaterialPath(size) : getSpiritualPath(size);
+    
+    // Debug: mostra primi numeri del percorso
+    var debugSeq = [];
+    for (var d = 0; d < Math.min(5, path.length); d++) {
+        debugSeq.push(grid[path[d][0]][path[d][1]]);
+    }
+    console.log("[SQUARE] Direction:", state.direction, "- First 5 numbers:", debugSeq.join(", "));
+    
     var posMap = {};
     var i;
     for (i = 0; i < path.length; i++) {
@@ -427,7 +465,6 @@ function buildGrid() {
     }
     
     var r, c, cell, posIdx;
-    var displayDay = state.viewOnly ? state.completed : state.completed;
     
     for (r = 0; r < size; r++) {
         for (c = 0; c < size; c++) {
@@ -438,12 +475,14 @@ function buildGrid() {
             posIdx = posMap[r + "," + c];
             if (posIdx !== undefined) {
                 if (state.viewOnly) {
+                    // View-only: mostra il giorno completato
                     if (posIdx < state.completed - 1) {
                         cell.className = "cell completed";
                     } else if (posIdx === state.completed - 1) {
                         cell.className = "cell completed-today";
                     }
                 } else {
+                    // Counter mode: mostra giorno corrente
                     if (posIdx < state.completed) {
                         cell.className = "cell completed";
                     } else if (posIdx === state.completed) {
@@ -492,7 +531,7 @@ function setupViewOnlyMode(planetInfo) {
 }
 
 function init() {
-    console.log("[SQUARE] Init v4...");
+    console.log("[SQUARE] Init v5 - Fixed paths...");
     
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
