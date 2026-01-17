@@ -67,24 +67,24 @@
 </head>
 <body>
     <div class="header">
-        <div class="planet-symbol" id="planetSymbol">?</div>
+        <div class="planet-symbol" id="planetSymbol">☉</div>
         <h1 id="squareTitle">QUADRATO</h1>
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <div class="view-only-banner" id="viewOnlyBanner">GIORNO GIA COMPLETATO</div>
+    <div class="view-only-banner" id="viewOnlyBanner">✅ GIORNO GIÀ COMPLETATO</div>
     
     <div class="step-indicator" id="stepIndicator">
-        <div class="step active" id="step1">Vibrazioni</div>
-        <div class="step" id="step2">Affermazioni</div>
+        <div class="step active" id="step1">🔊 Vibrazioni</div>
+        <div class="step" id="step2">✍️ Affermazioni</div>
     </div>
     
     <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
     <div class="view-only-info" id="viewOnlyInfo">
-        <div class="info-row"><span class="info-label">Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
-        <div class="info-row"><span class="info-label">Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">Data Fine:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
+        <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine:</span><span class="info-value" id="infoEndDate">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
     </div>
     
@@ -112,21 +112,21 @@
             <button class="btn btn-add" id="btnAdd1">+1</button>
             <button class="btn btn-add" id="btnAdd5">+5</button>
             <button class="btn btn-add" id="btnAdd10">+10</button>
-            <button class="btn btn-vibra" id="mainBtn">VIBRA</button>
-            <button class="btn btn-save" id="btnSave">SALVA E CHIUDI</button>
+            <button class="btn btn-vibra" id="mainBtn">⚡ VIBRA ⚡</button>
+            <button class="btn btn-save" id="btnSave">✅ SALVA E CHIUDI</button>
         </div>
         <div class="settings-row">
-            <span>Suoni</span>
+            <span>🔊 Suoni</span>
             <label class="toggle"><input type="checkbox" id="soundToggle" checked><span class="toggle-slider"></span></label>
         </div>
     </div>
     
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" id="btnClose" style="width: 100%;">CHIUDI</button>
+        <button class="btn btn-close" id="btnClose" style="width: 100%;">← CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
-        <div class="completed-icon">&#10022;</div>
+        <div class="completed-icon">✧</div>
         <div class="completed-text">GIORNO COMPLETATO!</div>
         <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
     </div>
@@ -152,13 +152,13 @@ var GRIDS = {
 };
 
 var PLANETS = {
-    saturn: { symbol: "h", name: "SATURNO", days: 15 },
-    jupiter: { symbol: "4", name: "GIOVE", days: 16 },
-    mars: { symbol: "o", name: "MARTE", days: 25 },
-    sun: { symbol: "Q", name: "SOLE", days: 36 },
-    venus: { symbol: "R", name: "VENERE", days: 49 },
-    mercury: { symbol: "W", name: "MERCURIO", days: 64 },
-    moon: { symbol: "C", name: "LUNA", days: 81 }
+    saturn: { symbol: "\u2644", name: "SATURNO", days: 15 },
+    jupiter: { symbol: "\u2643", name: "GIOVE", days: 16 },
+    mars: { symbol: "\u2642", name: "MARTE", days: 25 },
+    sun: { symbol: "\u2609", name: "SOLE", days: 36 },
+    venus: { symbol: "\u2640", name: "VENERE", days: 49 },
+    mercury: { symbol: "\u263F", name: "MERCURIO", days: 64 },
+    moon: { symbol: "\u263D", name: "LUNA", days: 81 }
 };
 
 var state = {
@@ -184,13 +184,9 @@ function getMaterialPath(size) {
     for (col = size - 1; col >= 0; col--) {
         colFromRight = size - 1 - col;
         if (colFromRight % 2 === 0) {
-            for (row = 0; row < size; row++) {
-                path.push([row, col]);
-            }
+            for (row = 0; row < size; row++) { path.push([row, col]); }
         } else {
-            for (row = size - 1; row >= 0; row--) {
-                path.push([row, col]);
-            }
+            for (row = size - 1; row >= 0; row--) { path.push([row, col]); }
         }
     }
     return path;
@@ -201,13 +197,9 @@ function getSpiritualPath(size) {
     var col, row;
     for (col = 0; col < size; col++) {
         if (col % 2 === 0) {
-            for (row = size - 1; row >= 0; row--) {
-                path.push([row, col]);
-            }
+            for (row = size - 1; row >= 0; row--) { path.push([row, col]); }
         } else {
-            for (row = 0; row < size; row++) {
-                path.push([row, col]);
-            }
+            for (row = 0; row < size; row++) { path.push([row, col]); }
         }
     }
     return path;
@@ -264,7 +256,7 @@ function switchToAffirmations() {
     state.step = 2;
     document.getElementById("step1").className = "step completed";
     document.getElementById("step2").className = "step active";
-    document.getElementById("mainBtn").textContent = "RECITA";
+    document.getElementById("mainBtn").textContent = "✍️ RECITA ✍️";
     document.getElementById("affirmationBox").style.display = "block";
     updateUI();
 }
@@ -280,11 +272,11 @@ function updateUI() {
     var left = total - curr;
     var msg = document.getElementById("message");
     if (left === 0) {
-        msg.textContent = state.step === 1 && state.affTotal > 0 ? "Ora le affermazioni..." : "COMPLETATO";
+        msg.textContent = state.step === 1 && state.affTotal > 0 ? "✧ Ora le affermazioni..." : "✧ COMPLETATO ✧";
     } else if (left === 1) {
-        msg.textContent = "ULTIMA!";
+        msg.textContent = "⚡ ULTIMA! ⚡";
     } else if (left <= 5) {
-        msg.textContent = "ULTIME " + left + "!";
+        msg.textContent = "⚡ ULTIME " + left + "! ⚡";
     } else {
         msg.textContent = "";
     }
@@ -294,7 +286,7 @@ function playAudio(id) {
     var a = document.getElementById(id);
     if (a && a.src) {
         a.currentTime = 0;
-        a.play();
+        a.play().catch(function(e) { console.log("[AUDIO] Error:", e); });
     }
 }
 
@@ -312,6 +304,7 @@ function saveAndClose() {
         total_vibrations: state.vibTotal,
         total_affirmations: state.affTotal
     };
+    console.log("[SQUARE] Saving:", JSON.stringify(data));
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify(data));
         setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
@@ -327,13 +320,20 @@ function closeWebApp() {
 }
 
 function loadAudio() {
-    if (!state.audioUrl) return;
+    if (!state.audioUrl) {
+        console.log("[AUDIO] No audio URL provided");
+        return;
+    }
     var base = state.audioUrl + "/" + state.lang + "/";
+    console.log("[AUDIO] Loading from:", base);
     var milestones = [10, 20, 30, 40, 50, 100];
     var i, el;
     for (i = 0; i < milestones.length; i++) {
         el = document.getElementById("audio" + milestones[i]);
-        if (el) el.src = base + milestones[i] + ".mp3";
+        if (el) {
+            el.src = base + milestones[i] + ".mp3";
+            console.log("[AUDIO] Set audio" + milestones[i] + ":", el.src);
+        }
     }
     el = document.getElementById("audioLast");
     if (el) el.src = base + "last.mp3";
@@ -343,7 +343,10 @@ function loadAudio() {
 
 function buildGrid() {
     var grid = GRIDS[state.planet];
-    if (!grid) return;
+    if (!grid) {
+        console.log("[SQUARE] No grid for planet:", state.planet);
+        return;
+    }
     var size = grid.length;
     var container = document.getElementById("squareGrid");
     container.innerHTML = "";
@@ -378,24 +381,29 @@ function buildGrid() {
 }
 
 function setupViewOnlyMode(planetInfo) {
+    console.log("[SQUARE] Setting up view-only mode");
     document.getElementById("viewOnlyBanner").style.display = "block";
     document.getElementById("viewOnlyInfo").style.display = "block";
     document.getElementById("stepIndicator").style.display = "none";
     document.getElementById("dayInfo").style.display = "none";
     document.getElementById("counterSection").style.display = "none";
     document.getElementById("closeSection").style.display = "block";
+    
     var remaining = planetInfo.days - state.completed;
     var progressPct = Math.round((state.completed / planetInfo.days) * 100);
     var endDate = new Date();
     endDate.setDate(endDate.getDate() + remaining);
+    
     document.getElementById("infoCompleted").textContent = state.completed + " / " + planetInfo.days;
     document.getElementById("infoRemaining").textContent = remaining;
-    document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT");
+    document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT", {day: "numeric", month: "long", year: "numeric"});
     document.getElementById("progressVisual").style.width = progressPct + "%";
     document.getElementById("progressVisual").textContent = progressPct + "%";
 }
 
 function init() {
+    console.log("[SQUARE] Init v3...");
+    
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
         window.Telegram.WebApp.ready();
@@ -424,6 +432,8 @@ function init() {
     try { if (mantra) mantra = decodeURIComponent(mantra); } catch(e) {}
     try { if (pron) pron = decodeURIComponent(pron); } catch(e) {}
     
+    console.log("[SQUARE] State:", JSON.stringify(state));
+    
     var planetInfo = PLANETS[state.planet] || PLANETS.sun;
     document.getElementById("planetSymbol").textContent = planetInfo.symbol;
     document.getElementById("squareTitle").textContent = "QUADRATO " + planetInfo.name;
@@ -434,7 +444,7 @@ function init() {
     document.getElementById("mantraText").textContent = mantra || "MANTRA";
     if (pron) document.getElementById("mantraPronunciation").textContent = "(" + pron + ")";
     if (affText) {
-        document.getElementById("affirmationText").textContent = affText;
+        document.getElementById("affirmationText").textContent = '"' + affText + '"';
         document.getElementById("affirmationBox").style.display = "block";
     }
     
@@ -448,8 +458,11 @@ function init() {
     }
     
     buildGrid();
-    updateUI();
+    if (!state.viewOnly) {
+        updateUI();
+    }
     
+    // Bind buttons
     document.getElementById("btnAdd1").onclick = function() { addCount(1); };
     document.getElementById("btnAdd5").onclick = function() { addCount(5); };
     document.getElementById("btnAdd10").onclick = function() { addCount(10); };
