@@ -3,200 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🔢 Contatore Vibrazioni</title>
+    <title>Contatore Vibrazioni</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        :root {
-            --bg-dark: #0a0a12;
-            --bg-card: #12121f;
-            --gold: #d4af37;
-            --gold-light: #f4d675;
-            --purple: #7b2cbf;
-            --purple-light: #9d4edd;
-            --green: #10b981;
-            --text: #e8e8e8;
-            --text-dim: #888;
-        }
-        body {
-            font-family: 'Cinzel', serif;
-            background: var(--bg-dark);
-            background-image: 
-                radial-gradient(ellipse at top, rgba(123, 44, 191, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 15px;
-            user-select: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cinzel', serif; background: #0a0a12; color: #e8e8e8; min-height: 100vh; padding: 15px; }
         .container { max-width: 400px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 15px; }
-        .header h1 {
-            font-size: 1.3rem;
-            color: var(--gold);
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-        }
-        .header .subtitle { font-size: 0.85rem; color: var(--text-dim); margin-top: 5px; }
+        .header h1 { font-size: 1.3rem; color: #d4af37; }
+        .header .subtitle { font-size: 0.85rem; color: #888; margin-top: 5px; }
         .step-indicator { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
-        .step {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            background: rgba(255,255,255,0.1);
-            color: var(--text-dim);
-            transition: all 0.3s;
-        }
-        .step.active {
-            background: linear-gradient(135deg, var(--purple), var(--gold));
-            color: white;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-        }
-        .step.completed { background: var(--green); color: white; }
-        .card {
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
+        .step { padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; background: rgba(255,255,255,0.1); color: #888; }
+        .step.active { background: linear-gradient(135deg, #7b2cbf, #d4af37); color: white; }
+        .step.completed { background: #10b981; color: white; }
+        .card { background: #12121f; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(212, 175, 55, 0.3); }
         .count-display { text-align: center; margin-bottom: 15px; }
-        .count-big {
-            font-size: 4rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, var(--gold), var(--purple-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .count-total { font-size: 1rem; color: var(--text-dim); }
-        .progress-bar {
-            height: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--purple), var(--gold));
-            transition: width 0.3s ease;
-            border-radius: 5px;
-        }
-        .message {
-            text-align: center;
-            font-size: 0.95rem;
-            color: var(--gold-light);
-            min-height: 25px;
-            margin: 10px 0;
-        }
-        .message.warning { animation: pulse 1s infinite; color: #ff6b6b; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .affirmation {
-            background: rgba(123, 44, 191, 0.15);
-            border-radius: 10px;
-            padding: 12px;
-            margin: 15px 0;
-            font-style: italic;
-            font-size: 0.9rem;
-            color: var(--text);
-            border-left: 3px solid var(--purple);
-            display: none;
-        }
-        .affirmation.show { display: block; }
+        .count-big { font-size: 4rem; font-weight: bold; color: #d4af37; }
+        .count-total { font-size: 1rem; color: #888; }
+        .progress-bar { height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; margin: 15px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #7b2cbf, #d4af37); transition: width 0.3s; }
+        .message { text-align: center; font-size: 0.95rem; color: #f4d675; min-height: 25px; margin: 10px 0; }
+        .affirmation { background: rgba(123, 44, 191, 0.15); border-radius: 10px; padding: 12px; margin: 15px 0; font-style: italic; font-size: 0.9rem; border-left: 3px solid #7b2cbf; display: none; }
         .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .btn {
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            font-family: 'Cinzel', serif;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            color: white;
-            transition: transform 0.1s, box-shadow 0.2s;
-        }
+        .btn { padding: 15px; font-size: 1.1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 12px; cursor: pointer; color: white; }
         .btn:active { transform: scale(0.95); }
-        .btn-add {
-            background: linear-gradient(135deg, var(--purple), var(--purple-light));
-            box-shadow: 0 2px 10px rgba(123, 44, 191, 0.3);
-        }
-        .btn-main {
-            grid-column: span 3;
-            padding: 18px;
-            font-size: 1.3rem;
-            background: linear-gradient(135deg, var(--gold), #c9a227);
-            color: #1a1a1a;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-        }
-        .btn-save {
-            grid-column: span 3;
-            padding: 18px;
-            font-size: 1.2rem;
-            background: linear-gradient(135deg, var(--green), #059669);
-            margin-top: 15px;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-        }
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin-top: 15px;
-        }
+        .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
+        .btn-main { grid-column: span 3; padding: 18px; font-size: 1.3rem; background: linear-gradient(135deg, #d4af37, #c9a227); color: #1a1a1a; }
+        .btn-save { grid-column: span 3; padding: 18px; font-size: 1.2rem; background: linear-gradient(135deg, #10b981, #059669); margin-top: 15px; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 0.85rem; color: #888; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 15px; }
         .toggle { position: relative; width: 44px; height: 24px; }
         .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.2);
-            transition: 0.3s;
-            border-radius: 24px;
-        }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 18px; width: 18px;
-            left: 3px; bottom: 3px;
-            background: white;
-            transition: 0.3s;
-            border-radius: 50%;
-        }
-        .toggle input:checked + .toggle-slider { background: var(--gold); }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.2); border-radius: 24px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle input:checked + .toggle-slider { background: #d4af37; }
         .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
-        .completed-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95));
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s;
-        }
-        .completed-overlay.show { opacity: 1; pointer-events: all; }
-        .completed-icon { font-size: 5rem; margin-bottom: 15px; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .completed-text { font-size: 1.8rem; color: #1a1a1a; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(255,255,255,0.3); }
-        .close-btn {
-            padding: 15px 40px;
-            background: #1a1a1a;
-            color: var(--gold);
-            border: 2px solid var(--gold);
-            border-radius: 30px;
-            font-family: 'Cinzel', serif;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .completed-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95)); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        .completed-overlay.show { display: flex; }
+        .completed-icon { font-size: 5rem; margin-bottom: 15px; }
+        .completed-text { font-size: 1.8rem; color: #1a1a1a; margin-bottom: 25px; }
+        .close-btn { padding: 15px 40px; background: #1a1a1a; color: #d4af37; border: 2px solid #d4af37; border-radius: 30px; font-family: 'Cinzel', serif; font-size: 1.1rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -207,8 +53,8 @@
         </div>
         
         <div class="step-indicator">
-            <div class="step active" id="step1">🔊 Vibrazioni</div>
-            <div class="step" id="step2">✍️ Affermazioni</div>
+            <div class="step active" id="step1">Vibrazioni</div>
+            <div class="step" id="step2">Affermazioni</div>
         </div>
         
         <div class="card">
@@ -224,19 +70,19 @@
             <div class="message" id="message"></div>
             
             <div class="affirmation" id="affirmationBox">
-                <span id="affirmationText">"Affermazione..."</span>
+                <span id="affirmationText"></span>
             </div>
             
             <div class="buttons">
-                <button class="btn btn-add" onclick="addCount(1)">+1</button>
-                <button class="btn btn-add" onclick="addCount(5)">+5</button>
-                <button class="btn btn-add" onclick="addCount(10)">+10</button>
-                <button class="btn btn-main" id="mainBtn" onclick="addCount(1)">⚡ VIBRA ⚡</button>
-                <button class="btn btn-save" onclick="saveAndClose()">✅ SALVA E CHIUDI</button>
+                <button class="btn btn-add" id="btnAdd1">+1</button>
+                <button class="btn btn-add" id="btnAdd5">+5</button>
+                <button class="btn btn-add" id="btnAdd10">+10</button>
+                <button class="btn btn-main" id="mainBtn">VIBRA</button>
+                <button class="btn btn-save" id="btnSave">SALVA E CHIUDI</button>
             </div>
             
             <div class="settings-row">
-                <span>🔊 Suoni</span>
+                <span>Suoni</span>
                 <label class="toggle">
                     <input type="checkbox" id="soundToggle" checked>
                     <span class="toggle-slider"></span>
@@ -246,9 +92,9 @@
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
-        <div class="completed-icon">✧</div>
+        <div class="completed-icon">&#10022;</div>
         <div class="completed-text">COMPLETATO!</div>
-        <button class="close-btn" onclick="saveAndClose()">Salva e Chiudi</button>
+        <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
     </div>
     
     <audio id="audio10" preload="auto"></audio>
@@ -260,195 +106,184 @@
     <audio id="audioLast" preload="auto"></audio>
     <audio id="audioComplete" preload="auto"></audio>
     
-    <script>
-        let state = {
-            step: 1,
-            vibCount: 0,
-            vibTotal: 40,
-            affCount: 0,
-            affTotal: 0,
-            workId: '',
-            audioUrl: '',
-            lang: 'it',
-            sound: true
-        };
-        
-        function init() {
-            console.log('[COUNTER] Init...');
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.ready();
-            }
-            
-            const p = new URLSearchParams(window.location.search);
-            
-            state.workId = p.get('work_id') || '';
-            state.vibTotal = parseInt(p.get('total')) || parseInt(p.get('vibrations')) || 40;
-            state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.lang = p.get('lang') || 'it';
-            
-            // FIX AUDIO: Decodifica correttamente l'URL
-            const rawAudioUrl = p.get('audio_url') || '';
-            state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : '';
-            console.log('[COUNTER] Audio URL:', state.audioUrl);
-            
-            const name = decodeURIComponent(p.get('name') || 'Lavoro');
-            const affText = decodeURIComponent(p.get('affirmation') || '');
-            
-            // UI
-            document.getElementById('title').textContent = name;
-            document.getElementById('total').textContent = state.vibTotal;
-            
-            if (affText) {
-                document.getElementById('affirmationText').textContent = '"' + affText + '"';
-            }
-            
-            if (state.affTotal <= 0) {
-                document.getElementById('step2').style.display = 'none';
-            }
-            
-            loadAudio();
-            updateUI();
-        }
-        
-        function loadAudio() {
-            if (!state.audioUrl) {
-                console.log('[AUDIO] No audio URL');
-                return;
-            }
-            
-            const base = state.audioUrl + '/' + state.lang + '/';
-            console.log('[AUDIO] Loading from:', base);
-            
-            const milestones = [10, 20, 30, 40, 50, 100];
-            milestones.forEach(n => {
-                const el = document.getElementById('audio' + n);
-                if (el) el.src = base + n + '.mp3';
-            });
-            
-            document.getElementById('audioLast').src = base + 'last.mp3';
-            document.getElementById('audioComplete').src = base + 'complete.mp3';
-        }
-        
-        function addCount(n) {
-            state.sound = document.getElementById('soundToggle').checked;
-            
-            if (state.step === 1) {
-                if (state.vibCount >= state.vibTotal) return;
-                const prev = state.vibCount;
-                state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
-                
-                if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
-                updateUI();
-                
-                if (state.vibCount >= state.vibTotal) {
-                    if (state.affTotal > 0) {
-                        setTimeout(switchToAffirmations, 800);
-                    } else {
-                        setTimeout(showComplete, 500);
-                    }
-                }
+<script>
+var state = {
+    step: 1,
+    vibCount: 0,
+    vibTotal: 40,
+    affCount: 0,
+    affTotal: 0,
+    workId: "",
+    audioUrl: "",
+    lang: "it",
+    sound: true
+};
+
+function addCount(n) {
+    state.sound = document.getElementById("soundToggle").checked;
+    
+    if (state.step === 1) {
+        if (state.vibCount >= state.vibTotal) return;
+        var prev = state.vibCount;
+        state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+        if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
+        updateUI();
+        if (state.vibCount >= state.vibTotal) {
+            if (state.affTotal > 0) {
+                setTimeout(switchToAffirmations, 800);
             } else {
-                if (state.affCount >= state.affTotal) return;
-                const prev = state.affCount;
-                state.affCount = Math.min(state.affCount + n, state.affTotal);
-                
-                if (state.sound && state.affCount === state.affTotal - 1 && prev < state.affTotal - 1) {
-                    playAudio('audioLast');
-                }
-                updateUI();
-                
-                if (state.affCount >= state.affTotal) {
-                    setTimeout(showComplete, 500);
-                }
+                setTimeout(showComplete, 500);
             }
         }
-        
-        function checkMilestone(prev, curr, total) {
-            if (curr === total - 1 && prev < total - 1) {
-                playAudio('audioLast');
-                return;
-            }
-            const milestones = [10, 20, 30, 40, 50, 100];
-            for (const m of milestones) {
-                if (prev < m && curr >= m && m <= total) {
-                    playAudio('audio' + m);
-                    return;
-                }
-            }
+    } else {
+        if (state.affCount >= state.affTotal) return;
+        var prev2 = state.affCount;
+        state.affCount = Math.min(state.affCount + n, state.affTotal);
+        if (state.sound && state.affCount === state.affTotal - 1 && prev2 < state.affTotal - 1) {
+            playAudio("audioLast");
         }
-        
-        function switchToAffirmations() {
-            state.step = 2;
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step1').classList.add('completed');
-            document.getElementById('step2').classList.add('active');
-            document.getElementById('mainBtn').textContent = '✍️ RECITA ✍️';
-            document.getElementById('affirmationBox').classList.add('show');
-            updateUI();
+        updateUI();
+        if (state.affCount >= state.affTotal) {
+            setTimeout(showComplete, 500);
         }
-        
-        function updateUI() {
-            const curr = state.step === 1 ? state.vibCount : state.affCount;
-            const total = state.step === 1 ? state.vibTotal : state.affTotal;
-            
-            document.getElementById('count').textContent = curr;
-            document.getElementById('total').textContent = total;
-            document.getElementById('progress').style.width = Math.round((curr / total) * 100) + '%';
-            
-            const left = total - curr;
-            const msg = document.getElementById('message');
-            
-            if (left === 0) {
-                msg.textContent = state.step === 1 && state.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
-                msg.className = 'message';
-            } else if (left === 1) {
-                msg.textContent = '⚡ ULTIMA! ⚡';
-                msg.className = 'message warning';
-            } else if (left <= 5) {
-                msg.textContent = '⚡ ULTIME ' + left + '! ⚡';
-                msg.className = 'message warning';
-            } else {
-                msg.textContent = '';
-                msg.className = 'message';
-            }
+    }
+}
+
+function checkMilestone(prev, curr, total) {
+    if (curr === total - 1 && prev < total - 1) {
+        playAudio("audioLast");
+        return;
+    }
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, m;
+    for (i = 0; i < milestones.length; i++) {
+        m = milestones[i];
+        if (prev < m && curr >= m && m <= total) {
+            playAudio("audio" + m);
+            return;
         }
-        
-        function playAudio(id) {
-            const el = document.getElementById(id);
-            if (el && el.src) {
-                el.currentTime = 0;
-                el.play().catch(e => console.log('[AUDIO] Play error:', e));
-            }
-        }
-        
-        function showComplete() {
-            if (state.sound) playAudio('audioComplete');
-            document.getElementById('completedOverlay').classList.add('show');
-        }
-        
-        function saveAndClose() {
-            console.log('[COUNTER] Saving...');
-            
-            const data = {
-                action: 'counter_complete',
-                work_id: state.workId,
-                vibrations: state.vibCount,
-                affirmations: state.affCount,
-                total_vibrations: state.vibTotal,
-                total_affirmations: state.affTotal
-            };
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify(data));
-                setTimeout(() => window.Telegram.WebApp.close(), 300);
-            } else {
-                alert('Dati: ' + JSON.stringify(data, null, 2));
-            }
-        }
-        
-        init();
-    </script>
+    }
+}
+
+function switchToAffirmations() {
+    state.step = 2;
+    document.getElementById("step1").className = "step completed";
+    document.getElementById("step2").className = "step active";
+    document.getElementById("mainBtn").textContent = "RECITA";
+    document.getElementById("affirmationBox").style.display = "block";
+    updateUI();
+}
+
+function updateUI() {
+    var curr = state.step === 1 ? state.vibCount : state.affCount;
+    var total = state.step === 1 ? state.vibTotal : state.affTotal;
+    document.getElementById("count").textContent = curr;
+    document.getElementById("total").textContent = total;
+    var pct = Math.round((curr / total) * 100);
+    document.getElementById("progress").style.width = pct + "%";
+    var left = total - curr;
+    var msg = document.getElementById("message");
+    if (left === 0) {
+        msg.textContent = state.step === 1 && state.affTotal > 0 ? "Ora le affermazioni..." : "COMPLETATO";
+    } else if (left === 1) {
+        msg.textContent = "ULTIMA!";
+    } else if (left <= 5) {
+        msg.textContent = "ULTIME " + left + "!";
+    } else {
+        msg.textContent = "";
+    }
+}
+
+function playAudio(id) {
+    var a = document.getElementById(id);
+    if (a && a.src) {
+        a.currentTime = 0;
+        a.play();
+    }
+}
+
+function showComplete() {
+    if (state.sound) playAudio("audioComplete");
+    document.getElementById("completedOverlay").className = "completed-overlay show";
+}
+
+function saveAndClose() {
+    var data = {
+        action: "counter_complete",
+        work_id: state.workId,
+        vibrations: state.vibCount,
+        affirmations: state.affCount,
+        total_vibrations: state.vibTotal,
+        total_affirmations: state.affTotal
+    };
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(data));
+        setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
+    } else {
+        alert("Dati: " + JSON.stringify(data));
+    }
+}
+
+function loadAudio() {
+    if (!state.audioUrl) return;
+    var base = state.audioUrl + "/" + state.lang + "/";
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, el;
+    for (i = 0; i < milestones.length; i++) {
+        el = document.getElementById("audio" + milestones[i]);
+        if (el) el.src = base + milestones[i] + ".mp3";
+    }
+    el = document.getElementById("audioLast");
+    if (el) el.src = base + "last.mp3";
+    el = document.getElementById("audioComplete");
+    if (el) el.src = base + "complete.mp3";
+}
+
+function init() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.ready();
+    }
+    
+    var params = new URLSearchParams(window.location.search);
+    state.workId = params.get("work_id") || "";
+    state.vibTotal = parseInt(params.get("total")) || parseInt(params.get("vibrations")) || 40;
+    state.affTotal = parseInt(params.get("aff_reps")) || 0;
+    state.lang = params.get("lang") || "it";
+    
+    var rawAudioUrl = params.get("audio_url") || "";
+    if (rawAudioUrl) {
+        try { state.audioUrl = decodeURIComponent(rawAudioUrl); } catch(e) { state.audioUrl = rawAudioUrl; }
+    }
+    
+    var name = params.get("name") || "Lavoro";
+    var affText = params.get("affirmation") || "";
+    try { if (name) name = decodeURIComponent(name); } catch(e) {}
+    try { if (affText) affText = decodeURIComponent(affText); } catch(e) {}
+    
+    document.getElementById("title").textContent = name;
+    document.getElementById("total").textContent = state.vibTotal;
+    
+    if (affText) {
+        document.getElementById("affirmationText").textContent = affText;
+    }
+    
+    if (state.affTotal <= 0) {
+        document.getElementById("step2").style.display = "none";
+    }
+    
+    loadAudio();
+    updateUI();
+    
+    document.getElementById("btnAdd1").onclick = function() { addCount(1); };
+    document.getElementById("btnAdd5").onclick = function() { addCount(5); };
+    document.getElementById("btnAdd10").onclick = function() { addCount(10); };
+    document.getElementById("mainBtn").onclick = function() { addCount(1); };
+    document.getElementById("btnSave").onclick = saveAndClose;
+    document.getElementById("btnOverlayClose").onclick = saveAndClose;
+}
+
+init();
+</script>
 </body>
 </html>
