@@ -228,13 +228,20 @@ var state = {
  * - Alterna salendo verso l'alto
  * - Termina in alto
  */
+/**
+ * MATERIALE: Serpentina per RIGHE
+ * - Inizia da ALTO-DESTRA (row = 0, col = size-1)
+ * - Prima riga: da DESTRA a SINISTRA
+ * - Seconda riga: da SINISTRA a DESTRA
+ * - Alterna andando verso il basso
+ * - Termina in BASSO-SINISTRA
+ */
 function getMaterialPath(size) {
     var path = [];
-    var row, col, rowFromBottom;
-    for (row = size - 1; row >= 0; row--) {
-        rowFromBottom = (size - 1) - row;
-        if (rowFromBottom % 2 === 0) {
-            // Righe pari (dal basso): da DESTRA a SINISTRA
+    var row, col;
+    for (row = 0; row < size; row++) {
+        if (row % 2 === 0) {
+            // Righe pari: da DESTRA a SINISTRA
             for (col = size - 1; col >= 0; col--) {
                 path.push([row, col]);
             }
@@ -250,11 +257,11 @@ function getMaterialPath(size) {
 
 /**
  * SPIRITUALE: Serpentina per COLONNE
- * - Inizia dalla colonna destra (col = size-1), riga in alto (row = 0)
- * - Prima colonna: dall'alto verso il basso
- * - Seconda colonna: dal basso verso l'alto
+ * - Inizia da BASSO-DESTRA (row = size-1, col = size-1)
+ * - Prima colonna: dal BASSO verso l'ALTO
+ * - Seconda colonna: dall'ALTO verso il BASSO
  * - Alterna andando verso sinistra
- * - Termina a sinistra
+ * - Termina in ALTO-SINISTRA
  */
 function getSpiritualPath(size) {
     var path = [];
@@ -262,13 +269,13 @@ function getSpiritualPath(size) {
     for (col = size - 1; col >= 0; col--) {
         colFromRight = (size - 1) - col;
         if (colFromRight % 2 === 0) {
-            // Colonne pari (da destra): dall'ALTO verso il BASSO
-            for (row = 0; row < size; row++) {
+            // Colonne pari (da destra): dal BASSO verso l'ALTO
+            for (row = size - 1; row >= 0; row--) {
                 path.push([row, col]);
             }
         } else {
-            // Colonne dispari: dal BASSO verso l'ALTO
-            for (row = size - 1; row >= 0; row--) {
+            // Colonne dispari: dall'ALTO verso il BASSO
+            for (row = 0; row < size; row++) {
                 path.push([row, col]);
             }
         }
