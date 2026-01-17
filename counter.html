@@ -197,14 +197,13 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .close-btn:hover { background: var(--gold); color: #1a1a1a; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="title">🔢 CONTATORE</h1>
-            <div class="subtitle" id="subtitle">Vibrazioni</div>
+            <h1 id="title">Contatore</h1>
+            <div class="subtitle">Vibrazioni Sacre</div>
         </div>
         
         <div class="step-indicator">
@@ -219,13 +218,13 @@
             </div>
             
             <div class="progress-bar">
-                <div class="progress-fill" id="progress"></div>
+                <div class="progress-fill" id="progress" style="width: 0%"></div>
             </div>
             
             <div class="message" id="message"></div>
             
             <div class="affirmation" id="affirmationBox">
-                <span id="affirmationText"></span>
+                <span id="affirmationText">"Affermazione..."</span>
             </div>
             
             <div class="buttons">
@@ -248,7 +247,7 @@
     
     <div class="completed-overlay" id="completedOverlay">
         <div class="completed-icon">✧</div>
-        <div class="completed-text" id="completedTitle">COMPLETATO!</div>
+        <div class="completed-text">COMPLETATO!</div>
         <button class="close-btn" onclick="saveAndClose()">Salva e Chiudi</button>
     </div>
     
@@ -256,6 +255,8 @@
     <audio id="audio20" preload="auto"></audio>
     <audio id="audio30" preload="auto"></audio>
     <audio id="audio40" preload="auto"></audio>
+    <audio id="audio50" preload="auto"></audio>
+    <audio id="audio100" preload="auto"></audio>
     <audio id="audioLast" preload="auto"></audio>
     <audio id="audioComplete" preload="auto"></audio>
     
@@ -274,45 +275,26 @@
         
         function init() {
             console.log('[COUNTER] Init...');
-            console.log('[COUNTER] URL:', window.location.href);
-            console.log('[COUNTER] Search:', window.location.search);
-            
-            // DEBUG VISIVO - mostra URL nella pagina
-            const debugDiv = document.createElement('div');
-            debugDiv.style.cssText = 'background:#000;color:#0f0;font-size:10px;padding:5px;margin:10px 0;word-break:break-all;max-height:100px;overflow:auto;';
-            debugDiv.innerHTML = '<b>URL:</b> ' + window.location.href + '<br><b>Search:</b> ' + window.location.search;
-            document.querySelector('.container').prepend(debugDiv);
             
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
-                console.log('[COUNTER] Telegram WebApp ready');
             }
             
             const p = new URLSearchParams(window.location.search);
             
-            // DEBUG: mostra tutti i parametri
-            console.log('[COUNTER] All params:');
-            let paramDebug = '';
-            for (const [key, value] of p.entries()) {
-                console.log('  ', key, '=', value);
-                paramDebug += key + '=' + value.substring(0,30) + '<br>';
-            }
-            debugDiv.innerHTML += '<br><b>Params:</b><br>' + paramDebug;
-            
-            // Leggi parametri
             state.workId = p.get('work_id') || '';
             state.vibTotal = parseInt(p.get('total')) || parseInt(p.get('vibrations')) || 40;
             state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.audioUrl = decodeURIComponent(p.get('audio_url') || '');
             state.lang = p.get('lang') || 'it';
+            
+            // FIX AUDIO: Decodifica correttamente l'URL
+            const rawAudioUrl = p.get('audio_url') || '';
+            state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : '';
+            console.log('[COUNTER] Audio URL:', state.audioUrl);
             
             const name = decodeURIComponent(p.get('name') || 'Lavoro');
             const affText = decodeURIComponent(p.get('affirmation') || '');
-            
-            console.log('[COUNTER] work_id:', state.workId);
-            console.log('[COUNTER] vibTotal:', state.vibTotal);
-            console.log('[COUNTER] affTotal:', state.affTotal);
             
             // UI
             document.getElementById('title').textContent = name;
@@ -322,7 +304,6 @@
                 document.getElementById('affirmationText').textContent = '"' + affText + '"';
             }
             
-            // Nascondi step 2 se non ci sono affermazioni
             if (state.affTotal <= 0) {
                 document.getElementById('step2').style.display = 'none';
             }
@@ -333,19 +314,21 @@
         
         function loadAudio() {
             if (!state.audioUrl) {
-                console.log('[AUDIO] No audioUrl!');
+                console.log('[AUDIO] No audio URL');
                 return;
             }
-            const base = state.audioUrl + '/' + state.lang + '/';
-            console.log('[AUDIO] Base URL:', base);
             
-            document.getElementById('audio10').src = base + '10.mp3';
-            document.getElementById('audio20').src = base + '20.mp3';
-            document.getElementById('audio30').src = base + '30.mp3';
-            document.getElementById('audio40').src = base + '40.mp3';
+            const base = state.audioUrl + '/' + state.lang + '/';
+            console.log('[AUDIO] Loading from:', base);
+            
+            const milestones = [10, 20, 30, 40, 50, 100];
+            milestones.forEach(n => {
+                const el = document.getElementById('audio' + n);
+                if (el) el.src = base + n + '.mp3';
+            });
+            
             document.getElementById('audioLast').src = base + 'last.mp3';
             document.getElementById('audioComplete').src = base + 'complete.mp3';
-            console.log('[AUDIO] Files loaded');
         }
         
         function addCount(n) {
@@ -387,7 +370,7 @@
                 playAudio('audioLast');
                 return;
             }
-            const milestones = [10, 20, 30, 40];
+            const milestones = [10, 20, 30, 40, 50, 100];
             for (const m of milestones) {
                 if (prev < m && curr >= m && m <= total) {
                     playAudio('audio' + m);
@@ -436,7 +419,7 @@
             const el = document.getElementById(id);
             if (el && el.src) {
                 el.currentTime = 0;
-                el.play().catch(e => console.log('Audio error:', e));
+                el.play().catch(e => console.log('[AUDIO] Play error:', e));
             }
         }
         
@@ -457,19 +440,11 @@
                 total_affirmations: state.affTotal
             };
             
-            console.log('[COUNTER] Data:', JSON.stringify(data));
-            
             if (window.Telegram && window.Telegram.WebApp) {
-                try {
-                    window.Telegram.WebApp.sendData(JSON.stringify(data));
-                    console.log('[COUNTER] sendData OK');
-                    setTimeout(() => window.Telegram.WebApp.close(), 300);
-                } catch (e) {
-                    console.error('[COUNTER] sendData error:', e);
-                    alert('Errore salvataggio: ' + e.message);
-                }
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                setTimeout(() => window.Telegram.WebApp.close(), 300);
             } else {
-                alert('Completato!\n\nDati: ' + JSON.stringify(data, null, 2));
+                alert('Dati: ' + JSON.stringify(data, null, 2));
             }
         }
         
