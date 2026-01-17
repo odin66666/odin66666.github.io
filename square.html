@@ -3,162 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⬛ Quadrato Magico</title>
+    <title>Quadrato Magico</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        :root {
-            --bg-dark: #0a0a12;
-            --bg-card: #12121f;
-            --gold: #d4af37;
-            --gold-light: #f4d675;
-            --purple: #7b2cbf;
-            --purple-light: #9d4edd;
-            --green: #10b981;
-            --text: #e8e8e8;
-            --text-dim: #888;
-        }
-        body {
-            font-family: 'Cinzel', serif;
-            background: var(--bg-dark);
-            background-image: 
-                radial-gradient(ellipse at top, rgba(123, 44, 191, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at bottom, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
-            color: var(--text);
-            min-height: 100vh;
-            padding: 10px;
-            user-select: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Cinzel', serif; background: #0a0a12; color: #e8e8e8; min-height: 100vh; padding: 10px; }
         .header { text-align: center; margin-bottom: 10px; }
-        .header h1 { font-size: 1.2rem; color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        .header .subtitle { font-size: 0.8rem; color: var(--text-dim); }
+        .header h1 { font-size: 1.2rem; color: #d4af37; }
         .planet-symbol { font-size: 2.5rem; margin: 5px 0; }
+        .subtitle { font-size: 0.8rem; color: #888; }
         .step-indicator { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-        .step { padding: 6px 12px; border-radius: 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1); color: var(--text-dim); }
-        .step.active { background: linear-gradient(135deg, var(--purple), var(--gold)); color: white; }
-        .step.completed { background: var(--green); color: white; }
-        .square-container { display: flex; justify-content: center; margin: 10px 0; position: relative; }
-        .square-grid { display: grid; gap: 2px; background: var(--bg-card); padding: 8px; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); position: relative; }
-        .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-weight: bold; transition: all 0.3s; position: relative; }
-        .cell.completed { background: rgba(16, 185, 129, 0.3); color: var(--green); }
-        .cell.completed::after { content: "✓"; position: absolute; font-size: 0.6em; color: var(--green); top: 1px; right: 2px; }
-        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid var(--gold); box-shadow: 0 0 10px var(--gold); animation: glow 2s infinite; }
-        .cell.path { position: relative; }
-        .cell.path::before { content: ""; position: absolute; width: 3px; height: 3px; background: var(--purple); border-radius: 50%; opacity: 0.5; }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px var(--gold); } 50% { box-shadow: 0 0 15px var(--gold); } }
-        .path-line { position: absolute; background: var(--purple); opacity: 0.4; z-index: 1; pointer-events: none; }
-        .day-info { background: var(--bg-card); border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
-        .day-info h2 { color: var(--gold); font-size: 1rem; margin-bottom: 8px; }
-        .vibration-count { font-size: 3rem; background: linear-gradient(135deg, var(--gold), var(--purple-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .vibration-label { font-size: 0.85rem; color: var(--text-dim); }
-        .mantra-section { background: var(--bg-card); border-radius: 10px; padding: 10px; margin: 8px 0; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .mantra-text { font-size: 1.1rem; color: var(--gold-light); letter-spacing: 1px; }
-        .mantra-pronunciation { font-size: 0.75rem; color: var(--text-dim); font-style: italic; margin-top: 3px; }
-        .counter-section { background: var(--bg-card); border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(123, 44, 191, 0.3); }
+        .step { padding: 6px 12px; border-radius: 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1); color: #888; }
+        .step.active { background: linear-gradient(135deg, #7b2cbf, #d4af37); color: white; }
+        .step.completed { background: #10b981; color: white; }
+        .square-container { display: flex; justify-content: center; margin: 10px 0; }
+        .square-grid { display: grid; gap: 2px; background: #12121f; padding: 8px; border-radius: 12px; border: 2px solid #d4af37; }
+        .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-weight: bold; }
+        .cell.completed { background: rgba(16, 185, 129, 0.3); color: #10b981; }
+        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid #d4af37; }
+        .day-info { background: #12121f; border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
+        .day-info h2 { color: #d4af37; font-size: 1rem; margin-bottom: 8px; }
+        .vibration-count { font-size: 3rem; color: #d4af37; }
+        .vibration-label { font-size: 0.85rem; color: #888; }
+        .mantra-section { background: #12121f; border-radius: 10px; padding: 10px; margin: 8px 0; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .mantra-text { font-size: 1.1rem; color: #f4d675; }
+        .mantra-pronunciation { font-size: 0.75rem; color: #888; font-style: italic; margin-top: 3px; }
+        .counter-section { background: #12121f; border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(123, 44, 191, 0.3); }
         .counter-display { text-align: center; margin-bottom: 10px; }
-        .counter-number { font-size: 2.5rem; background: linear-gradient(135deg, var(--gold), var(--purple-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .counter-number { font-size: 2.5rem; color: #d4af37; }
         .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 10px 0; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--gold)); transition: width 0.3s; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #7b2cbf, #d4af37); transition: width 0.3s; }
         .counter-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .btn { padding: 12px; font-size: 1.1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; transition: transform 0.1s; }
+        .btn { padding: 12px; font-size: 1.1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; }
         .btn:active { transform: scale(0.95); }
-        .btn-add { background: linear-gradient(135deg, var(--purple), var(--purple-light)); }
-        .btn-vibra { grid-column: span 3; padding: 15px; font-size: 1.2rem; background: linear-gradient(135deg, var(--gold), #c9a227); color: #1a1a1a; }
-        .btn-save { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, var(--green), #059669); margin-top: 10px; }
-        .btn-close { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #666, #444); margin-top: 10px; }
-        .affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 8px; padding: 10px; margin: 8px 0; font-style: italic; font-size: 0.85rem; color: var(--text); border-left: 3px solid var(--purple); display: none; }
-        .affirmation.show { display: block; }
-        .message { text-align: center; font-size: 0.9rem; color: var(--gold-light); min-height: 22px; margin: 8px 0; }
-        .message.warning { animation: pulse 1s infinite; color: #ff6b6b; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.8rem; color: var(--text-dim); border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; }
+        .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
+        .btn-vibra { grid-column: span 3; padding: 15px; font-size: 1.2rem; background: linear-gradient(135deg, #d4af37, #c9a227); color: #1a1a1a; }
+        .btn-save { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669); margin-top: 10px; }
+        .btn-close { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: #444; margin-top: 10px; }
+        .affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 8px; padding: 10px; margin: 8px 0; font-style: italic; font-size: 0.85rem; border-left: 3px solid #7b2cbf; display: none; }
+        .message { text-align: center; font-size: 0.9rem; color: #f4d675; min-height: 22px; margin: 8px 0; }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.8rem; color: #888; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; }
         .toggle { position: relative; width: 40px; height: 22px; }
         .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.2); transition: 0.3s; border-radius: 22px; }
-        .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; transition: 0.3s; border-radius: 50%; }
-        .toggle input:checked + .toggle-slider { background: var(--gold); }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.2); border-radius: 22px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle input:checked + .toggle-slider { background: #d4af37; }
         .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
-        .completed-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95)); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
-        .completed-overlay.show { opacity: 1; pointer-events: all; }
-        .completed-icon { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .completed-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95)); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        .completed-overlay.show { display: flex; }
+        .completed-icon { font-size: 4rem; margin-bottom: 10px; }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
-        .close-btn { padding: 12px 30px; background: #1a1a1a; color: var(--gold); border: 2px solid var(--gold); border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
-        .view-only-banner { background: linear-gradient(135deg, var(--green), #059669); color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.9rem; }
-        .view-only-info { background: var(--bg-card); border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .close-btn { padding: 12px 30px; background: #1a1a1a; color: #d4af37; border: 2px solid #d4af37; border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
+        .view-only-banner { background: #10b981; color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: none; }
+        .view-only-info { background: #12121f; border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(16, 185, 129, 0.3); display: none; }
         .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .info-row:last-child { border-bottom: none; }
-        .info-label { color: var(--text-dim); }
-        .info-value { color: var(--gold); font-weight: bold; }
+        .info-label { color: #888; }
+        .info-value { color: #d4af37; font-weight: bold; }
         .progress-visual { background: rgba(255,255,255,0.1); border-radius: 10px; height: 20px; overflow: hidden; margin: 10px 0; }
-        .progress-visual-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1a1a1a; font-weight: bold; }
+        .progress-visual-fill { height: 100%; background: linear-gradient(90deg, #10b981, #d4af37); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1a1a1a; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="planet-symbol" id="planetSymbol">☉</div>
-        <h1 id="squareTitle">QUADRATO DEL SOLE</h1>
+        <div class="planet-symbol" id="planetSymbol">?</div>
+        <h1 id="squareTitle">QUADRATO</h1>
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <div class="view-only-banner" id="viewOnlyBanner" style="display: none;">✅ GIORNO GIÀ COMPLETATO</div>
+    <div class="view-only-banner" id="viewOnlyBanner">GIORNO GIA COMPLETATO</div>
     
     <div class="step-indicator" id="stepIndicator">
-        <div class="step active" id="step1">🔊 Vibrazioni</div>
-        <div class="step" id="step2">✍️ Affermazioni</div>
+        <div class="step active" id="step1">Vibrazioni</div>
+        <div class="step" id="step2">Affermazioni</div>
     </div>
     
     <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
-    <div class="view-only-info" id="viewOnlyInfo" style="display: none;">
-        <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
-        <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">🏁 Data Fine Prevista:</span><span class="info-value" id="infoEndDate">--</span></div>
+    <div class="view-only-info" id="viewOnlyInfo">
+        <div class="info-row"><span class="info-label">Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
+        <div class="info-row"><span class="info-label">Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
+        <div class="info-row"><span class="info-label">Data Fine:</span><span class="info-value" id="infoEndDate">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
     </div>
     
     <div class="day-info" id="dayInfo">
         <h2>VIBRAZIONI OGGI</h2>
-        <div class="vibration-count" id="todayVibrations">111</div>
+        <div class="vibration-count" id="todayVibrations">0</div>
         <div class="vibration-label">volte il mantra</div>
     </div>
     
     <div class="mantra-section">
-        <div class="mantra-text" id="mantraText">SURYAYE</div>
-        <div class="mantra-pronunciation" id="mantraPronunciation">(SUR-ya-yeh)</div>
+        <div class="mantra-text" id="mantraText">MANTRA</div>
+        <div class="mantra-pronunciation" id="mantraPronunciation"></div>
     </div>
     
-    <div class="affirmation show" id="affirmationBox"><span id="affirmationText">"La tua affermazione qui..."</span></div>
+    <div class="affirmation" id="affirmationBox"><span id="affirmationText"></span></div>
     
     <div class="counter-section" id="counterSection">
         <div class="counter-display">
             <div class="counter-number" id="counterDisplay">0</div>
-            <span class="vibration-label">di <span id="counterTotal">111</span></span>
+            <span class="vibration-label">di <span id="counterTotal">0</span></span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
         <div class="message" id="message"></div>
         <div class="counter-buttons">
-            <button class="btn btn-add" onclick="addCount(1)">+1</button>
-            <button class="btn btn-add" onclick="addCount(5)">+5</button>
-            <button class="btn btn-add" onclick="addCount(10)">+10</button>
-            <button class="btn btn-vibra" id="mainBtn" onclick="addCount(1)">⚡ VIBRA ⚡</button>
-            <button class="btn btn-save" onclick="saveAndClose()">✅ SALVA E CHIUDI</button>
+            <button class="btn btn-add" id="btnAdd1">+1</button>
+            <button class="btn btn-add" id="btnAdd5">+5</button>
+            <button class="btn btn-add" id="btnAdd10">+10</button>
+            <button class="btn btn-vibra" id="mainBtn">VIBRA</button>
+            <button class="btn btn-save" id="btnSave">SALVA E CHIUDI</button>
         </div>
         <div class="settings-row">
-            <span>🔊 Suoni</span>
+            <span>Suoni</span>
             <label class="toggle"><input type="checkbox" id="soundToggle" checked><span class="toggle-slider"></span></label>
         </div>
     </div>
     
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" onclick="closeWebApp()" style="width: 100%;">← CHIUDI</button>
+        <button class="btn btn-close" id="btnClose" style="width: 100%;">CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
-        <div class="completed-icon">✧</div>
-        <div class="completed-text" id="completedTitle">GIORNO COMPLETATO!</div>
-        <button class="close-btn" onclick="saveAndClose()">Salva e Chiudi</button>
+        <div class="completed-icon">&#10022;</div>
+        <div class="completed-text">GIORNO COMPLETATO!</div>
+        <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
     </div>
     
     <audio id="audio10" preload="auto"></audio>
@@ -170,338 +140,326 @@
     <audio id="audioLast" preload="auto"></audio>
     <audio id="audioComplete" preload="auto"></audio>
     
-    <script>
-        var GRIDS = {
-            saturn: [[4,9,2],[3,5,7],[8,1,6]],
-            jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
-            mars: [[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]],
-            sun: [[6,32,3,34,35,1],[7,11,27,28,8,30],[19,14,16,15,23,24],[18,20,22,21,17,13],[25,29,10,9,26,12],[36,5,33,4,2,31]],
-            venus: [[22,47,16,41,10,35,4],[5,23,48,17,42,11,29],[30,6,24,49,18,36,12],[13,31,7,25,43,19,37],[38,14,32,1,26,44,20],[21,39,8,33,2,27,45],[46,15,40,9,34,3,28]],
-            mercury: [[8,58,59,5,4,62,63,1],[49,15,14,52,53,11,10,56],[41,23,22,44,45,19,18,48],[32,34,35,29,28,38,39,25],[40,26,27,37,36,30,31,33],[17,47,46,20,21,43,42,24],[9,55,54,12,13,51,50,16],[64,2,3,61,60,6,7,57]],
-            moon: [[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
-        };
-        
-        var PLANETS = {
-            saturn: { symbol: '\u2644', name: 'SATURNO', days: 15 },
-            jupiter: { symbol: '\u2643', name: 'GIOVE', days: 16 },
-            mars: { symbol: '\u2642', name: 'MARTE', days: 25 },
-            sun: { symbol: '\u2609', name: 'SOLE', days: 36 },
-            venus: { symbol: '\u2640', name: 'VENERE', days: 49 },
-            mercury: { symbol: '\u263F', name: 'MERCURIO', days: 64 },
-            moon: { symbol: '\u263D', name: 'LUNA', days: 81 }
-        };
-        
-        var state = {
-            step: 1,
-            vibCount: 0,
-            vibTotal: 111,
-            affCount: 0,
-            affTotal: 0,
-            planet: 'sun',
-            day: 1,
-            completed: 0,
-            direction: 'material',
-            workId: '',
-            audioUrl: '',
-            lang: 'it',
-            sound: true,
-            viewOnly: false
-        };
-        
-        function getMaterialPath(size) {
-            var path = [];
-            for (var col = size - 1; col >= 0; col--) {
-                var colFromRight = size - 1 - col;
-                if (colFromRight % 2 === 0) {
-                    for (var row = 0; row < size; row++) { path.push([row, col]); }
-                } else {
-                    for (var row = size - 1; row >= 0; row--) { path.push([row, col]); }
-                }
+<script>
+var GRIDS = {
+    saturn: [[4,9,2],[3,5,7],[8,1,6]],
+    jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
+    mars: [[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]],
+    sun: [[6,32,3,34,35,1],[7,11,27,28,8,30],[19,14,16,15,23,24],[18,20,22,21,17,13],[25,29,10,9,26,12],[36,5,33,4,2,31]],
+    venus: [[22,47,16,41,10,35,4],[5,23,48,17,42,11,29],[30,6,24,49,18,36,12],[13,31,7,25,43,19,37],[38,14,32,1,26,44,20],[21,39,8,33,2,27,45],[46,15,40,9,34,3,28]],
+    mercury: [[8,58,59,5,4,62,63,1],[49,15,14,52,53,11,10,56],[41,23,22,44,45,19,18,48],[32,34,35,29,28,38,39,25],[40,26,27,37,36,30,31,33],[17,47,46,20,21,43,42,24],[9,55,54,12,13,51,50,16],[64,2,3,61,60,6,7,57]],
+    moon: [[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
+};
+
+var PLANETS = {
+    saturn: { symbol: "h", name: "SATURNO", days: 15 },
+    jupiter: { symbol: "4", name: "GIOVE", days: 16 },
+    mars: { symbol: "o", name: "MARTE", days: 25 },
+    sun: { symbol: "Q", name: "SOLE", days: 36 },
+    venus: { symbol: "R", name: "VENERE", days: 49 },
+    mercury: { symbol: "W", name: "MERCURIO", days: 64 },
+    moon: { symbol: "C", name: "LUNA", days: 81 }
+};
+
+var state = {
+    step: 1,
+    vibCount: 0,
+    vibTotal: 100,
+    affCount: 0,
+    affTotal: 0,
+    planet: "sun",
+    day: 1,
+    completed: 0,
+    direction: "material",
+    workId: "",
+    audioUrl: "",
+    lang: "it",
+    sound: true,
+    viewOnly: false
+};
+
+function getMaterialPath(size) {
+    var path = [];
+    var col, row, colFromRight;
+    for (col = size - 1; col >= 0; col--) {
+        colFromRight = size - 1 - col;
+        if (colFromRight % 2 === 0) {
+            for (row = 0; row < size; row++) {
+                path.push([row, col]);
             }
-            return path;
+        } else {
+            for (row = size - 1; row >= 0; row--) {
+                path.push([row, col]);
+            }
         }
-        
-        function getSpiritualPath(size) {
-            var path = [];
-            for (var col = 0; col < size; col++) {
-                if (col % 2 === 0) {
-                    for (var row = size - 1; row >= 0; row--) { path.push([row, col]); }
-                } else {
-                    for (var row = 0; row < size; row++) { path.push([row, col]); }
-                }
+    }
+    return path;
+}
+
+function getSpiritualPath(size) {
+    var path = [];
+    var col, row;
+    for (col = 0; col < size; col++) {
+        if (col % 2 === 0) {
+            for (row = size - 1; row >= 0; row--) {
+                path.push([row, col]);
             }
-            return path;
+        } else {
+            for (row = 0; row < size; row++) {
+                path.push([row, col]);
+            }
         }
-        
-        function init() {
-            console.log('[SQUARE] Init v2...');
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.ready();
-            }
-            
-            var params = new URLSearchParams(window.location.search);
-            
-            state.workId = params.get('work_id') || '';
-            state.planet = params.get('planet') || 'sun';
-            state.day = parseInt(params.get('day')) || 1;
-            state.completed = parseInt(params.get('completed')) || 0;
-            state.direction = params.get('direction') || 'material';
-            state.vibTotal = parseInt(params.get('vibrations')) || parseInt(params.get('total')) || 111;
-            state.affTotal = parseInt(params.get('aff_reps')) || 0;
-            state.lang = params.get('lang') || 'it';
-            state.viewOnly = params.get('view_only') === '1' || params.get('view_only') === 'true';
-            
-            var rawAudioUrl = params.get('audio_url') || '';
-            state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : '';
-            
-            var affText = params.get('affirmation') ? decodeURIComponent(params.get('affirmation')) : '';
-            var mantra = params.get('mantra') ? decodeURIComponent(params.get('mantra')) : '';
-            var pron = params.get('pronunciation') ? decodeURIComponent(params.get('pronunciation')) : '';
-            
-            console.log('[SQUARE] State:', JSON.stringify(state));
-            
-            var planetInfo = PLANETS[state.planet] || PLANETS.sun;
-            document.getElementById('planetSymbol').textContent = planetInfo.symbol;
-            document.getElementById('squareTitle').textContent = 'QUADRATO ' + planetInfo.name;
-            document.getElementById('currentDay').textContent = state.day;
-            document.getElementById('totalDays').textContent = planetInfo.days;
-            document.getElementById('todayVibrations').textContent = state.vibTotal;
-            document.getElementById('counterTotal').textContent = state.vibTotal;
-            
-            document.getElementById('mantraText').textContent = mantra || 'MANTRA';
-            document.getElementById('mantraPronunciation').textContent = pron ? '(' + pron + ')' : '';
-            
-            if (affText) {
-                document.getElementById('affirmationText').textContent = '"' + affText + '"';
-            }
-            
-            if (state.viewOnly) {
-                console.log('[SQUARE] View-only mode');
-                setupViewOnlyMode(planetInfo);
+    }
+    return path;
+}
+
+function addCount(n) {
+    if (state.viewOnly) return;
+    state.sound = document.getElementById("soundToggle").checked;
+    
+    if (state.step === 1) {
+        if (state.vibCount >= state.vibTotal) return;
+        var prev = state.vibCount;
+        state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+        if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
+        updateUI();
+        if (state.vibCount >= state.vibTotal) {
+            if (state.affTotal > 0) {
+                setTimeout(switchToAffirmations, 800);
             } else {
-                if (state.affTotal <= 0) {
-                    document.getElementById('step2').style.display = 'none';
+                setTimeout(showComplete, 500);
+            }
+        }
+    } else {
+        if (state.affCount >= state.affTotal) return;
+        var prev2 = state.affCount;
+        state.affCount = Math.min(state.affCount + n, state.affTotal);
+        if (state.sound && state.affCount === state.affTotal - 1 && prev2 < state.affTotal - 1) {
+            playAudio("audioLast");
+        }
+        updateUI();
+        if (state.affCount >= state.affTotal) {
+            setTimeout(showComplete, 500);
+        }
+    }
+}
+
+function checkMilestone(prev, curr, total) {
+    if (curr === total - 1 && prev < total - 1) {
+        playAudio("audioLast");
+        return;
+    }
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, m;
+    for (i = 0; i < milestones.length; i++) {
+        m = milestones[i];
+        if (prev < m && curr >= m && m <= total) {
+            playAudio("audio" + m);
+            return;
+        }
+    }
+}
+
+function switchToAffirmations() {
+    state.step = 2;
+    document.getElementById("step1").className = "step completed";
+    document.getElementById("step2").className = "step active";
+    document.getElementById("mainBtn").textContent = "RECITA";
+    document.getElementById("affirmationBox").style.display = "block";
+    updateUI();
+}
+
+function updateUI() {
+    if (state.viewOnly) return;
+    var curr = state.step === 1 ? state.vibCount : state.affCount;
+    var total = state.step === 1 ? state.vibTotal : state.affTotal;
+    document.getElementById("counterDisplay").textContent = curr;
+    document.getElementById("counterTotal").textContent = total;
+    var pct = Math.round((curr / total) * 100);
+    document.getElementById("progressFill").style.width = pct + "%";
+    var left = total - curr;
+    var msg = document.getElementById("message");
+    if (left === 0) {
+        msg.textContent = state.step === 1 && state.affTotal > 0 ? "Ora le affermazioni..." : "COMPLETATO";
+    } else if (left === 1) {
+        msg.textContent = "ULTIMA!";
+    } else if (left <= 5) {
+        msg.textContent = "ULTIME " + left + "!";
+    } else {
+        msg.textContent = "";
+    }
+}
+
+function playAudio(id) {
+    var a = document.getElementById(id);
+    if (a && a.src) {
+        a.currentTime = 0;
+        a.play();
+    }
+}
+
+function showComplete() {
+    if (state.sound) playAudio("audioComplete");
+    document.getElementById("completedOverlay").className = "completed-overlay show";
+}
+
+function saveAndClose() {
+    var data = {
+        action: "counter_complete",
+        work_id: state.workId,
+        vibrations: state.vibCount,
+        affirmations: state.affCount,
+        total_vibrations: state.vibTotal,
+        total_affirmations: state.affTotal
+    };
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(data));
+        setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
+    } else {
+        alert("Dati: " + JSON.stringify(data));
+    }
+}
+
+function closeWebApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.close();
+    }
+}
+
+function loadAudio() {
+    if (!state.audioUrl) return;
+    var base = state.audioUrl + "/" + state.lang + "/";
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, el;
+    for (i = 0; i < milestones.length; i++) {
+        el = document.getElementById("audio" + milestones[i]);
+        if (el) el.src = base + milestones[i] + ".mp3";
+    }
+    el = document.getElementById("audioLast");
+    if (el) el.src = base + "last.mp3";
+    el = document.getElementById("audioComplete");
+    if (el) el.src = base + "complete.mp3";
+}
+
+function buildGrid() {
+    var grid = GRIDS[state.planet];
+    if (!grid) return;
+    var size = grid.length;
+    var container = document.getElementById("squareGrid");
+    container.innerHTML = "";
+    var maxWidth = Math.min(window.innerWidth - 40, 350);
+    var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
+    container.style.gridTemplateColumns = "repeat(" + size + ", " + cellSize + "px)";
+    container.style.gridTemplateRows = "repeat(" + size + ", " + cellSize + "px)";
+    var path = state.direction === "material" ? getMaterialPath(size) : getSpiritualPath(size);
+    var posMap = {};
+    var i;
+    for (i = 0; i < path.length; i++) {
+        posMap[path[i][0] + "," + path[i][1]] = i;
+    }
+    var r, c, cell, posIdx;
+    for (r = 0; r < size; r++) {
+        for (c = 0; c < size; c++) {
+            cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = grid[r][c];
+            cell.style.fontSize = (cellSize * 0.4) + "px";
+            posIdx = posMap[r + "," + c];
+            if (posIdx !== undefined) {
+                if (posIdx < state.completed) {
+                    cell.className = "cell completed";
+                } else if (posIdx === state.completed) {
+                    cell.className = "cell current";
                 }
-                loadAudio();
             }
-            
-            buildGrid();
-            updateUI();
+            container.appendChild(cell);
         }
-        
-        function setupViewOnlyMode(planetInfo) {
-            document.getElementById('viewOnlyBanner').style.display = 'block';
-            document.getElementById('viewOnlyInfo').style.display = 'block';
-            document.getElementById('stepIndicator').style.display = 'none';
-            document.getElementById('dayInfo').style.display = 'none';
-            document.getElementById('counterSection').style.display = 'none';
-            document.getElementById('closeSection').style.display = 'block';
-            
-            var remaining = planetInfo.days - state.completed;
-            var progressPct = Math.round((state.completed / planetInfo.days) * 100);
-            
-            var endDate = new Date();
-            endDate.setDate(endDate.getDate() + remaining);
-            var endDateStr = endDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
-            
-            document.getElementById('infoCompleted').textContent = state.completed + ' / ' + planetInfo.days;
-            document.getElementById('infoRemaining').textContent = remaining;
-            document.getElementById('infoEndDate').textContent = endDateStr;
-            document.getElementById('progressVisual').style.width = progressPct + '%';
-            document.getElementById('progressVisual').textContent = progressPct + '%';
+    }
+}
+
+function setupViewOnlyMode(planetInfo) {
+    document.getElementById("viewOnlyBanner").style.display = "block";
+    document.getElementById("viewOnlyInfo").style.display = "block";
+    document.getElementById("stepIndicator").style.display = "none";
+    document.getElementById("dayInfo").style.display = "none";
+    document.getElementById("counterSection").style.display = "none";
+    document.getElementById("closeSection").style.display = "block";
+    var remaining = planetInfo.days - state.completed;
+    var progressPct = Math.round((state.completed / planetInfo.days) * 100);
+    var endDate = new Date();
+    endDate.setDate(endDate.getDate() + remaining);
+    document.getElementById("infoCompleted").textContent = state.completed + " / " + planetInfo.days;
+    document.getElementById("infoRemaining").textContent = remaining;
+    document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT");
+    document.getElementById("progressVisual").style.width = progressPct + "%";
+    document.getElementById("progressVisual").textContent = progressPct + "%";
+}
+
+function init() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.ready();
+    }
+    
+    var params = new URLSearchParams(window.location.search);
+    state.workId = params.get("work_id") || "";
+    state.planet = params.get("planet") || "sun";
+    state.day = parseInt(params.get("day")) || 1;
+    state.completed = parseInt(params.get("completed")) || 0;
+    state.direction = params.get("direction") || "material";
+    state.vibTotal = parseInt(params.get("vibrations")) || parseInt(params.get("total")) || 100;
+    state.affTotal = parseInt(params.get("aff_reps")) || 0;
+    state.lang = params.get("lang") || "it";
+    state.viewOnly = params.get("view_only") === "1";
+    
+    var rawAudioUrl = params.get("audio_url") || "";
+    if (rawAudioUrl) {
+        try { state.audioUrl = decodeURIComponent(rawAudioUrl); } catch(e) { state.audioUrl = rawAudioUrl; }
+    }
+    
+    var affText = params.get("affirmation") || "";
+    var mantra = params.get("mantra") || "";
+    var pron = params.get("pronunciation") || "";
+    try { if (affText) affText = decodeURIComponent(affText); } catch(e) {}
+    try { if (mantra) mantra = decodeURIComponent(mantra); } catch(e) {}
+    try { if (pron) pron = decodeURIComponent(pron); } catch(e) {}
+    
+    var planetInfo = PLANETS[state.planet] || PLANETS.sun;
+    document.getElementById("planetSymbol").textContent = planetInfo.symbol;
+    document.getElementById("squareTitle").textContent = "QUADRATO " + planetInfo.name;
+    document.getElementById("currentDay").textContent = state.day;
+    document.getElementById("totalDays").textContent = planetInfo.days;
+    document.getElementById("todayVibrations").textContent = state.vibTotal;
+    document.getElementById("counterTotal").textContent = state.vibTotal;
+    document.getElementById("mantraText").textContent = mantra || "MANTRA";
+    if (pron) document.getElementById("mantraPronunciation").textContent = "(" + pron + ")";
+    if (affText) {
+        document.getElementById("affirmationText").textContent = affText;
+        document.getElementById("affirmationBox").style.display = "block";
+    }
+    
+    if (state.viewOnly) {
+        setupViewOnlyMode(planetInfo);
+    } else {
+        if (state.affTotal <= 0) {
+            document.getElementById("step2").style.display = "none";
         }
-        
-        function buildGrid() {
-            var grid = GRIDS[state.planet];
-            if (!grid) { console.log('[SQUARE] No grid for', state.planet); return; }
-            
-            var size = grid.length;
-            var container = document.getElementById('squareGrid');
-            container.innerHTML = '';
-            
-            var maxWidth = Math.min(window.innerWidth - 40, 350);
-            var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
-            
-            container.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellSize + 'px)';
-            container.style.gridTemplateRows = 'repeat(' + size + ', ' + cellSize + 'px)';
-            
-            var path = state.direction === 'material' ? getMaterialPath(size) : getSpiritualPath(size);
-            
-            var posMap = {};
-            for (var i = 0; i < path.length; i++) {
-                posMap[path[i][0] + ',' + path[i][1]] = i;
-            }
-            
-            for (var r = 0; r < size; r++) {
-                for (var c = 0; c < size; c++) {
-                    var cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.textContent = grid[r][c];
-                    cell.style.fontSize = (cellSize * 0.4) + 'px';
-                    
-                    var posIdx = posMap[r + ',' + c];
-                    if (posIdx !== undefined) {
-                        if (posIdx < state.completed) {
-                            cell.classList.add('completed');
-                        } else if (posIdx === state.completed) {
-                            cell.classList.add('current');
-                        }
-                    }
-                    container.appendChild(cell);
-                }
-            }
-            drawPathLines(container, path, cellSize, size);
-        }
-        
-        function drawPathLines(container, path, cellSize, size) {
-            var gap = 2, padding = 8;
-            for (var i = 0; i < path.length - 1; i++) {
-                var r1 = path[i][0], c1 = path[i][1];
-                var r2 = path[i+1][0], c2 = path[i+1][1];
-                var x1 = padding + c1 * (cellSize + gap) + cellSize / 2;
-                var y1 = padding + r1 * (cellSize + gap) + cellSize / 2;
-                var x2 = padding + c2 * (cellSize + gap) + cellSize / 2;
-                var y2 = padding + r2 * (cellSize + gap) + cellSize / 2;
-                var line = document.createElement('div');
-                line.className = 'path-line';
-                var length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                var angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-                line.style.width = length + 'px';
-                line.style.height = '2px';
-                line.style.left = x1 + 'px';
-                line.style.top = y1 + 'px';
-                line.style.transformOrigin = '0 50%';
-                line.style.transform = 'rotate(' + angle + 'deg)';
-                container.appendChild(line);
-            }
-        }
-        
-        function loadAudio() {
-            if (!state.audioUrl) return;
-            var base = state.audioUrl + '/' + state.lang + '/';
-            var milestones = [10, 20, 30, 40, 50, 100];
-            for (var i = 0; i < milestones.length; i++) {
-                var el = document.getElementById('audio' + milestones[i]);
-                if (el) el.src = base + milestones[i] + '.mp3';
-            }
-            var lastEl = document.getElementById('audioLast');
-            if (lastEl) lastEl.src = base + 'last.mp3';
-            var compEl = document.getElementById('audioComplete');
-            if (compEl) compEl.src = base + 'complete.mp3';
-        }
-        
-        function addCount(n) {
-            if (state.viewOnly) return;
-            state.sound = document.getElementById('soundToggle').checked;
-            
-            if (state.step === 1) {
-                if (state.vibCount >= state.vibTotal) return;
-                var prev = state.vibCount;
-                state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
-                if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
-                updateUI();
-                if (state.vibCount >= state.vibTotal) {
-                    if (state.affTotal > 0) {
-                        setTimeout(switchToAffirmations, 800);
-                    } else {
-                        setTimeout(showComplete, 500);
-                    }
-                }
-            } else {
-                if (state.affCount >= state.affTotal) return;
-                var prev2 = state.affCount;
-                state.affCount = Math.min(state.affCount + n, state.affTotal);
-                if (state.sound && state.affCount === state.affTotal - 1 && prev2 < state.affTotal - 1) {
-                    playAudio('audioLast');
-                }
-                updateUI();
-                if (state.affCount >= state.affTotal) {
-                    setTimeout(showComplete, 500);
-                }
-            }
-        }
-        
-        function checkMilestone(prev, curr, total) {
-            if (curr === total - 1 && prev < total - 1) { playAudio('audioLast'); return; }
-            var milestones = [10, 20, 30, 40, 50, 100];
-            for (var i = 0; i < milestones.length; i++) {
-                var m = milestones[i];
-                if (prev < m && curr >= m && m <= total) { playAudio('audio' + m); return; }
-            }
-        }
-        
-        function switchToAffirmations() {
-            state.step = 2;
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step1').classList.add('completed');
-            document.getElementById('step2').classList.add('active');
-            document.getElementById('mainBtn').textContent = '✍️ RECITA ✍️';
-            document.getElementById('affirmationBox').classList.add('show');
-            updateUI();
-        }
-        
-        function updateUI() {
-            if (state.viewOnly) return;
-            var curr = state.step === 1 ? state.vibCount : state.affCount;
-            var total = state.step === 1 ? state.vibTotal : state.affTotal;
-            document.getElementById('counterDisplay').textContent = curr;
-            document.getElementById('counterTotal').textContent = total;
-            document.getElementById('progressFill').style.width = Math.round((curr / total) * 100) + '%';
-            var left = total - curr;
-            var msg = document.getElementById('message');
-            if (left === 0) {
-                msg.textContent = state.step === 1 && state.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
-                msg.className = 'message';
-            } else if (left === 1) {
-                msg.textContent = '⚡ ULTIMA! ⚡';
-                msg.className = 'message warning';
-            } else if (left <= 5) {
-                msg.textContent = '⚡ ULTIME ' + left + '! ⚡';
-                msg.className = 'message warning';
-            } else {
-                msg.textContent = '';
-                msg.className = 'message';
-            }
-        }
-        
-        function playAudio(id) {
-            var a = document.getElementById(id);
-            if (a && a.src) { a.currentTime = 0; a.play().catch(function(e) { console.log('Audio error:', e); }); }
-        }
-        
-        function showComplete() {
-            if (state.sound) playAudio('audioComplete');
-            document.getElementById('completedOverlay').classList.add('show');
-        }
-        
-        function saveAndClose() {
-            var data = {
-                action: 'counter_complete',
-                work_id: state.workId,
-                vibrations: state.vibCount,
-                affirmations: state.affCount,
-                total_vibrations: state.vibTotal,
-                total_affirmations: state.affTotal
-            };
-            console.log('[SQUARE] Saving:', JSON.stringify(data));
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.sendData(JSON.stringify(data));
-                setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
-            } else {
-                alert('Dati: ' + JSON.stringify(data, null, 2));
-            }
-        }
-        
-        function closeWebApp() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.close();
-            }
-        }
-        
-        // Start
-        init();
-    </script>
+        loadAudio();
+    }
+    
+    buildGrid();
+    updateUI();
+    
+    document.getElementById("btnAdd1").onclick = function() { addCount(1); };
+    document.getElementById("btnAdd5").onclick = function() { addCount(5); };
+    document.getElementById("btnAdd10").onclick = function() { addCount(10); };
+    document.getElementById("mainBtn").onclick = function() { addCount(1); };
+    document.getElementById("btnSave").onclick = saveAndClose;
+    document.getElementById("btnClose").onclick = closeWebApp;
+    document.getElementById("btnOverlayClose").onclick = saveAndClose;
+}
+
+init();
+</script>
 </body>
 </html>
