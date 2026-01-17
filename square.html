@@ -85,50 +85,14 @@
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: var(--gold); border: 2px solid var(--gold); border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
-        
-        /* VIEW ONLY MODE */
-        .view-only-banner {
-            background: linear-gradient(135deg, var(--green), #059669);
-            color: white;
-            text-align: center;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-        .view-only-info {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+        .view-only-banner { background: linear-gradient(135deg, var(--green), #059669); color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.9rem; }
+        .view-only-info { background: var(--bg-card); border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .info-row:last-child { border-bottom: none; }
         .info-label { color: var(--text-dim); }
         .info-value { color: var(--gold); font-weight: bold; }
-        .progress-visual {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            height: 20px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        .progress-visual-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--green), var(--gold));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            color: #1a1a1a;
-            font-weight: bold;
-        }
+        .progress-visual { background: rgba(255,255,255,0.1); border-radius: 10px; height: 20px; overflow: hidden; margin: 10px 0; }
+        .progress-visual-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1a1a1a; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -138,12 +102,8 @@
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <!-- VIEW ONLY BANNER (nascosto di default) -->
-    <div class="view-only-banner" id="viewOnlyBanner" style="display: none;">
-        ✅ GIORNO GIÀ COMPLETATO
-    </div>
+    <div class="view-only-banner" id="viewOnlyBanner" style="display: none;">✅ GIORNO GIÀ COMPLETATO</div>
     
-    <!-- STEP INDICATOR (nascosto in view mode) -->
     <div class="step-indicator" id="stepIndicator">
         <div class="step active" id="step1">🔊 Vibrazioni</div>
         <div class="step" id="step2">✍️ Affermazioni</div>
@@ -151,26 +111,13 @@
     
     <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
-    <!-- VIEW ONLY INFO (nascosto di default) -->
     <div class="view-only-info" id="viewOnlyInfo" style="display: none;">
-        <div class="info-row">
-            <span class="info-label">📅 Giorni Completati:</span>
-            <span class="info-value" id="infoCompleted">0 / 36</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">⏳ Giorni Rimanenti:</span>
-            <span class="info-value" id="infoRemaining">36</span>
-        </div>
-        <div class="info-row">
-            <span class="info-label">🏁 Data Fine Prevista:</span>
-            <span class="info-value" id="infoEndDate">--</span>
-        </div>
-        <div class="progress-visual">
-            <div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div>
-        </div>
+        <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
+        <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine Prevista:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
     </div>
     
-    <!-- COUNTER MODE INFO -->
     <div class="day-info" id="dayInfo">
         <h2>VIBRAZIONI OGGI</h2>
         <div class="vibration-count" id="todayVibrations">111</div>
@@ -182,19 +129,14 @@
         <div class="mantra-pronunciation" id="mantraPronunciation">(SUR-ya-yeh)</div>
     </div>
     
-    <div class="affirmation show" id="affirmationBox">
-        <span id="affirmationText">"La tua affermazione qui..."</span>
-    </div>
+    <div class="affirmation show" id="affirmationBox"><span id="affirmationText">"La tua affermazione qui..."</span></div>
     
-    <!-- COUNTER SECTION (nascosto in view mode) -->
     <div class="counter-section" id="counterSection">
         <div class="counter-display">
             <div class="counter-number" id="counterDisplay">0</div>
             <span class="vibration-label">di <span id="counterTotal">111</span></span>
         </div>
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
         <div class="message" id="message"></div>
         <div class="counter-buttons">
             <button class="btn btn-add" onclick="addCount(1)">+1</button>
@@ -205,14 +147,10 @@
         </div>
         <div class="settings-row">
             <span>🔊 Suoni</span>
-            <label class="toggle">
-                <input type="checkbox" id="soundToggle" checked>
-                <span class="toggle-slider"></span>
-            </label>
+            <label class="toggle"><input type="checkbox" id="soundToggle" checked><span class="toggle-slider"></span></label>
         </div>
     </div>
     
-    <!-- CLOSE BUTTON (solo in view mode) -->
     <div id="closeSection" style="display: none; padding: 10px;">
         <button class="btn btn-close" onclick="closeWebApp()" style="width: 100%;">← CHIUDI</button>
     </div>
@@ -233,8 +171,7 @@
     <audio id="audioComplete" preload="auto"></audio>
     
     <script>
-        // Griglie dei quadrati magici
-        const GRIDS = {
+        var GRIDS = {
             saturn: [[4,9,2],[3,5,7],[8,1,6]],
             jupiter: [[4,14,15,1],[9,7,6,12],[5,11,10,8],[16,2,3,13]],
             mars: [[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]],
@@ -244,17 +181,17 @@
             moon: [[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
         };
         
-        const PLANETS = {
-            saturn: { symbol: '♄', name: 'SATURNO', days: 15 },
-            jupiter: { symbol: '♃', name: 'GIOVE', days: 16 },
-            mars: { symbol: '♂', name: 'MARTE', days: 25 },
-            sun: { symbol: '☉', name: 'SOLE', days: 36 },
-            venus: { symbol: '♀', name: 'VENERE', days: 49 },
-            mercury: { symbol: '☿', name: 'MERCURIO', days: 64 },
-            moon: { symbol: '☽', name: 'LUNA', days: 81 }
+        var PLANETS = {
+            saturn: { symbol: '\u2644', name: 'SATURNO', days: 15 },
+            jupiter: { symbol: '\u2643', name: 'GIOVE', days: 16 },
+            mars: { symbol: '\u2642', name: 'MARTE', days: 25 },
+            sun: { symbol: '\u2609', name: 'SOLE', days: 36 },
+            venus: { symbol: '\u2640', name: 'VENERE', days: 49 },
+            mercury: { symbol: '\u263F', name: 'MERCURIO', days: 64 },
+            moon: { symbol: '\u263D', name: 'LUNA', days: 81 }
         };
         
-        let state = {
+        var state = {
             step: 1,
             vibCount: 0,
             vibTotal: 111,
@@ -271,76 +208,65 @@
             viewOnly: false
         };
         
-        // Genera percorso MATERIALE (serpentina verticale da alto-destra)
         function getMaterialPath(size) {
-            const path = [];
-            for (let col = size - 1; col >= 0; col--) {
-                const colFromRight = size - 1 - col;
+            var path = [];
+            for (var col = size - 1; col >= 0; col--) {
+                var colFromRight = size - 1 - col;
                 if (colFromRight % 2 === 0) {
-                    for (let row = 0; row < size; row++) {
-                        path.push([row, col]);
-                    }
+                    for (var row = 0; row < size; row++) { path.push([row, col]); }
                 } else {
-                    for (let row = size - 1; row >= 0; row--) {
-                        path.push([row, col]);
-                    }
+                    for (var row = size - 1; row >= 0; row--) { path.push([row, col]); }
                 }
             }
             return path;
         }
         
-        // Genera percorso SPIRITUALE (serpentina verticale da basso-sinistra)
         function getSpiritualPath(size) {
-            const path = [];
-            for (let col = 0; col < size; col++) {
+            var path = [];
+            for (var col = 0; col < size; col++) {
                 if (col % 2 === 0) {
-                    for (let row = size - 1; row >= 0; row--) {
-                        path.push([row, col]);
-                    }
+                    for (var row = size - 1; row >= 0; row--) { path.push([row, col]); }
                 } else {
-                    for (let row = 0; row < size; row++) {
-                        path.push([row, col]);
-                    }
+                    for (var row = 0; row < size; row++) { path.push([row, col]); }
                 }
             }
             return path;
         }
         
         function init() {
-            console.log('[SQUARE] Init...');
+            console.log('[SQUARE] Init v2...');
             
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
                 window.Telegram.WebApp.ready();
             }
             
-            const p = new URLSearchParams(window.location.search);
+            var params = new URLSearchParams(window.location.search);
             
-            state.workId = p.get('work_id') || '';
-            state.planet = p.get('planet') || 'sun';
-            state.day = parseInt(p.get('day')) || 1;
-            state.completed = parseInt(p.get('completed')) || 0;
-            state.direction = p.get('direction') || 'material';
-            state.vibTotal = parseInt(p.get('vibrations')) || parseInt(p.get('total')) || 111;
-            state.affTotal = parseInt(p.get('aff_reps')) || 0;
-            state.lang = p.get('lang') || 'it';
-            state.viewOnly = p.get('view_only') === '1' || p.get('view_only') === 'true';
+            state.workId = params.get('work_id') || '';
+            state.planet = params.get('planet') || 'sun';
+            state.day = parseInt(params.get('day')) || 1;
+            state.completed = parseInt(params.get('completed')) || 0;
+            state.direction = params.get('direction') || 'material';
+            state.vibTotal = parseInt(params.get('vibrations')) || parseInt(params.get('total')) || 111;
+            state.affTotal = parseInt(params.get('aff_reps')) || 0;
+            state.lang = params.get('lang') || 'it';
+            state.viewOnly = params.get('view_only') === '1' || params.get('view_only') === 'true';
             
-            // FIX AUDIO: Decodifica correttamente l'URL
-            const rawAudioUrl = p.get('audio_url') || '';
+            var rawAudioUrl = params.get('audio_url') || '';
             state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : '';
-            console.log('[SQUARE] Audio URL:', state.audioUrl);
             
-            const affText = decodeURIComponent(p.get('affirmation') || '');
-            const mantra = decodeURIComponent(p.get('mantra') || '');
-            const pron = decodeURIComponent(p.get('pronunciation') || '');
+            var affText = params.get('affirmation') ? decodeURIComponent(params.get('affirmation')) : '';
+            var mantra = params.get('mantra') ? decodeURIComponent(params.get('mantra')) : '';
+            var pron = params.get('pronunciation') ? decodeURIComponent(params.get('pronunciation')) : '';
             
-            // UI base
-            const planet = PLANETS[state.planet] || PLANETS.sun;
-            document.getElementById('planetSymbol').textContent = planet.symbol;
-            document.getElementById('squareTitle').textContent = 'QUADRATO ' + planet.name;
+            console.log('[SQUARE] State:', JSON.stringify(state));
+            
+            var planetInfo = PLANETS[state.planet] || PLANETS.sun;
+            document.getElementById('planetSymbol').textContent = planetInfo.symbol;
+            document.getElementById('squareTitle').textContent = 'QUADRATO ' + planetInfo.name;
             document.getElementById('currentDay').textContent = state.day;
-            document.getElementById('totalDays').textContent = planet.days;
+            document.getElementById('totalDays').textContent = planetInfo.days;
             document.getElementById('todayVibrations').textContent = state.vibTotal;
             document.getElementById('counterTotal').textContent = state.vibTotal;
             
@@ -351,12 +277,10 @@
                 document.getElementById('affirmationText').textContent = '"' + affText + '"';
             }
             
-            // VIEW ONLY MODE
             if (state.viewOnly) {
-                console.log('[SQUARE] View-only mode attivo');
-                setupViewOnlyMode(planet);
+                console.log('[SQUARE] View-only mode');
+                setupViewOnlyMode(planetInfo);
             } else {
-                // Counter mode normale
                 if (state.affTotal <= 0) {
                     document.getElementById('step2').style.display = 'none';
                 }
@@ -367,32 +291,22 @@
             updateUI();
         }
         
-        function setupViewOnlyMode(planet) {
-            // Mostra banner e info
+        function setupViewOnlyMode(planetInfo) {
             document.getElementById('viewOnlyBanner').style.display = 'block';
             document.getElementById('viewOnlyInfo').style.display = 'block';
-            
-            // Nascondi elementi del counter
             document.getElementById('stepIndicator').style.display = 'none';
             document.getElementById('dayInfo').style.display = 'none';
             document.getElementById('counterSection').style.display = 'none';
             document.getElementById('closeSection').style.display = 'block';
             
-            // Calcola info
-            const remaining = planet.days - state.completed;
-            const progressPct = Math.round((state.completed / planet.days) * 100);
+            var remaining = planetInfo.days - state.completed;
+            var progressPct = Math.round((state.completed / planetInfo.days) * 100);
             
-            // Calcola data fine prevista
-            const endDate = new Date();
+            var endDate = new Date();
             endDate.setDate(endDate.getDate() + remaining);
-            const endDateStr = endDate.toLocaleDateString('it-IT', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
+            var endDateStr = endDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
             
-            // Popola info
-            document.getElementById('infoCompleted').textContent = state.completed + ' / ' + planet.days;
+            document.getElementById('infoCompleted').textContent = state.completed + ' / ' + planetInfo.days;
             document.getElementById('infoRemaining').textContent = remaining;
             document.getElementById('infoEndDate').textContent = endDateStr;
             document.getElementById('progressVisual').style.width = progressPct + '%';
@@ -400,15 +314,194 @@
         }
         
         function buildGrid() {
-            const grid = GRIDS[state.planet];
-            if (!grid) return;
+            var grid = GRIDS[state.planet];
+            if (!grid) { console.log('[SQUARE] No grid for', state.planet); return; }
             
-            const size = grid.length;
-            const container = document.getElementById('squareGrid');
+            var size = grid.length;
+            var container = document.getElementById('squareGrid');
             container.innerHTML = '';
             
-            // Calcola dimensioni celle
-            const maxWidth = Math.min(window.innerWidth - 40, 350);
-            const cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
+            var maxWidth = Math.min(window.innerWidth - 40, 350);
+            var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
             
-            container.style.grid
+            container.style.gridTemplateColumns = 'repeat(' + size + ', ' + cellSize + 'px)';
+            container.style.gridTemplateRows = 'repeat(' + size + ', ' + cellSize + 'px)';
+            
+            var path = state.direction === 'material' ? getMaterialPath(size) : getSpiritualPath(size);
+            
+            var posMap = {};
+            for (var i = 0; i < path.length; i++) {
+                posMap[path[i][0] + ',' + path[i][1]] = i;
+            }
+            
+            for (var r = 0; r < size; r++) {
+                for (var c = 0; c < size; c++) {
+                    var cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[r][c];
+                    cell.style.fontSize = (cellSize * 0.4) + 'px';
+                    
+                    var posIdx = posMap[r + ',' + c];
+                    if (posIdx !== undefined) {
+                        if (posIdx < state.completed) {
+                            cell.classList.add('completed');
+                        } else if (posIdx === state.completed) {
+                            cell.classList.add('current');
+                        }
+                    }
+                    container.appendChild(cell);
+                }
+            }
+            drawPathLines(container, path, cellSize, size);
+        }
+        
+        function drawPathLines(container, path, cellSize, size) {
+            var gap = 2, padding = 8;
+            for (var i = 0; i < path.length - 1; i++) {
+                var r1 = path[i][0], c1 = path[i][1];
+                var r2 = path[i+1][0], c2 = path[i+1][1];
+                var x1 = padding + c1 * (cellSize + gap) + cellSize / 2;
+                var y1 = padding + r1 * (cellSize + gap) + cellSize / 2;
+                var x2 = padding + c2 * (cellSize + gap) + cellSize / 2;
+                var y2 = padding + r2 * (cellSize + gap) + cellSize / 2;
+                var line = document.createElement('div');
+                line.className = 'path-line';
+                var length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                var angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                line.style.width = length + 'px';
+                line.style.height = '2px';
+                line.style.left = x1 + 'px';
+                line.style.top = y1 + 'px';
+                line.style.transformOrigin = '0 50%';
+                line.style.transform = 'rotate(' + angle + 'deg)';
+                container.appendChild(line);
+            }
+        }
+        
+        function loadAudio() {
+            if (!state.audioUrl) return;
+            var base = state.audioUrl + '/' + state.lang + '/';
+            var milestones = [10, 20, 30, 40, 50, 100];
+            for (var i = 0; i < milestones.length; i++) {
+                var el = document.getElementById('audio' + milestones[i]);
+                if (el) el.src = base + milestones[i] + '.mp3';
+            }
+            var lastEl = document.getElementById('audioLast');
+            if (lastEl) lastEl.src = base + 'last.mp3';
+            var compEl = document.getElementById('audioComplete');
+            if (compEl) compEl.src = base + 'complete.mp3';
+        }
+        
+        function addCount(n) {
+            if (state.viewOnly) return;
+            state.sound = document.getElementById('soundToggle').checked;
+            
+            if (state.step === 1) {
+                if (state.vibCount >= state.vibTotal) return;
+                var prev = state.vibCount;
+                state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+                if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
+                updateUI();
+                if (state.vibCount >= state.vibTotal) {
+                    if (state.affTotal > 0) {
+                        setTimeout(switchToAffirmations, 800);
+                    } else {
+                        setTimeout(showComplete, 500);
+                    }
+                }
+            } else {
+                if (state.affCount >= state.affTotal) return;
+                var prev2 = state.affCount;
+                state.affCount = Math.min(state.affCount + n, state.affTotal);
+                if (state.sound && state.affCount === state.affTotal - 1 && prev2 < state.affTotal - 1) {
+                    playAudio('audioLast');
+                }
+                updateUI();
+                if (state.affCount >= state.affTotal) {
+                    setTimeout(showComplete, 500);
+                }
+            }
+        }
+        
+        function checkMilestone(prev, curr, total) {
+            if (curr === total - 1 && prev < total - 1) { playAudio('audioLast'); return; }
+            var milestones = [10, 20, 30, 40, 50, 100];
+            for (var i = 0; i < milestones.length; i++) {
+                var m = milestones[i];
+                if (prev < m && curr >= m && m <= total) { playAudio('audio' + m); return; }
+            }
+        }
+        
+        function switchToAffirmations() {
+            state.step = 2;
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step1').classList.add('completed');
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('mainBtn').textContent = '✍️ RECITA ✍️';
+            document.getElementById('affirmationBox').classList.add('show');
+            updateUI();
+        }
+        
+        function updateUI() {
+            if (state.viewOnly) return;
+            var curr = state.step === 1 ? state.vibCount : state.affCount;
+            var total = state.step === 1 ? state.vibTotal : state.affTotal;
+            document.getElementById('counterDisplay').textContent = curr;
+            document.getElementById('counterTotal').textContent = total;
+            document.getElementById('progressFill').style.width = Math.round((curr / total) * 100) + '%';
+            var left = total - curr;
+            var msg = document.getElementById('message');
+            if (left === 0) {
+                msg.textContent = state.step === 1 && state.affTotal > 0 ? '✧ Ora le affermazioni...' : '✧ COMPLETATO ✧';
+                msg.className = 'message';
+            } else if (left === 1) {
+                msg.textContent = '⚡ ULTIMA! ⚡';
+                msg.className = 'message warning';
+            } else if (left <= 5) {
+                msg.textContent = '⚡ ULTIME ' + left + '! ⚡';
+                msg.className = 'message warning';
+            } else {
+                msg.textContent = '';
+                msg.className = 'message';
+            }
+        }
+        
+        function playAudio(id) {
+            var a = document.getElementById(id);
+            if (a && a.src) { a.currentTime = 0; a.play().catch(function(e) { console.log('Audio error:', e); }); }
+        }
+        
+        function showComplete() {
+            if (state.sound) playAudio('audioComplete');
+            document.getElementById('completedOverlay').classList.add('show');
+        }
+        
+        function saveAndClose() {
+            var data = {
+                action: 'counter_complete',
+                work_id: state.workId,
+                vibrations: state.vibCount,
+                affirmations: state.affCount,
+                total_vibrations: state.vibTotal,
+                total_affirmations: state.affTotal
+            };
+            console.log('[SQUARE] Saving:', JSON.stringify(data));
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
+            } else {
+                alert('Dati: ' + JSON.stringify(data, null, 2));
+            }
+        }
+        
+        function closeWebApp() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            }
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
