@@ -56,8 +56,9 @@
         .affirmation-text { background: rgba(123, 44, 191, 0.15); border-radius: 8px; padding: 12px; font-style: italic; font-size: 0.85rem; border-left: 3px solid #7b2cbf; margin-bottom: 12px; text-align: center; color: #f4d675; }
         
         .buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .btn { padding: 12px; font-size: 1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; }
+        .btn { padding: 12px; font-size: 1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; transition: opacity 0.3s; }
         .btn:active { transform: scale(0.95); }
+        .btn:disabled { cursor: not-allowed; transform: none; }
         .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
         .btn-main { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #d4af37, #c9a227); color: #1a1a1a; }
         .btn-save { grid-column: span 3; padding: 15px; font-size: 1rem; background: linear-gradient(135deg, #10b981, #059669); margin-top: 10px; }
@@ -316,6 +317,24 @@ function updateVibrationUI() {
     } else {
         msg.textContent = "";
     }
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnVibAdd5");
+    var btn10 = document.getElementById("btnVibAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
+    }
 }
 
 function updateAffirmationUI() {
@@ -334,6 +353,24 @@ function updateAffirmationUI() {
         msg.textContent = "⚡ ULTIME " + left + "! ⚡";
     } else {
         msg.textContent = "";
+    }
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnAffAdd5");
+    var btn10 = document.getElementById("btnAffAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
     }
 }
 
