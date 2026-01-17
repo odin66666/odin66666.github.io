@@ -21,7 +21,9 @@
         .square-grid { display: grid; gap: 2px; background: #12121f; padding: 8px; border-radius: 12px; border: 2px solid #d4af37; }
         .cell { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 4px; font-weight: bold; }
         .cell.completed { background: rgba(16, 185, 129, 0.3); color: #10b981; }
-        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid #d4af37; }
+        .cell.current { background: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(123, 44, 191, 0.5)); border: 2px solid #d4af37; animation: pulse 2s infinite; }
+        .cell.completed-today { background: linear-gradient(135deg, rgba(16, 185, 129, 0.6), rgba(212, 175, 55, 0.4)); border: 2px solid #10b981; color: #10b981; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
         .day-info { background: #12121f; border-radius: 12px; padding: 12px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
         .day-info h2 { color: #d4af37; font-size: 1rem; margin-bottom: 8px; }
         .vibration-count { font-size: 3rem; color: #d4af37; }
@@ -40,8 +42,10 @@
         .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
         .btn-vibra { grid-column: span 3; padding: 15px; font-size: 1.2rem; background: linear-gradient(135deg, #d4af37, #c9a227); color: #1a1a1a; }
         .btn-save { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669); margin-top: 10px; }
-        .btn-close { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: #444; margin-top: 10px; }
-        .affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 8px; padding: 10px; margin: 8px 0; font-style: italic; font-size: 0.85rem; border-left: 3px solid #7b2cbf; display: none; }
+        .btn-close { width: 100%; padding: 15px; font-size: 1.1rem; background: #444; margin-top: 10px; }
+        .affirmation-section { background: #12121f; border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(123, 44, 191, 0.3); display: none; }
+        .affirmation-title { color: #d4af37; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+        .affirmation-text { background: rgba(123, 44, 191, 0.15); border-radius: 10px; padding: 15px; font-style: italic; font-size: 0.95rem; border-left: 3px solid #7b2cbf; margin-bottom: 15px; text-align: center; color: #f4d675; }
         .message { text-align: center; font-size: 0.9rem; color: #f4d675; min-height: 22px; margin: 8px 0; }
         .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 0.8rem; color: #888; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; }
         .toggle { position: relative; width: 40px; height: 22px; }
@@ -55,14 +59,20 @@
         .completed-icon { font-size: 4rem; margin-bottom: 10px; }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: #d4af37; border: 2px solid #d4af37; border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
-        .view-only-banner { background: #10b981; color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: none; }
+        .view-only-banner { background: #10b981; color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: none; font-size: 0.9rem; }
         .view-only-info { background: #12121f; border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(16, 185, 129, 0.3); display: none; }
-        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
         .info-row:last-child { border-bottom: none; }
         .info-label { color: #888; }
         .info-value { color: #d4af37; font-weight: bold; }
         .progress-visual { background: rgba(255,255,255,0.1); border-radius: 10px; height: 20px; overflow: hidden; margin: 10px 0; }
         .progress-visual-fill { height: 100%; background: linear-gradient(90deg, #10b981, #d4af37); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1a1a1a; font-weight: bold; }
+        .view-mantra { background: rgba(212, 175, 55, 0.1); border-radius: 10px; padding: 12px; margin-top: 10px; text-align: center; }
+        .view-mantra-label { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
+        .view-mantra-text { font-size: 1rem; color: #f4d675; }
+        .view-affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 10px; padding: 12px; margin-top: 10px; }
+        .view-affirmation-label { font-size: 0.75rem; color: #888; margin-bottom: 5px; text-align: center; }
+        .view-affirmation-text { font-size: 0.9rem; color: #e8e8e8; font-style: italic; text-align: center; }
     </style>
 </head>
 <body>
@@ -72,7 +82,7 @@
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <div class="view-only-banner" id="viewOnlyBanner">✅ GIORNO GIÀ COMPLETATO</div>
+    <div class="view-only-banner" id="viewOnlyBanner">✅ GIORNO <span id="completedDayNum">1</span> COMPLETATO</div>
     
     <div class="step-indicator" id="stepIndicator">
         <div class="step active" id="step1">🔊 Vibrazioni</div>
@@ -84,8 +94,16 @@
     <div class="view-only-info" id="viewOnlyInfo">
         <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
         <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">🏁 Data Fine:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
+        <div class="view-mantra" id="viewMantra">
+            <div class="view-mantra-label">MANTRA</div>
+            <div class="view-mantra-text" id="viewMantraText">--</div>
+        </div>
+        <div class="view-affirmation" id="viewAffirmation" style="display: none;">
+            <div class="view-affirmation-label">AFFERMAZIONE</div>
+            <div class="view-affirmation-text" id="viewAffirmationText">--</div>
+        </div>
     </div>
     
     <div class="day-info" id="dayInfo">
@@ -94,26 +112,24 @@
         <div class="vibration-label">volte il mantra</div>
     </div>
     
-    <div class="mantra-section">
+    <div class="mantra-section" id="mantraSection">
         <div class="mantra-text" id="mantraText">MANTRA</div>
         <div class="mantra-pronunciation" id="mantraPronunciation"></div>
     </div>
     
-    <div class="affirmation" id="affirmationBox"><span id="affirmationText"></span></div>
-    
-    <div class="counter-section" id="counterSection">
+    <!-- SEZIONE VIBRAZIONI -->
+    <div class="counter-section" id="vibrationSection">
         <div class="counter-display">
-            <div class="counter-number" id="counterDisplay">0</div>
-            <span class="vibration-label">di <span id="counterTotal">0</span></span>
+            <div class="counter-number" id="vibCounterDisplay">0</div>
+            <span class="vibration-label">di <span id="vibCounterTotal">0</span> vibrazioni</span>
         </div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
-        <div class="message" id="message"></div>
+        <div class="progress-bar"><div class="progress-fill" id="vibProgressFill" style="width: 0%"></div></div>
+        <div class="message" id="vibMessage"></div>
         <div class="counter-buttons">
-            <button class="btn btn-add" id="btnAdd1">+1</button>
-            <button class="btn btn-add" id="btnAdd5">+5</button>
-            <button class="btn btn-add" id="btnAdd10">+10</button>
-            <button class="btn btn-vibra" id="mainBtn">⚡ VIBRA ⚡</button>
-            <button class="btn btn-save" id="btnSave">✅ SALVA E CHIUDI</button>
+            <button class="btn btn-add" id="btnVibAdd1">+1</button>
+            <button class="btn btn-add" id="btnVibAdd5">+5</button>
+            <button class="btn btn-add" id="btnVibAdd10">+10</button>
+            <button class="btn btn-vibra" id="btnVibMain">⚡ VIBRA ⚡</button>
         </div>
         <div class="settings-row">
             <span>🔊 Suoni</span>
@@ -121,8 +137,32 @@
         </div>
     </div>
     
+    <!-- SEZIONE AFFERMAZIONI (separata) -->
+    <div class="affirmation-section" id="affirmationSection">
+        <div class="affirmation-title">✍️ AFFERMAZIONI</div>
+        <div class="affirmation-text" id="affirmationText">Affermazione</div>
+        <div class="counter-display">
+            <div class="counter-number" id="affCounterDisplay">0</div>
+            <span class="vibration-label">di <span id="affCounterTotal">0</span> ripetizioni</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="affProgressFill" style="width: 0%"></div></div>
+        <div class="message" id="affMessage"></div>
+        <div class="counter-buttons">
+            <button class="btn btn-add" id="btnAffAdd1">+1</button>
+            <button class="btn btn-add" id="btnAffAdd5">+5</button>
+            <button class="btn btn-add" id="btnAffAdd10">+10</button>
+            <button class="btn btn-vibra" id="btnAffMain">✍️ RECITA ✍️</button>
+        </div>
+    </div>
+    
+    <!-- PULSANTE SALVA -->
+    <div id="saveSection" style="display: none; padding: 0 10px;">
+        <button class="btn btn-save" id="btnSave" style="width: 100%;">✅ SALVA E CHIUDI</button>
+    </div>
+    
+    <!-- PULSANTE CHIUDI (view only) -->
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" id="btnClose" style="width: 100%;">← CHIUDI</button>
+        <button class="btn btn-close" id="btnClose">← CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
@@ -162,7 +202,7 @@ var PLANETS = {
 };
 
 var state = {
-    step: 1,
+    phase: "vibrations",
     vibCount: 0,
     vibTotal: 100,
     affCount: 0,
@@ -175,7 +215,9 @@ var state = {
     audioUrl: "",
     lang: "it",
     sound: true,
-    viewOnly: false
+    viewOnly: false,
+    mantra: "",
+    affirmation: ""
 };
 
 function getMaterialPath(size) {
@@ -205,34 +247,40 @@ function getSpiritualPath(size) {
     return path;
 }
 
-function addCount(n) {
-    if (state.viewOnly) return;
+function addVibration(n) {
+    if (state.viewOnly || state.phase !== "vibrations") return;
     state.sound = document.getElementById("soundToggle").checked;
     
-    if (state.step === 1) {
-        if (state.vibCount >= state.vibTotal) return;
-        var prev = state.vibCount;
-        state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
-        if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
-        updateUI();
-        if (state.vibCount >= state.vibTotal) {
-            if (state.affTotal > 0) {
-                setTimeout(switchToAffirmations, 800);
-            } else {
-                setTimeout(showComplete, 500);
-            }
-        }
-    } else {
-        if (state.affCount >= state.affTotal) return;
-        var prev2 = state.affCount;
-        state.affCount = Math.min(state.affCount + n, state.affTotal);
-        if (state.sound && state.affCount === state.affTotal - 1 && prev2 < state.affTotal - 1) {
-            playAudio("audioLast");
-        }
-        updateUI();
-        if (state.affCount >= state.affTotal) {
+    if (state.vibCount >= state.vibTotal) return;
+    var prev = state.vibCount;
+    state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+    if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
+    updateVibrationUI();
+    
+    if (state.vibCount >= state.vibTotal) {
+        if (state.affTotal > 0) {
+            setTimeout(switchToAffirmations, 800);
+        } else {
             setTimeout(showComplete, 500);
         }
+    }
+}
+
+function addAffirmation(n) {
+    if (state.viewOnly || state.phase !== "affirmations") return;
+    
+    if (state.affCount >= state.affTotal) return;
+    var prev = state.affCount;
+    state.affCount = Math.min(state.affCount + n, state.affTotal);
+    
+    if (state.sound && state.affCount === state.affTotal - 1 && prev < state.affTotal - 1) {
+        playAudio("audioLast");
+    }
+    
+    updateAffirmationUI();
+    
+    if (state.affCount >= state.affTotal) {
+        setTimeout(showComplete, 500);
     }
 }
 
@@ -253,26 +301,45 @@ function checkMilestone(prev, curr, total) {
 }
 
 function switchToAffirmations() {
-    state.step = 2;
+    state.phase = "affirmations";
     document.getElementById("step1").className = "step completed";
     document.getElementById("step2").className = "step active";
-    document.getElementById("mainBtn").textContent = "✍️ RECITA ✍️";
-    document.getElementById("affirmationBox").style.display = "block";
-    updateUI();
+    document.getElementById("vibrationSection").style.display = "none";
+    document.getElementById("affirmationSection").style.display = "block";
+    document.getElementById("dayInfo").style.display = "none";
+    document.getElementById("mantraSection").style.display = "none";
+    updateAffirmationUI();
 }
 
-function updateUI() {
-    if (state.viewOnly) return;
-    var curr = state.step === 1 ? state.vibCount : state.affCount;
-    var total = state.step === 1 ? state.vibTotal : state.affTotal;
-    document.getElementById("counterDisplay").textContent = curr;
-    document.getElementById("counterTotal").textContent = total;
-    var pct = Math.round((curr / total) * 100);
-    document.getElementById("progressFill").style.width = pct + "%";
-    var left = total - curr;
-    var msg = document.getElementById("message");
+function updateVibrationUI() {
+    document.getElementById("vibCounterDisplay").textContent = state.vibCount;
+    document.getElementById("vibCounterTotal").textContent = state.vibTotal;
+    var pct = Math.round((state.vibCount / state.vibTotal) * 100);
+    document.getElementById("vibProgressFill").style.width = pct + "%";
+    
+    var left = state.vibTotal - state.vibCount;
+    var msg = document.getElementById("vibMessage");
     if (left === 0) {
-        msg.textContent = state.step === 1 && state.affTotal > 0 ? "✧ Ora le affermazioni..." : "✧ COMPLETATO ✧";
+        msg.textContent = state.affTotal > 0 ? "✧ Vibrazioni complete! Ora le affermazioni..." : "✧ COMPLETATO ✧";
+    } else if (left === 1) {
+        msg.textContent = "⚡ ULTIMA! ⚡";
+    } else if (left <= 5) {
+        msg.textContent = "⚡ ULTIME " + left + "! ⚡";
+    } else {
+        msg.textContent = "";
+    }
+}
+
+function updateAffirmationUI() {
+    document.getElementById("affCounterDisplay").textContent = state.affCount;
+    document.getElementById("affCounterTotal").textContent = state.affTotal;
+    var pct = Math.round((state.affCount / state.affTotal) * 100);
+    document.getElementById("affProgressFill").style.width = pct + "%";
+    
+    var left = state.affTotal - state.affCount;
+    var msg = document.getElementById("affMessage");
+    if (left === 0) {
+        msg.textContent = "✧ COMPLETATO ✧";
     } else if (left === 1) {
         msg.textContent = "⚡ ULTIMA! ⚡";
     } else if (left <= 5) {
@@ -330,10 +397,7 @@ function loadAudio() {
     var i, el;
     for (i = 0; i < milestones.length; i++) {
         el = document.getElementById("audio" + milestones[i]);
-        if (el) {
-            el.src = base + milestones[i] + ".mp3";
-            console.log("[AUDIO] Set audio" + milestones[i] + ":", el.src);
-        }
+        if (el) el.src = base + milestones[i] + ".mp3";
     }
     el = document.getElementById("audioLast");
     if (el) el.src = base + "last.mp3";
@@ -354,13 +418,17 @@ function buildGrid() {
     var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
     container.style.gridTemplateColumns = "repeat(" + size + ", " + cellSize + "px)";
     container.style.gridTemplateRows = "repeat(" + size + ", " + cellSize + "px)";
+    
     var path = state.direction === "material" ? getMaterialPath(size) : getSpiritualPath(size);
     var posMap = {};
     var i;
     for (i = 0; i < path.length; i++) {
         posMap[path[i][0] + "," + path[i][1]] = i;
     }
+    
     var r, c, cell, posIdx;
+    var displayDay = state.viewOnly ? state.completed : state.completed;
+    
     for (r = 0; r < size; r++) {
         for (c = 0; c < size; c++) {
             cell = document.createElement("div");
@@ -369,10 +437,18 @@ function buildGrid() {
             cell.style.fontSize = (cellSize * 0.4) + "px";
             posIdx = posMap[r + "," + c];
             if (posIdx !== undefined) {
-                if (posIdx < state.completed) {
-                    cell.className = "cell completed";
-                } else if (posIdx === state.completed) {
-                    cell.className = "cell current";
+                if (state.viewOnly) {
+                    if (posIdx < state.completed - 1) {
+                        cell.className = "cell completed";
+                    } else if (posIdx === state.completed - 1) {
+                        cell.className = "cell completed-today";
+                    }
+                } else {
+                    if (posIdx < state.completed) {
+                        cell.className = "cell completed";
+                    } else if (posIdx === state.completed) {
+                        cell.className = "cell current";
+                    }
                 }
             }
             container.appendChild(cell);
@@ -383,11 +459,17 @@ function buildGrid() {
 function setupViewOnlyMode(planetInfo) {
     console.log("[SQUARE] Setting up view-only mode");
     document.getElementById("viewOnlyBanner").style.display = "block";
+    document.getElementById("completedDayNum").textContent = state.completed;
     document.getElementById("viewOnlyInfo").style.display = "block";
     document.getElementById("stepIndicator").style.display = "none";
     document.getElementById("dayInfo").style.display = "none";
-    document.getElementById("counterSection").style.display = "none";
+    document.getElementById("mantraSection").style.display = "none";
+    document.getElementById("vibrationSection").style.display = "none";
+    document.getElementById("affirmationSection").style.display = "none";
+    document.getElementById("saveSection").style.display = "none";
     document.getElementById("closeSection").style.display = "block";
+    
+    document.getElementById("currentDay").textContent = state.completed;
     
     var remaining = planetInfo.days - state.completed;
     var progressPct = Math.round((state.completed / planetInfo.days) * 100);
@@ -399,10 +481,18 @@ function setupViewOnlyMode(planetInfo) {
     document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT", {day: "numeric", month: "long", year: "numeric"});
     document.getElementById("progressVisual").style.width = progressPct + "%";
     document.getElementById("progressVisual").textContent = progressPct + "%";
+    
+    if (state.mantra) {
+        document.getElementById("viewMantraText").textContent = state.mantra;
+    }
+    if (state.affirmation) {
+        document.getElementById("viewAffirmation").style.display = "block";
+        document.getElementById("viewAffirmationText").textContent = '"' + state.affirmation + '"';
+    }
 }
 
 function init() {
-    console.log("[SQUARE] Init v3...");
+    console.log("[SQUARE] Init v4...");
     
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
@@ -432,6 +522,9 @@ function init() {
     try { if (mantra) mantra = decodeURIComponent(mantra); } catch(e) {}
     try { if (pron) pron = decodeURIComponent(pron); } catch(e) {}
     
+    state.mantra = mantra;
+    state.affirmation = affText;
+    
     console.log("[SQUARE] State:", JSON.stringify(state));
     
     var planetInfo = PLANETS[state.planet] || PLANETS.sun;
@@ -440,12 +533,13 @@ function init() {
     document.getElementById("currentDay").textContent = state.day;
     document.getElementById("totalDays").textContent = planetInfo.days;
     document.getElementById("todayVibrations").textContent = state.vibTotal;
-    document.getElementById("counterTotal").textContent = state.vibTotal;
+    document.getElementById("vibCounterTotal").textContent = state.vibTotal;
     document.getElementById("mantraText").textContent = mantra || "MANTRA";
     if (pron) document.getElementById("mantraPronunciation").textContent = "(" + pron + ")";
+    
     if (affText) {
         document.getElementById("affirmationText").textContent = '"' + affText + '"';
-        document.getElementById("affirmationBox").style.display = "block";
+        document.getElementById("affCounterTotal").textContent = state.affTotal;
     }
     
     if (state.viewOnly) {
@@ -454,19 +548,26 @@ function init() {
         if (state.affTotal <= 0) {
             document.getElementById("step2").style.display = "none";
         }
+        document.getElementById("saveSection").style.display = "block";
         loadAudio();
+        updateVibrationUI();
     }
     
     buildGrid();
-    if (!state.viewOnly) {
-        updateUI();
-    }
     
-    // Bind buttons
-    document.getElementById("btnAdd1").onclick = function() { addCount(1); };
-    document.getElementById("btnAdd5").onclick = function() { addCount(5); };
-    document.getElementById("btnAdd10").onclick = function() { addCount(10); };
-    document.getElementById("mainBtn").onclick = function() { addCount(1); };
+    // Bind vibration buttons
+    document.getElementById("btnVibAdd1").onclick = function() { addVibration(1); };
+    document.getElementById("btnVibAdd5").onclick = function() { addVibration(5); };
+    document.getElementById("btnVibAdd10").onclick = function() { addVibration(10); };
+    document.getElementById("btnVibMain").onclick = function() { addVibration(1); };
+    
+    // Bind affirmation buttons
+    document.getElementById("btnAffAdd1").onclick = function() { addAffirmation(1); };
+    document.getElementById("btnAffAdd5").onclick = function() { addAffirmation(5); };
+    document.getElementById("btnAffAdd10").onclick = function() { addAffirmation(10); };
+    document.getElementById("btnAffMain").onclick = function() { addAffirmation(1); };
+    
+    // Bind save/close
     document.getElementById("btnSave").onclick = saveAndClose;
     document.getElementById("btnClose").onclick = closeWebApp;
     document.getElementById("btnOverlayClose").onclick = saveAndClose;
