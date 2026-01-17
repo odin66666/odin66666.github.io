@@ -37,8 +37,9 @@
         .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 10px 0; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #7b2cbf, #d4af37); transition: width 0.3s; }
         .counter-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .btn { padding: 12px; font-size: 1.1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; }
+        .btn { padding: 12px; font-size: 1.1rem; font-weight: bold; font-family: 'Cinzel', serif; border: none; border-radius: 10px; cursor: pointer; color: white; transition: opacity 0.3s; }
         .btn:active { transform: scale(0.95); }
+        .btn:disabled { cursor: not-allowed; transform: none; }
         .btn-add { background: linear-gradient(135deg, #7b2cbf, #9d4edd); }
         .btn-vibra { grid-column: span 3; padding: 15px; font-size: 1.2rem; background: linear-gradient(135deg, #d4af37, #c9a227); color: #1a1a1a; }
         .btn-save { grid-column: span 3; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #10b981, #059669); margin-top: 10px; }
@@ -152,6 +153,7 @@
             <button class="btn btn-add" id="btnAffAdd5">+5</button>
             <button class="btn btn-add" id="btnAffAdd10">+10</button>
             <button class="btn btn-vibra" id="btnAffMain">✍️ RECITA ✍️</button>
+            <button class="btn btn-save" id="btnAffSave">✅ SALVA E CHIUDI</button>
         </div>
     </div>
     
@@ -287,9 +289,12 @@ function addVibration(n) {
     updateVibrationUI();
     
     if (state.vibCount >= state.vibTotal) {
+        console.log("[SQUARE] Vibrations complete! affTotal=" + state.affTotal);
         if (state.affTotal > 0) {
+            console.log("[SQUARE] Will switch to affirmations in 800ms");
             setTimeout(switchToAffirmations, 800);
         } else {
+            console.log("[SQUARE] No affirmations, showing complete");
             setTimeout(showComplete, 500);
         }
     }
@@ -330,6 +335,7 @@ function checkMilestone(prev, curr, total) {
 }
 
 function switchToAffirmations() {
+    console.log("[SQUARE] switchToAffirmations called, affTotal=" + state.affTotal);
     state.phase = "affirmations";
     document.getElementById("step1").className = "step completed";
     document.getElementById("step2").className = "step active";
@@ -337,6 +343,8 @@ function switchToAffirmations() {
     document.getElementById("affirmationSection").style.display = "block";
     document.getElementById("dayInfo").style.display = "none";
     document.getElementById("mantraSection").style.display = "none";
+    document.getElementById("saveSection").style.display = "none";  // Nascondo, c'è già nella sezione affermazioni
+    console.log("[SQUARE] affirmationSection display:", document.getElementById("affirmationSection").style.display);
     updateAffirmationUI();
 }
 
@@ -357,6 +365,24 @@ function updateVibrationUI() {
     } else {
         msg.textContent = "";
     }
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnVibAdd5");
+    var btn10 = document.getElementById("btnVibAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
+    }
 }
 
 function updateAffirmationUI() {
@@ -375,6 +401,24 @@ function updateAffirmationUI() {
         msg.textContent = "⚡ ULTIME " + left + "! ⚡";
     } else {
         msg.textContent = "";
+    }
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnAffAdd5");
+    var btn10 = document.getElementById("btnAffAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
     }
 }
 
@@ -546,6 +590,7 @@ function init() {
     state.direction = params.get("direction") || "material";
     state.vibTotal = parseInt(params.get("vibrations")) || parseInt(params.get("total")) || 100;
     state.affTotal = parseInt(params.get("aff_reps")) || 0;
+    console.log("[SQUARE] aff_reps raw:", params.get("aff_reps"), "parsed affTotal:", state.affTotal);
     state.lang = params.get("lang") || "it";
     state.viewOnly = params.get("view_only") === "1";
     
@@ -605,6 +650,7 @@ function init() {
     document.getElementById("btnAffAdd5").onclick = function() { addAffirmation(5); };
     document.getElementById("btnAffAdd10").onclick = function() { addAffirmation(10); };
     document.getElementById("btnAffMain").onclick = function() { addAffirmation(1); };
+    document.getElementById("btnAffSave").onclick = saveAndClose;
     
     // Bind save/close
     document.getElementById("btnSave").onclick = saveAndClose;
