@@ -14,9 +14,11 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     @keyframes chakraPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px currentColor; } 50% { transform: scale(1.1); box-shadow: 0 0 40px currentColor; } }
     @keyframes countPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    @keyframes celebrate { 0% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.1) rotate(-5deg); } 50% { transform: scale(1) rotate(5deg); } 75% { transform: scale(1.1) rotate(-5deg); } 100% { transform: scale(1) rotate(0deg); } }
     .pulse { animation: pulse 1.5s ease-in-out infinite; }
     .chakra-pulse { animation: chakraPulse 2s ease-in-out infinite; }
     .count-pulse { animation: countPulse 0.3s ease-out; }
+    .celebrate { animation: celebrate 0.6s ease-out; }
     
     .container { max-width: 400px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
     .card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px); }
@@ -63,7 +65,7 @@
     const PARAM_SPELL_ID = urlParams.get('spell_id') || '';
     const PARAM_DAYS_DONE = parseInt(urlParams.get('days_done')) || 0;
     const PARAM_DAYS_REQUIRED = parseInt(urlParams.get('days_required')) || 4;
-    const PARAM_REPS = parseInt(urlParams.get('reps')) || 7;
+    const PARAM_REPS = parseInt(urlParams.get('reps')) || 7; // Ripetizioni FISSE
 
     // CHAKRA DATA
     const CHAKRAS = {
@@ -102,13 +104,14 @@
     function App() {
       const [screen, setScreen] = React.useState('home'); // home, counting, complete
       const [count, setCount] = React.useState(0);
-      const [reps, setReps] = React.useState(PARAM_REPS);
       const [sound, setSound] = React.useState(true);
       const [pulseKey, setPulseKey] = React.useState(0);
       const [startTime, setStartTime] = React.useState(null);
       const [elapsed, setElapsed] = React.useState(0);
+      const [dataSent, setDataSent] = React.useState(false);
 
-      const targetReps = reps;
+      // Ripetizioni FISSE (non modificabili dall'utente)
+      const targetReps = PARAM_REPS;
       const daysAfterComplete = PARAM_DAYS_DONE + 1;
       const willComplete = daysAfterComplete >= PARAM_DAYS_REQUIRED;
 
@@ -136,27 +139,32 @@
           else Audio.tick();
         }
 
-        if (newCount >= targetReps) {
+        if (newCount >= targetReps && !dataSent) {
+          // Suono completamento
           setTimeout(() => {
             if (sound) Audio.complete();
-            
-            // Invia dati al bot
-            const data = {
-              type: 'chakra_opening_complete',
-              user_id: PARAM_USER_ID,
-              chakra_id: PARAM_CHAKRA_ID,
-              spell_id: PARAM_SPELL_ID,
-              reps_done: targetReps,
-              duration: elapsed,
-              day_number: daysAfterComplete,
-              total_days: PARAM_DAYS_REQUIRED,
-              completed_at: new Date().toISOString()
-            };
-            sendToBot(data);
-            
-            // NON chiude automaticamente - mostra schermata completamento
+          }, 300);
+          
+          // Invia dati al bot PRIMA di mostrare completamento
+          const data = {
+            type: 'chakra_opening_complete',
+            user_id: PARAM_USER_ID,
+            chakra_id: PARAM_CHAKRA_ID,
+            spell_id: PARAM_SPELL_ID,
+            reps_done: targetReps,
+            duration: elapsed,
+            day_number: daysAfterComplete,
+            total_days: PARAM_DAYS_REQUIRED,
+            completed_at: new Date().toISOString()
+          };
+          sendToBot(data);
+          setDataSent(true);
+          
+          // Mostra schermata completamento dopo un delay più lungo
+          // NON si chiude automaticamente - l'utente deve premere CHIUDI
+          setTimeout(() => {
             setScreen('complete');
-          }, 800);
+          }, 2000);
         }
       };
 
@@ -164,6 +172,7 @@
         setCount(0);
         setStartTime(Date.now());
         setElapsed(0);
+        setDataSent(false);
         setScreen('counting');
       };
 
@@ -233,26 +242,11 @@
               <p className="text-xs font-mono text-center opacity-70">{chakra.pronunciation}</p>
             </div>
 
-            {/* REPS SELECTOR */}
-            <div className="card">
-              <p className="text-sm font-bold mb-2">🔢 RIPETIZIONI</p>
-              <div className="flex gap-2 flex-wrap justify-center">
-                {[3, 7, 9, 18, 36, 54, 108].map(n => (
-                  <button 
-                    key={n}
-                    onClick={() => setReps(n)}
-                    className="btn"
-                    style={{
-                      padding: '8px 14px',
-                      fontSize: 14,
-                      background: reps === n ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
-                      border: reps === n ? '2px solid rgba(255,255,255,0.5)' : '2px solid transparent'
-                    }}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
+            {/* RIPETIZIONI FISSE */}
+            <div className="card text-center">
+              <p className="text-sm opacity-70 mb-1">🔢 RIPETIZIONI</p>
+              <p className="text-4xl font-bold">{targetReps}x</p>
+              <p className="text-xs opacity-50 mt-1">Come da tradizione</p>
             </div>
 
             {/* SOUND TOGGLE */}
@@ -297,12 +291,13 @@
         const progress = (count / targetReps) * 100;
         const isPreLast = count === targetReps - 2;
         const isLast = count === targetReps - 1;
+        const isDone = count >= targetReps;
 
         return (
           <div 
             className="container tap-zone" 
             style={{ background: chakra.gradient }}
-            onClick={handleTap}
+            onClick={!isDone ? handleTap : undefined}
           >
             {/* Header */}
             <div className="flex justify-between items-center w-full p-3" style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
@@ -317,7 +312,7 @@
             {/* Main Counter */}
             <div className="text-center">
               <div 
-                className="chakra-circle"
+                className={`chakra-circle ${isDone ? 'celebrate' : ''}`}
                 style={{ 
                   background: 'rgba(255,255,255,0.15)',
                   margin: '0 auto 20px',
@@ -327,7 +322,7 @@
                   boxShadow: `0 0 ${20 + progress * 0.3}px ${chakra.color}`
                 }}
               >
-                🌀
+                {isDone ? '✨' : '🌀'}
               </div>
 
               <div 
@@ -341,6 +336,7 @@
 
               {isPreLast && <p className="text-lg mt-4 pulse" style={{ color: '#fde047' }}>⚡ Penultima!</p>}
               {isLast && <p className="text-xl font-bold mt-4 pulse" style={{ color: '#86efac' }}>🎯 ULTIMA!</p>}
+              {isDone && <p className="text-xl font-bold mt-4" style={{ color: '#86efac' }}>✅ COMPLETATO!</p>}
             </div>
 
             {/* Vibration Reminder */}
@@ -355,26 +351,30 @@
                 <div 
                   className="progress-fill"
                   style={{ 
-                    width: `${progress}%`,
+                    width: `${Math.min(progress, 100)}%`,
                     background: 'rgba(255,255,255,0.8)'
                   }}
                 />
               </div>
             </div>
 
-            {!isPreLast && !isLast && (
+            {!isPreLast && !isLast && !isDone && (
               <p className="text-sm opacity-50 mt-6 pulse">Tocca per vibrare</p>
+            )}
+            
+            {isDone && (
+              <p className="text-sm opacity-70 mt-6">Attendere...</p>
             )}
           </div>
         );
       }
 
-      // COMPLETE SCREEN
+      // COMPLETE SCREEN - NON si chiude automaticamente
       if (screen === 'complete') {
         return (
           <div className="container" style={{ background: chakra.gradient, justifyContent: 'center' }}>
             <div className="text-center">
-              <div className="text-6xl mb-4">✨</div>
+              <div className="text-6xl mb-4 celebrate">✨</div>
               <h1 className="text-2xl font-bold mb-2">
                 {willComplete ? '🎉 APERTURA COMPLETATA!' : 'Sessione Completata!'}
               </h1>
@@ -386,6 +386,10 @@
 
               {/* Stats */}
               <div className="card mb-4">
+                <div className="flex justify-between mb-2">
+                  <span className="opacity-70">Chakra:</span>
+                  <span className="font-bold">{chakra.name}</span>
+                </div>
                 <div className="flex justify-between mb-2">
                   <span className="opacity-70">Vibrazioni:</span>
                   <span className="font-bold">{targetReps}x {chakra.vibration}</span>
@@ -421,7 +425,7 @@
 
               {willComplete ? (
                 <div className="card" style={{ background: 'rgba(34, 197, 94, 0.3)' }}>
-                  <p className="text-sm">🌟 Chakra {chakra.name} aperto!</p>
+                  <p className="text-sm font-bold">🌟 Chakra {chakra.name} aperto!</p>
                   <p className="text-xs opacity-70 mt-1">Ora puoi passare al prossimo chakra.</p>
                 </div>
               ) : (
@@ -431,13 +435,22 @@
                 </div>
               )}
 
+              {/* BOTTONE CHIUDI MANUALE - L'UTENTE DEVE PREMERLO */}
               <button 
                 onClick={closeApp}
                 className="btn btn-primary w-full mt-4"
-                style={{ padding: 16 }}
+                style={{ 
+                  padding: 18,
+                  fontSize: 18,
+                  background: 'rgba(255,255,255,0.3)'
+                }}
               >
-                ✓ CHIUDI
+                ✓ CHIUDI E TORNA AL BOT
               </button>
+              
+              <p className="text-xs opacity-50 mt-3">
+                I dati sono stati salvati automaticamente
+              </p>
             </div>
           </div>
         );
