@@ -103,7 +103,7 @@ const CITY = P.get('city') || 'Roma';
 const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
 
-// FIX: check esplicito per null perché 0 || 1 = 1
+// FIX: check esplicito per null
 const tzParam = P.get('tz');
 const TZ = tzParam !== null ? parseFloat(tzParam) : 1;
 
@@ -131,44 +131,26 @@ function minToStr(min) {
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// Calcola timezone locale dal browser
-// getTimezoneOffset() restituisce minuti da AGGIUNGERE per ottenere UTC
-// Es: UK (GMT) = 0, Italia (CET) = -60
-// Quindi LOCAL_TZ in ore = -getTimezoneOffset() / 60
-function getLocalTZ() {
-  return -new Date().getTimezoneOffset() / 60;
+// USA DIRETTAMENTE L'ORA DEL BROWSER
+// L'utente seleziona la città in cui si trova, quindi l'ora è già corretta
+function getNowMinutes() {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
 }
 
-// Converti ora locale in ora della città target
-function getCityMinutes() {
+function getNowSeconds() {
   const now = new Date();
-  const localMin = now.getHours() * 60 + now.getMinutes();
-  const localTZ = getLocalTZ();
-  
-  // cityMin = localMin + (targetTZ - localTZ) * 60
-  const diffHours = TZ - localTZ;
-  const cityMin = localMin + (diffHours * 60);
-  
-  return cityMin;
-}
-
-function getCityDayOfWeek() {
-  const now = new Date();
-  const localMin = now.getHours() * 60 + now.getMinutes();
-  const localTZ = getLocalTZ();
-  const diffHours = TZ - localTZ;
-  const cityMin = localMin + (diffHours * 60);
-  
-  let day = now.getDay();
-  if (cityMin >= 1440) day = (day + 1) % 7;
-  if (cityMin < 0) day = (day + 6) % 7;
-  return day;
+  return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 }
 
 function getDayOfYear() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   return Math.floor((now - start) / 86400000);
+}
+
+function getDayOfWeek() {
+  return new Date().getDay();
 }
 
 function sunTimesMin(lat, lon, doy, tz) {
@@ -259,14 +241,15 @@ function mkRow(h, nowMin, cur) {
 let DATA = null;
 
 function init() {
-  const nowMin = getCityMinutes();
+  const nowMin = getNowMinutes();
   const doy = getDayOfYear();
-  const dow = getCityDayOfWeek();
+  const dow = getDayOfWeek();
   
   DATA = calcHours(LAT, LON, doy, TZ, dow);
   const cur = getCur(DATA.hrs, nowMin);
   
-  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + minToStr(nowMin);
+  // Mostra ora corrente direttamente dal browser
+  document.getElementById('localTime').textContent = '🕐 Ora: ' + minToStr(nowMin);
   
   const days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
   const now = new Date();
@@ -298,15 +281,19 @@ function init() {
 
 function updateCD() {
   if (!DATA) return;
-  const nowMin = getCityMinutes();
+  const nowSec = getNowSeconds();
+  const nowMin = Math.floor(nowSec / 60);
   const cur = getCur(DATA.hrs, nowMin);
   
   if (cur) {
-    let rem = cur.en - nowMin;
-    if (rem < 0) rem += 1440;
-    document.getElementById('cdText').textContent = Math.floor(rem) + 'm';
+    const endSec = Math.floor(cur.en * 60);
+    let rem = endSec - nowSec;
+    if (rem < 0) rem += 86400;
+    const m = Math.floor(rem / 60);
+    const s = Math.floor(rem % 60);
+    document.getElementById('cdText').textContent = m + 'm ' + s + 's';
   }
-  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + minToStr(nowMin);
+  document.getElementById('localTime').textContent = '🕐 Ora: ' + minToStr(nowMin);
 }
 
 function showTab(which) {
