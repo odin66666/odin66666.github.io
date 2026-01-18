@@ -109,11 +109,30 @@
       const [startTime, setStartTime] = React.useState(null);
       const [elapsed, setElapsed] = React.useState(0);
       const [dataSent, setDataSent] = React.useState(false);
+      const [finalElapsed, setFinalElapsed] = React.useState(0); // Tempo al completamento
 
       // Ripetizioni FISSE (non modificabili dall'utente)
       const targetReps = PARAM_REPS;
       const daysAfterComplete = PARAM_DAYS_DONE + 1;
       const willComplete = daysAfterComplete >= PARAM_DAYS_REQUIRED;
+      
+      // Funzione per chiudere: invia dati E chiude
+      const handleClose = () => {
+        // Invia dati al bot
+        const data = {
+          type: 'chakra_opening_complete',
+          user_id: PARAM_USER_ID,
+          chakra_id: PARAM_CHAKRA_ID,
+          spell_id: PARAM_SPELL_ID,
+          reps_done: targetReps,
+          duration: finalElapsed,
+          day_number: daysAfterComplete,
+          total_days: PARAM_DAYS_REQUIRED,
+          completed_at: new Date().toISOString()
+        };
+        sendToBot(data);
+        // sendToBot chiuderà automaticamente la webapp
+      };
 
       // Timer
       React.useEffect(() => {
@@ -140,31 +159,22 @@
         }
 
         if (newCount >= targetReps && !dataSent) {
+          // Salva il tempo finale
+          setFinalElapsed(elapsed);
+          
           // Suono completamento
           setTimeout(() => {
             if (sound) Audio.complete();
           }, 300);
           
-          // Invia dati al bot PRIMA di mostrare completamento
-          const data = {
-            type: 'chakra_opening_complete',
-            user_id: PARAM_USER_ID,
-            chakra_id: PARAM_CHAKRA_ID,
-            spell_id: PARAM_SPELL_ID,
-            reps_done: targetReps,
-            duration: elapsed,
-            day_number: daysAfterComplete,
-            total_days: PARAM_DAYS_REQUIRED,
-            completed_at: new Date().toISOString()
-          };
-          sendToBot(data);
+          // NON inviamo i dati qui - li invieremo quando l'utente preme CHIUDI
+          // Altrimenti Telegram chiude automaticamente la webapp!
           setDataSent(true);
           
-          // Mostra schermata completamento dopo un delay più lungo
-          // NON si chiude automaticamente - l'utente deve premere CHIUDI
+          // Mostra schermata completamento dopo un delay
           setTimeout(() => {
             setScreen('complete');
-          }, 2000);
+          }, 1500);
         }
       };
 
@@ -437,7 +447,7 @@
 
               {/* BOTTONE CHIUDI MANUALE - L'UTENTE DEVE PREMERLO */}
               <button 
-                onClick={closeApp}
+                onClick={handleClose}
                 className="btn btn-primary w-full mt-4"
                 style={{ 
                   padding: 18,
@@ -445,11 +455,11 @@
                   background: 'rgba(255,255,255,0.3)'
                 }}
               >
-                ✓ CHIUDI E TORNA AL BOT
+                ✓ SALVA E CHIUDI
               </button>
               
               <p className="text-xs opacity-50 mt-3">
-                I dati sono stati salvati automaticamente
+                Premi il bottone per salvare i progressi
               </p>
             </div>
           </div>
