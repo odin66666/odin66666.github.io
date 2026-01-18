@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ore Planetarie v2</title>
+  <title>Ore Planetarie</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -57,6 +57,7 @@
     .c-venus { color: var(--venus); } .c-saturn { color: var(--saturn); }
     
     .hide { display: none !important; }
+    .localtime { font-size: 11px; color: var(--gold); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -65,6 +66,7 @@
     <h1>⏰ ORE PLANETARIE</h1>
     <div class="loc" id="locText">📍 Caricamento...</div>
     <div class="date" id="dateText"></div>
+    <div class="localtime" id="localTime"></div>
   </div>
   
   <div class="ruler">
@@ -103,8 +105,7 @@ const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
 const TZ = parseFloat(P.get('tz')) || 1;
 
-// Mostra città
-document.getElementById('locText').textContent = '📍 ' + CITY + ' (' + LAT.toFixed(2) + ', ' + LON.toFixed(2) + ')';
+document.getElementById('locText').textContent = '📍 ' + CITY;
 
 const PLANETS = {
   sun: { s: '☉', n: 'Sole', c: 'c-sun' },
@@ -116,7 +117,16 @@ const PLANETS = {
   saturn: { s: '♄', n: 'Saturno', c: 'c-saturn' }
 };
 const SEQ = ['saturn','jupiter','mars','sun','venus','mercury','moon'];
-const RULERS = {0:'moon',1:'mars',2:'mercury',3:'jupiter',4:'venus',5:'saturn',6:'sun'};
+const RULERS = {0:'sun',1:'moon',2:'mars',3:'mercury',4:'jupiter',5:'venus',6:'saturn'};
+
+// Converti ora locale in ora della città target
+function getCityTime() {
+  const now = new Date();
+  // Ottieni timestamp UTC
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  // Aggiungi offset della città target
+  return new Date(utcMs + TZ * 3600000);
+}
 
 function sunTimes(lat, lon, d, tz) {
   const doy = Math.floor((d - new Date(d.getFullYear(),0,0)) / 86400000);
@@ -141,7 +151,8 @@ function calcHours(lat, lon, d, tz) {
   const { sr: nsr } = sunTimes(lat, lon, tom, tz);
   const dayL = (ss - sr) / 12;
   const nightL = (nsr - ss) / 12;
-  const wd = (d.getDay()+6) % 7;
+  // Domenica = 0, Lunedì = 1, etc
+  const wd = d.getDay();
   const ruler = RULERS[wd];
   const ri = SEQ.indexOf(ruler);
   const hrs = [];
@@ -182,9 +193,13 @@ function mkRow(h, now, cur) {
 let DATA = null;
 
 function init() {
-  const now = new Date();
+  // USA ORA DELLA CITTÀ, NON ORA LOCALE!
+  const now = getCityTime();
   DATA = calcHours(LAT, LON, now, TZ);
   const cur = getCur(DATA.hrs, now);
+  
+  // Mostra ora locale della città
+  document.getElementById('localTime').textContent = '🕐 Ora locale: ' + fmt(now);
   
   // Date
   document.getElementById('dateText').textContent = now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -219,7 +234,7 @@ function init() {
 
 function updateCD() {
   if (!DATA) return;
-  const now = new Date();
+  const now = getCityTime();
   const cur = getCur(DATA.hrs, now);
   if (cur) {
     const rem = Math.max(0, Math.floor((cur.en - now) / 1000));
@@ -227,9 +242,10 @@ function updateCD() {
     const s = rem % 60;
     document.getElementById('cdText').textContent = m + 'm ' + s + 's';
   }
+  // Aggiorna ora locale
+  document.getElementById('localTime').textContent = '🕐 Ora locale: ' + fmt(now);
 }
 
-// TAB SWITCH - SEMPLICE
 function showTab(which) {
   const gDay = document.getElementById('gridDay');
   const gNight = document.getElementById('gridNight');
@@ -249,7 +265,6 @@ function showTab(which) {
   }
 }
 
-// START
 init();
 setInterval(updateCD, 1000);
 </script>
