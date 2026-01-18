@@ -103,13 +103,9 @@ const CITY = P.get('city') || 'Roma';
 const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
 
-// FIX: 0 || 1 = 1, quindi usiamo check esplicito per null
+// FIX: check esplicito per null perché 0 || 1 = 1
 const tzParam = P.get('tz');
 const TZ = tzParam !== null ? parseFloat(tzParam) : 1;
-
-// Timezone locale dell'utente (passato dal bot)
-const localTzParam = P.get('local_tz');
-const LOCAL_TZ = localTzParam !== null ? parseFloat(localTzParam) : 1;  // Default Italia
 
 document.getElementById('locText').textContent = '📍 ' + CITY;
 
@@ -135,21 +131,32 @@ function minToStr(min) {
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// Converti ora locale del dispositivo in ora della città target
-// Formula: cityTime = localTime + (targetTZ - localTZ) * 60
+// Calcola timezone locale dal browser
+// getTimezoneOffset() restituisce minuti da AGGIUNGERE per ottenere UTC
+// Es: UK (GMT) = 0, Italia (CET) = -60
+// Quindi LOCAL_TZ in ore = -getTimezoneOffset() / 60
+function getLocalTZ() {
+  return -new Date().getTimezoneOffset() / 60;
+}
+
+// Converti ora locale in ora della città target
 function getCityMinutes() {
   const now = new Date();
   const localMin = now.getHours() * 60 + now.getMinutes();
-  // Differenza tra timezone città e timezone utente
-  const diffHours = TZ - LOCAL_TZ;
+  const localTZ = getLocalTZ();
+  
+  // cityMin = localMin + (targetTZ - localTZ) * 60
+  const diffHours = TZ - localTZ;
   const cityMin = localMin + (diffHours * 60);
+  
   return cityMin;
 }
 
 function getCityDayOfWeek() {
   const now = new Date();
   const localMin = now.getHours() * 60 + now.getMinutes();
-  const diffHours = TZ - LOCAL_TZ;
+  const localTZ = getLocalTZ();
+  const diffHours = TZ - localTZ;
   const cityMin = localMin + (diffHours * 60);
   
   let day = now.getDay();
