@@ -58,6 +58,7 @@
     
     .hide { display: none !important; }
     .localtime { font-size: 11px; color: var(--gold); margin-top: 4px; }
+    .debug { font-size: 9px; color: #666; margin-top: 8px; padding: 8px; background: #111; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -92,13 +93,15 @@
   
   <div class="grid" id="gridDay"></div>
   <div class="grid hide" id="gridNight"></div>
+  
+  <div class="debug" id="debug"></div>
 </div>
 
 <script>
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// LEGGI PARAMETRI
+// PARAMETRI URL
 const P = new URLSearchParams(window.location.search);
 const CITY = P.get('city') || 'Roma';
 const LAT = parseFloat(P.get('lat')) || 41.9028;
@@ -116,74 +119,103 @@ const PLANETS = {
   venus: { s: '♀', n: 'Venere', c: 'c-venus' },
   saturn: { s: '♄', n: 'Saturno', c: 'c-saturn' }
 };
-const SEQ = ['saturn','jupiter','mars','sun','venus','mercury','moon'];
-const RULERS = {0:'sun',1:'moon',2:'mars',3:'mercury',4:'jupiter',5:'venus',6:'saturn'};
 
-// Converti ora locale in ora della città target
+// SEQUENZA CALDEA - IDENTICA AL PYTHON
+const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
+
+// REGGENTI GIORNI - IDENTICO AL PYTHON (0=Lunedì, 6=Domenica)
+const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
+
+// Ottieni ora della città (converte da ora locale a ora città)
 function getCityTime() {
   const now = new Date();
-  // Ottieni timestamp UTC
   const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  // Aggiungi offset della città target
   return new Date(utcMs + TZ * 3600000);
 }
 
+// Calcola alba/tramonto - IDENTICO AL PYTHON
 function sunTimes(lat, lon, d, tz) {
-  const doy = Math.floor((d - new Date(d.getFullYear(),0,0)) / 86400000);
-  const lr = lat * Math.PI / 180;
-  const dec = -23.45 * Math.cos(2*Math.PI/365*(doy+10));
-  const dr = dec * Math.PI / 180;
-  const B = 2*Math.PI/365*(doy-81);
-  const eot = 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
-  const z = 90.833 * Math.PI / 180;
-  let cH = (Math.cos(z) - Math.sin(lr)*Math.sin(dr)) / (Math.cos(lr)*Math.cos(dr));
-  cH = Math.max(-1, Math.min(1, cH));
-  const H = Math.acos(cH) * 180 / Math.PI;
-  const noon = 720 - lon*4 - eot;
-  const sr = new Date(d); sr.setHours(0,0,0,0); sr.setMinutes(noon - H*4 + tz*60);
-  const ss = new Date(d); ss.setHours(0,0,0,0); ss.setMinutes(noon + H*4 + tz*60);
+  const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  const latRad = lat * Math.PI / 180;
+  const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
+  const decRad = dec * Math.PI / 180;
+  const B = 2 * Math.PI / 365 * (doy - 81);
+  const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  const zenith = 90.833 * Math.PI / 180;
+  
+  let cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+  cosH = Math.max(-1, Math.min(1, cosH));
+  const H = Math.acos(cosH) * 180 / Math.PI;
+  
+  const noon = 720 - (lon * 4) - eot;
+  const srMin = noon - (H * 4) + (tz * 60);
+  const ssMin = noon + (H * 4) + (tz * 60);
+  
+  const sr = new Date(d); sr.setHours(0, 0, 0, 0); sr.setMinutes(srMin);
+  const ss = new Date(d); ss.setHours(0, 0, 0, 0); ss.setMinutes(ssMin);
   return { sr, ss };
 }
 
+// Calcola ore planetarie - IDENTICO AL PYTHON
 function calcHours(lat, lon, d, tz) {
   const { sr, ss } = sunTimes(lat, lon, d, tz);
-  const tom = new Date(d); tom.setDate(tom.getDate()+1);
-  const { sr: nsr } = sunTimes(lat, lon, tom, tz);
-  const dayL = (ss - sr) / 12;
-  const nightL = (nsr - ss) / 12;
-  // Domenica = 0, Lunedì = 1, etc
-  const wd = d.getDay();
-  const ruler = RULERS[wd];
+  
+  // Alba di domani per calcolo notte
+  const tom = new Date(d); tom.setDate(tom.getDate() + 1);
+  const { sr: nextSr } = sunTimes(lat, lon, tom, tz);
+  
+  const dayLen = (ss - sr) / 12;
+  const nightLen = (nextSr - ss) / 12;
+  
+  // CONVERSIONE GIORNO: JS getDay() 0=Dom, Python weekday() 0=Lun
+  // Converto da JS a Python: (jsDay + 6) % 7
+  const jsDay = d.getDay();
+  const pyDay = (jsDay + 6) % 7;  // 0=Lun, 6=Dom come Python
+  
+  const ruler = RULERS[pyDay];
   const ri = SEQ.indexOf(ruler);
+  
   const hrs = [];
+  
+  // Ore diurne
   let t = new Date(sr);
-  for (let i=0; i<12; i++) {
-    const p = SEQ[(ri+i)%7];
-    const e = new Date(t.getTime() + dayL);
-    hrs.push({ num: i+1, p, st: new Date(t), en: e, day: true });
+  for (let i = 0; i < 12; i++) {
+    const pIdx = (ri + i) % 7;
+    const p = SEQ[pIdx];
+    const e = new Date(t.getTime() + dayLen);
+    hrs.push({ num: i + 1, p, st: new Date(t), en: e, day: true });
     t = e;
   }
+  
+  // Ore notturne
   t = new Date(ss);
-  for (let i=0; i<12; i++) {
-    const p = SEQ[(ri+12+i)%7];
-    const e = new Date(t.getTime() + nightL);
-    hrs.push({ num: i+13, p, st: new Date(t), en: e, day: false });
+  for (let i = 0; i < 12; i++) {
+    const pIdx = (ri + 12 + i) % 7;
+    const p = SEQ[pIdx];
+    const e = new Date(t.getTime() + nightLen);
+    hrs.push({ num: i + 13, p, st: new Date(t), en: e, day: false });
     t = e;
   }
-  return { hrs, sr, ss, ruler };
+  
+  return { hrs, sr, ss, ruler, pyDay, jsDay };
 }
 
-function fmt(d) { return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+function fmt(d) { 
+  return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); 
+}
 
 function getCur(hrs, now) {
-  for (const h of hrs) if (now >= h.st && now < h.en) return h;
+  const nowMs = now.getTime();
+  for (const h of hrs) {
+    if (nowMs >= h.st.getTime() && nowMs < h.en.getTime()) return h;
+  }
   return null;
 }
 
 function mkRow(h, now, cur) {
   const pl = PLANETS[h.p];
   const isCur = cur && h.num === cur.num;
-  const isPast = now >= h.en;
+  const isPast = now.getTime() >= h.en.getTime();
   let cls = 'row';
   if (isCur) cls += ' cur';
   else if (isPast) cls += ' past';
@@ -193,26 +225,27 @@ function mkRow(h, now, cur) {
 let DATA = null;
 
 function init() {
-  // USA ORA DELLA CITTÀ, NON ORA LOCALE!
   const now = getCityTime();
   DATA = calcHours(LAT, LON, now, TZ);
   const cur = getCur(DATA.hrs, now);
   
-  // Mostra ora locale della città
-  document.getElementById('localTime').textContent = '🕐 Ora locale: ' + fmt(now);
+  // Debug
+  let dbg = `Città: ${CITY} | Lat: ${LAT} | Lon: ${LON} | TZ: ${TZ}\n`;
+  dbg += `Ora città: ${fmt(now)} | JS day: ${DATA.jsDay} | Py day: ${DATA.pyDay}\n`;
+  dbg += `Reggente: ${DATA.ruler} | Alba: ${fmt(DATA.sr)} | Tramonto: ${fmt(DATA.ss)}\n`;
+  if (cur) dbg += `Ora corrente: #${cur.num} ${cur.p} (${fmt(cur.st)}-${fmt(cur.en)})`;
+  else dbg += `Ora corrente: NESSUNA TROVATA!`;
+  document.getElementById('debug').textContent = dbg;
   
-  // Date
-  document.getElementById('dateText').textContent = now.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + fmt(now);
+  document.getElementById('dateText').textContent = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   
-  // Ruler
   const rl = PLANETS[DATA.ruler];
   document.getElementById('rulerText').innerHTML = `<span class="${rl.c}">${rl.s} ${rl.n}</span>`;
   
-  // Sun times
   document.getElementById('srText').textContent = fmt(DATA.sr);
   document.getElementById('ssText').textContent = fmt(DATA.ss);
   
-  // Current
   if (cur) {
     const pl = PLANETS[cur.p];
     document.getElementById('curSym').textContent = pl.s;
@@ -225,7 +258,6 @@ function init() {
     document.getElementById('curBanner').style.display = 'none';
   }
   
-  // Grids
   const dayH = DATA.hrs.filter(h => h.day);
   const nightH = DATA.hrs.filter(h => !h.day);
   document.getElementById('gridDay').innerHTML = dayH.map(h => mkRow(h, now, cur)).join('');
@@ -237,32 +269,17 @@ function updateCD() {
   const now = getCityTime();
   const cur = getCur(DATA.hrs, now);
   if (cur) {
-    const rem = Math.max(0, Math.floor((cur.en - now) / 1000));
-    const m = Math.floor(rem / 60);
-    const s = rem % 60;
-    document.getElementById('cdText').textContent = m + 'm ' + s + 's';
+    const rem = Math.max(0, Math.floor((cur.en.getTime() - now.getTime()) / 1000));
+    document.getElementById('cdText').textContent = Math.floor(rem / 60) + 'm ' + (rem % 60) + 's';
   }
-  // Aggiorna ora locale
-  document.getElementById('localTime').textContent = '🕐 Ora locale: ' + fmt(now);
+  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + fmt(now);
 }
 
 function showTab(which) {
-  const gDay = document.getElementById('gridDay');
-  const gNight = document.getElementById('gridNight');
-  const tDay = document.getElementById('tabDay');
-  const tNight = document.getElementById('tabNight');
-  
-  if (which === 'day') {
-    gDay.classList.remove('hide');
-    gNight.classList.add('hide');
-    tDay.classList.add('on');
-    tNight.classList.remove('on');
-  } else {
-    gDay.classList.add('hide');
-    gNight.classList.remove('hide');
-    tDay.classList.remove('on');
-    tNight.classList.add('on');
-  }
+  document.getElementById('gridDay').classList.toggle('hide', which !== 'day');
+  document.getElementById('gridNight').classList.toggle('hide', which !== 'night');
+  document.getElementById('tabDay').classList.toggle('on', which === 'day');
+  document.getElementById('tabNight').classList.toggle('on', which === 'night');
 }
 
 init();
