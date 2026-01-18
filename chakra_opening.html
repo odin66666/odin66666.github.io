@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Apertura Chakra</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; color: #fff; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    @keyframes chakraPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px currentColor; } 50% { transform: scale(1.1); box-shadow: 0 0 40px currentColor; } }
+    @keyframes countPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .pulse { animation: pulse 1.5s ease-in-out infinite; }
+    .chakra-pulse { animation: chakraPulse 2s ease-in-out infinite; }
+    .count-pulse { animation: countPulse 0.3s ease-out; }
+    
+    .container { max-width: 400px; margin: 0 auto; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; }
+    .card { background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; backdrop-filter: blur(10px); }
+    .btn { padding: 14px 28px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+    .btn-primary { background: rgba(255,255,255,0.2); color: white; }
+    .btn-primary:active { transform: scale(0.98); background: rgba(255,255,255,0.3); }
+    
+    .text-center { text-align: center; }
+    .text-xs { font-size: 12px; } .text-sm { font-size: 14px; } .text-lg { font-size: 18px; }
+    .text-xl { font-size: 22px; } .text-2xl { font-size: 28px; } .text-4xl { font-size: 40px; }
+    .text-6xl { font-size: 64px; } .text-8xl { font-size: 96px; }
+    .font-bold { font-weight: bold; } .font-mono { font-family: monospace; }
+    .opacity-70 { opacity: 0.7; } .opacity-50 { opacity: 0.5; }
+    
+    .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+    .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; }
+    .p-3 { padding: 12px; } .p-4 { padding: 16px; }
+    
+    .flex { display: flex; } .flex-col { flex-direction: column; } .flex-1 { flex: 1; }
+    .items-center { align-items: center; } .justify-center { justify-content: center; } .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+    .w-full { width: 100%; }
+    
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    
+    .chakra-circle { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+    .day-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.3s; }
+    
+    .vibration-box { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 16px; }
+    .tap-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    // URL PARAMS
+    const urlParams = new URLSearchParams(window.location.search);
+    const PARAM_USER_ID = urlParams.get('user_id') || '';
+    const PARAM_CHAKRA_ID = urlParams.get('chakra_id') || 'crown';
+    const PARAM_SPELL_ID = urlParams.get('spell_id') || '';
+    const PARAM_DAYS_DONE = parseInt(urlParams.get('days_done')) || 0;
+    const PARAM_DAYS_REQUIRED = parseInt(urlParams.get('days_required')) || 4;
+    const PARAM_REPS = parseInt(urlParams.get('reps')) || 7;
+
+    // CHAKRA DATA
+    const CHAKRAS = {
+      crown: { name: 'Corona', skt: 'Sahasrara', color: '#8B5CF6', gradient: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)', vibration: 'MAUM', pronunciation: 'M-M-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Governa: Lilith', day: 'Giovedì' },
+      sixth: { name: '6° Chakra', skt: 'Ajna', color: '#4F46E5', gradient: 'linear-gradient(135deg, #3730a3 0%, #4f46e5 50%, #818cf8 100%)', vibration: 'THAUM', pronunciation: 'TH-TH-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Terzo Occhio', day: 'Lunedì' },
+      throat: { name: 'Gola', skt: 'Vishuddha', color: '#06B6D4', gradient: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #67e8f9 100%)', vibration: 'HAUM', pronunciation: 'HH-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Comunicazione', day: 'Mercoledì' },
+      heart: { name: 'Cuore', skt: 'Anahata', color: '#22C55E', gradient: 'linear-gradient(135deg, #15803d 0%, #22c55e 50%, #86efac 100%)', vibration: 'YAUM', pronunciation: 'Y-Y-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Amore', day: 'Venerdì' },
+      solar: { name: 'Plesso Solare', skt: 'Manipura', color: '#EAB308', gradient: 'linear-gradient(135deg, #ca8a04 0%, #eab308 50%, #fde047 100%)', vibration: 'RAUM', pronunciation: 'R-R-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Governa: Azazel', day: 'Domenica' },
+      sacral: { name: 'Sacrale', skt: 'Svadhisthana', color: '#F97316', gradient: 'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fdba74 100%)', vibration: 'VAUM', pronunciation: 'V-V-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Creatività', day: 'Martedì' },
+      root: { name: 'Base', skt: 'Muladhara', color: '#EF4444', gradient: 'linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #fca5a5 100%)', vibration: 'LAUM', pronunciation: 'L-L-AH-AH-AH-U-U-U-U-M-M-M-M', note: 'Governa: Satana', day: 'Sabato' }
+    };
+
+    const chakra = CHAKRAS[PARAM_CHAKRA_ID] || CHAKRAS.crown;
+
+    // AUDIO
+    const Audio = {
+      ctx: null,
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); return this.ctx; },
+      tone(f, d, t = 'sine', v = 0.3) {
+        try { const c = this.init(), o = c.createOscillator(), g = c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value = f; o.type = t; g.gain.setValueAtTime(v, c.currentTime); g.gain.exponentialRampToValueAtTime(0.01, c.currentTime + d); o.start(c.currentTime); o.stop(c.currentTime + d); } catch(e) {}
+      },
+      tick() { this.tone(600, 0.08, 'sine', 0.15); },
+      preLast() { this.tone(880, 0.2, 'sine', 0.25); },
+      last() { this.tone(523, 0.4); setTimeout(() => this.tone(659, 0.4), 100); setTimeout(() => this.tone(784, 0.6), 200); },
+      complete() { [523, 587, 659, 698, 784, 880, 988, 1047].forEach((f, i) => setTimeout(() => this.tone(f, 0.35, 'sine', 0.25), i * 120)); }
+    };
+
+    const sendToBot = (data) => {
+      if (tg && typeof tg.sendData === 'function') {
+        try { tg.sendData(JSON.stringify(data)); return true; } catch (e) { return false; }
+      }
+      return false;
+    };
+    const closeApp = () => { if (tg && tg.close) tg.close(); };
+
+    function App() {
+      const [screen, setScreen] = React.useState('home'); // home, counting, complete
+      const [count, setCount] = React.useState(0);
+      const [reps, setReps] = React.useState(PARAM_REPS);
+      const [sound, setSound] = React.useState(true);
+      const [pulseKey, setPulseKey] = React.useState(0);
+      const [startTime, setStartTime] = React.useState(null);
+      const [elapsed, setElapsed] = React.useState(0);
+
+      const targetReps = reps;
+      const daysAfterComplete = PARAM_DAYS_DONE + 1;
+      const willComplete = daysAfterComplete >= PARAM_DAYS_REQUIRED;
+
+      // Timer
+      React.useEffect(() => {
+        let interval;
+        if (screen === 'counting' && startTime) {
+          interval = setInterval(() => {
+            setElapsed(Math.floor((Date.now() - startTime) / 1000));
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [screen, startTime]);
+
+      const handleTap = () => {
+        if (screen !== 'counting') return;
+        
+        const newCount = count + 1;
+        setCount(newCount);
+        setPulseKey(k => k + 1);
+
+        if (sound) {
+          if (newCount === targetReps - 1) Audio.preLast();
+          else if (newCount === targetReps) Audio.last();
+          else Audio.tick();
+        }
+
+        if (newCount >= targetReps) {
+          setTimeout(() => {
+            if (sound) Audio.complete();
+            
+            // Invia dati al bot
+            const data = {
+              type: 'chakra_opening_complete',
+              user_id: PARAM_USER_ID,
+              chakra_id: PARAM_CHAKRA_ID,
+              spell_id: PARAM_SPELL_ID,
+              reps_done: targetReps,
+              duration: elapsed,
+              day_number: daysAfterComplete,
+              total_days: PARAM_DAYS_REQUIRED,
+              completed_at: new Date().toISOString()
+            };
+            sendToBot(data);
+            
+            setScreen('complete');
+          }, 500);
+        }
+      };
+
+      const startSession = () => {
+        setCount(0);
+        setStartTime(Date.now());
+        setElapsed(0);
+        setScreen('counting');
+      };
+
+      const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+
+      // HOME SCREEN
+      if (screen === 'home') {
+        return (
+          <div className="container" style={{ background: chakra.gradient }}>
+            <div className="text-center mb-4" style={{ paddingTop: 20 }}>
+              <div 
+                className="chakra-circle chakra-pulse" 
+                style={{ 
+                  background: 'rgba(255,255,255,0.15)', 
+                  color: '#fff',
+                  margin: '0 auto',
+                  boxShadow: `0 0 30px ${chakra.color}66`
+                }}
+              >
+                🌀
+              </div>
+              <h1 className="text-xl font-bold mt-4">{chakra.name}</h1>
+              <p className="text-sm opacity-70">{chakra.skt} • {chakra.day}</p>
+              {chakra.note && <p className="text-xs opacity-50 mt-1">✨ {chakra.note}</p>}
+            </div>
+
+            {/* PROGRESS */}
+            <div className="card">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-bold">📊 PROGRESSO</span>
+                <span className="text-sm">{PARAM_DAYS_DONE}/{PARAM_DAYS_REQUIRED} giorni</span>
+              </div>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ 
+                    width: `${(PARAM_DAYS_DONE / PARAM_DAYS_REQUIRED) * 100}%`,
+                    background: 'rgba(255,255,255,0.8)'
+                  }}
+                />
+              </div>
+              <div className="flex justify-center gap-3 mt-3">
+                {[...Array(PARAM_DAYS_REQUIRED)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="day-dot"
+                    style={{
+                      background: i < PARAM_DAYS_DONE ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
+                      color: i < PARAM_DAYS_DONE ? chakra.color : 'rgba(255,255,255,0.5)'
+                    }}
+                  >
+                    {i < PARAM_DAYS_DONE ? '✓' : i + 1}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-center opacity-70 mt-2">
+                {PARAM_DAYS_DONE === 0 ? 'Inizia oggi!' : 
+                 PARAM_DAYS_DONE >= PARAM_DAYS_REQUIRED ? '✅ Completato!' :
+                 `Mancano ${PARAM_DAYS_REQUIRED - PARAM_DAYS_DONE} giorni`}
+              </p>
+            </div>
+
+            {/* VIBRATION */}
+            <div className="card vibration-box">
+              <p className="text-xs opacity-70 mb-1">🔊 VIBRAZIONE</p>
+              <p className="text-2xl font-bold text-center mb-2">{chakra.vibration}</p>
+              <p className="text-xs font-mono text-center opacity-70">{chakra.pronunciation}</p>
+            </div>
+
+            {/* REPS SELECTOR */}
+            <div className="card">
+              <p className="text-sm font-bold mb-2">🔢 RIPETIZIONI</p>
+              <div className="flex gap-2 flex-wrap justify-center">
+                {[3, 7, 9, 18, 36, 54, 108].map(n => (
+                  <button 
+                    key={n}
+                    onClick={() => setReps(n)}
+                    className="btn"
+                    style={{
+                      padding: '8px 14px',
+                      fontSize: 14,
+                      background: reps === n ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
+                      border: reps === n ? '2px solid rgba(255,255,255,0.5)' : '2px solid transparent'
+                    }}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SOUND TOGGLE */}
+            <div className="flex justify-center mb-4">
+              <button 
+                onClick={() => setSound(!sound)}
+                className="btn"
+                style={{ 
+                  padding: '10px 20px',
+                  background: sound ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'
+                }}
+              >
+                {sound ? '🔊 Audio ON' : '🔇 Audio OFF'}
+              </button>
+            </div>
+
+            {/* START BUTTON */}
+            <button 
+              onClick={startSession}
+              className="btn btn-primary w-full"
+              style={{ 
+                padding: 18, 
+                fontSize: 18,
+                background: 'rgba(255,255,255,0.25)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              }}
+            >
+              🧘 INIZIA SESSIONE
+            </button>
+
+            {willComplete && PARAM_DAYS_DONE < PARAM_DAYS_REQUIRED && (
+              <p className="text-xs text-center mt-3 opacity-70">
+                🎉 Questo sarà l'ultimo giorno!
+              </p>
+            )}
+          </div>
+        );
+      }
+
+      // COUNTING SCREEN
+      if (screen === 'counting') {
+        const progress = (count / targetReps) * 100;
+        const isPreLast = count === targetReps - 2;
+        const isLast = count === targetReps - 1;
+
+        return (
+          <div 
+            className="container tap-zone" 
+            style={{ background: chakra.gradient }}
+            onClick={handleTap}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center w-full p-3" style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+              <span className="text-sm opacity-70">⏱️ {formatTime(elapsed)}</span>
+              <span className="text-sm font-bold">Giorno {daysAfterComplete}/{PARAM_DAYS_REQUIRED}</span>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setScreen('home'); }}
+                className="text-sm opacity-70"
+              >✕</button>
+            </div>
+
+            {/* Main Counter */}
+            <div className="text-center">
+              <div 
+                className="chakra-circle"
+                style={{ 
+                  background: 'rgba(255,255,255,0.15)',
+                  margin: '0 auto 20px',
+                  width: 100,
+                  height: 100,
+                  fontSize: 36,
+                  boxShadow: `0 0 ${20 + progress * 0.3}px ${chakra.color}`
+                }}
+              >
+                🌀
+              </div>
+
+              <div 
+                key={pulseKey}
+                className={`text-8xl font-bold mb-2 ${pulseKey > 0 ? 'count-pulse' : ''}`}
+                style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}
+              >
+                {count}
+              </div>
+              <p className="text-lg opacity-70">di {targetReps}</p>
+
+              {isPreLast && <p className="text-lg mt-4 pulse" style={{ color: '#fde047' }}>⚡ Penultima!</p>}
+              {isLast && <p className="text-xl font-bold mt-4 pulse" style={{ color: '#86efac' }}>🎯 ULTIMA!</p>}
+            </div>
+
+            {/* Vibration Reminder */}
+            <div className="vibration-box mt-4" style={{ maxWidth: 280 }}>
+              <p className="text-2xl font-bold text-center">{chakra.vibration}</p>
+              <p className="text-xs font-mono text-center opacity-70 mt-1">{chakra.pronunciation}</p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full mt-4" style={{ maxWidth: 300 }}>
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill"
+                  style={{ 
+                    width: `${progress}%`,
+                    background: 'rgba(255,255,255,0.8)'
+                  }}
+                />
+              </div>
+            </div>
+
+            {!isPreLast && !isLast && (
+              <p className="text-sm opacity-50 mt-6 pulse">Tocca per vibrare</p>
+            )}
+          </div>
+        );
+      }
+
+      // COMPLETE SCREEN
+      if (screen === 'complete') {
+        return (
+          <div className="container" style={{ background: chakra.gradient, justifyContent: 'center' }}>
+            <div className="text-center">
+              <div className="text-6xl mb-4">✨</div>
+              <h1 className="text-2xl font-bold mb-2">
+                {willComplete ? '🎉 APERTURA COMPLETATA!' : 'Sessione Completata!'}
+              </h1>
+              <p className="opacity-70 mb-4">
+                {willComplete 
+                  ? `Hai completato l'apertura del chakra ${chakra.name}!` 
+                  : `Giorno ${daysAfterComplete} di ${PARAM_DAYS_REQUIRED} completato`}
+              </p>
+
+              {/* Stats */}
+              <div className="card mb-4">
+                <div className="flex justify-between mb-2">
+                  <span className="opacity-70">Vibrazioni:</span>
+                  <span className="font-bold">{targetReps}x {chakra.vibration}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="opacity-70">Durata:</span>
+                  <span className="font-bold">{formatTime(elapsed)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="opacity-70">Progresso:</span>
+                  <span className="font-bold">{daysAfterComplete}/{PARAM_DAYS_REQUIRED} giorni</span>
+                </div>
+              </div>
+
+              {/* Progress visualization */}
+              <div className="flex justify-center gap-3 mb-4">
+                {[...Array(PARAM_DAYS_REQUIRED)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="day-dot"
+                    style={{
+                      background: i < daysAfterComplete ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)',
+                      color: i < daysAfterComplete ? chakra.color : 'rgba(255,255,255,0.5)',
+                      width: 32,
+                      height: 32,
+                      fontSize: 12
+                    }}
+                  >
+                    {i < daysAfterComplete ? '✓' : i + 1}
+                  </div>
+                ))}
+              </div>
+
+              {willComplete ? (
+                <div className="card" style={{ background: 'rgba(34, 197, 94, 0.3)' }}>
+                  <p className="text-sm">🌟 Chakra {chakra.name} aperto!</p>
+                  <p className="text-xs opacity-70 mt-1">Ora puoi passare al prossimo chakra.</p>
+                </div>
+              ) : (
+                <div className="card">
+                  <p className="text-sm">📅 Torna domani per il giorno {daysAfterComplete + 1}</p>
+                  <p className="text-xs opacity-70 mt-1">Mancano {PARAM_DAYS_REQUIRED - daysAfterComplete} giorni</p>
+                </div>
+              )}
+
+              <button 
+                onClick={closeApp}
+                className="btn btn-primary w-full mt-4"
+                style={{ padding: 16 }}
+              >
+                ✓ CHIUDI
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
