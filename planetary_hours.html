@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ore Planetarie</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a25;
+      --gold: #d4af37;
+      --gold-dim: #b8962e;
+      --text: #e8e8e8;
+      --text-dim: #888;
+      --sun: #ffd700;
+      --moon: #c0c0c0;
+      --mars: #ff4444;
+      --mercury: #8b4513;
+      --jupiter: #ff8c00;
+      --venus: #90ee90;
+      --saturn: #4a4a4a;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 12px;
+    }
+    
+    .container { max-width: 500px; margin: 0 auto; }
+    
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 20px;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .header .location {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+    .header .date {
+      font-size: 14px;
+      color: var(--text);
+      margin-top: 4px;
+    }
+    
+    /* Current Hour Banner */
+    .current-banner {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .current-banner .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--gold-dim);
+      margin-bottom: 8px;
+    }
+    .current-banner .planet-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .current-banner .planet-symbol {
+      font-size: 36px;
+    }
+    .current-banner .planet-info {
+      text-align: left;
+    }
+    .current-banner .planet-name {
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .current-banner .planet-time {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .current-banner .countdown {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--gold);
+    }
+    .current-banner .countdown span {
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    /* Day/Night Toggle */
+    .toggle-container {
+      display: flex;
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 12px;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .toggle-btn.active {
+      background: rgba(212, 175, 55, 0.2);
+      color: var(--gold);
+    }
+    
+    /* Hours Grid */
+    .hours-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .hour-row {
+      display: grid;
+      grid-template-columns: 36px 40px 1fr 70px 70px;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .hour-row.current {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.08));
+      border: 1px solid var(--gold);
+    }
+    .hour-row.past {
+      opacity: 0.5;
+    }
+    
+    .hour-num {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .hour-row.current .hour-num {
+      color: var(--gold);
+    }
+    
+    .planet-symbol-small {
+      font-size: 22px;
+      text-align: center;
+    }
+    
+    .planet-name-small {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .hour-time {
+      font-size: 13px;
+      color: var(--text-dim);
+      text-align: center;
+      font-family: monospace;
+    }
+    .hour-row.current .hour-time {
+      color: var(--text);
+    }
+    
+    /* Planet Colors */
+    .planet-sun { color: var(--sun); }
+    .planet-moon { color: var(--moon); }
+    .planet-mars { color: var(--mars); }
+    .planet-mercury { color: var(--mercury); }
+    .planet-jupiter { color: var(--jupiter); }
+    .planet-venus { color: var(--venus); }
+    .planet-saturn { color: var(--saturn); }
+    
+    /* Sun Info */
+    .sun-info {
+      display: flex;
+      justify-content: space-around;
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .sun-info-item {
+      text-align: center;
+    }
+    .sun-info-item .icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    .sun-info-item .time {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .sun-info-item .label {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    
+    /* Day Ruler */
+    .day-ruler {
+      text-align: center;
+      padding: 10px;
+      background: var(--bg-card);
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .day-ruler .label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .day-ruler .planet {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-dim);
+    }
+    .loading .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bg-card);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Calcolo ore planetarie...</p>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+    
+    // Parametri URL
+    const params = new URLSearchParams(window.location.search);
+    const CITY_NAME = params.get('city') || 'Roma';
+    const LAT = parseFloat(params.get('lat')) || 41.9028;
+    const LON = parseFloat(params.get('lon')) || 12.4964;
+    const TZ = parseFloat(params.get('tz')) || 1;
+    
+    // Dati pianeti
+    const PLANETS = {
+      sun: { symbol: '☉', name: 'Sole', color: 'planet-sun' },
+      moon: { symbol: '☽', name: 'Luna', color: 'planet-moon' },
+      mars: { symbol: '♂', name: 'Marte', color: 'planet-mars' },
+      mercury: { symbol: '☿', name: 'Mercurio', color: 'planet-mercury' },
+      jupiter: { symbol: '♃', name: 'Giove', color: 'planet-jupiter' },
+      venus: { symbol: '♀', name: 'Venere', color: 'planet-venus' },
+      saturn: { symbol: '♄', name: 'Saturno', color: 'planet-saturn' }
+    };
+    
+    // Sequenza Caldea
+    const CHALDEAN = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
+    
+    // Reggenti dei giorni
+    const DAY_RULERS = {
+      0: 'moon', 1: 'mars', 2: 'mercury', 3: 'jupiter', 4: 'venus', 5: 'saturn', 6: 'sun'
+    };
+    
+    // Nomi giorni
+    const DAY_NAMES = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+    
+    // Calcolo alba/tramonto
+    function calculateSunTimes(lat, lon, date, tz) {
+      const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+      const latRad = lat * Math.PI / 180;
+      
+      const declination = -23.45 * Math.cos(2 * Math.PI / 365 * (dayOfYear + 10));
+      const decRad = declination * Math.PI / 180;
+      
+      const B = 2 * Math.PI / 365 * (dayOfYear - 81);
+      const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+      
+      const zenith = 90.833 * Math.PI / 180;
+      let cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / 
+                 (Math.cos(latRad) * Math.cos(decRad));
+      cosH = Math.max(-1, Math.min(1, cosH));
+      const H = Math.acos(cosH) * 180 / Math.PI;
+      
+      const solarNoon = 720 - (lon * 4) - eot;
+      const sunriseMin = solarNoon - (H * 4);
+      const sunsetMin = solarNoon + (H * 4);
+      
+      const sunrise = new Date(date);
+      sunrise.setHours(0, 0, 0, 0);
+      sunrise.setMinutes(sunriseMin + tz * 60);
+      
+      const sunset = new Date(date);
+      sunset.setHours(0, 0, 0, 0);
+      sunset.setMinutes(sunsetMin + tz * 60);
+      
+      return { sunrise, sunset };
+    }
+    
+    // Calcola ore planetarie
+    function calculatePlanetaryHours(lat, lon, date, tz) {
+      const { sunrise, sunset } = calculateSunTimes(lat, lon, date, tz);
+      
+      // Alba del giorno dopo
+      const tomorrow = new Date(date);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const { sunrise: nextSunrise } = calculateSunTimes(lat, lon, tomorrow, tz);
+      
+      const dayDuration = (sunset - sunrise) / 12;
+      const nightDuration = (nextSunrise - sunset) / 12;
+      
+      const weekday = (date.getDay() + 6) % 7; // 0 = Lunedì
+      const dayRuler = DAY_RULERS[weekday];
+      const rulerIndex = CHALDEAN.indexOf(dayRuler);
+      
+      const hours = [];
+      
+      // Ore diurne
+      let currentTime = new Date(sunrise);
+      for (let i = 0; i < 12; i++) {
+        const planetIndex = (rulerIndex + i) % 7;
+        const planet = CHALDEAN[planetIndex];
+        const endTime = new Date(currentTime.getTime() + dayDuration);
+        
+        hours.push({
+          number: i + 1,
+          planet,
+          start: new Date(currentTime),
+          end: endTime,
+          isDay: true
+        });
+        currentTime = endTime;
+      }
+      
+      // Ore notturne
+      currentTime = new Date(sunset);
+      for (let i = 0; i < 12; i++) {
+        const planetIndex = (rulerIndex + 12 + i) % 7;
+        const planet = CHALDEAN[planetIndex];
+        const endTime = new Date(currentTime.getTime() + nightDuration);
+        
+        hours.push({
+          number: i + 13,
+          planet,
+          start: new Date(currentTime),
+          end: endTime,
+          isDay: false
+        });
+        currentTime = endTime;
+      }
+      
+      return { hours, sunrise, sunset, dayRuler, weekday };
+    }
+    
+    // Formatta ora
+    function formatTime(date) {
+      return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Trova ora corrente
+    function getCurrentHour(hours, now) {
+      for (const hour of hours) {
+        if (now >= hour.start && now < hour.end) {
+          return hour;
+        }
+      }
+      return null;
+    }
+    
+    // Calcola tempo rimanente
+    function getTimeRemaining(endTime, now) {
+      const diff = endTime - now;
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      return { mins, secs, total: diff };
+    }
+    
+    // Render app
+    function render() {
+      const now = new Date();
+      const data = calculatePlanetaryHours(LAT, LON, now, TZ);
+      const currentHour = getCurrentHour(data.hours, now);
+      
+      const dayHours = data.hours.filter(h => h.isDay);
+      const nightHours = data.hours.filter(h => !h.isDay);
+      
+      const planetInfo = currentHour ? PLANETS[currentHour.planet] : null;
+      const remaining = currentHour ? getTimeRemaining(currentHour.end, now) : null;
+      
+      const dayRulerInfo = PLANETS[data.dayRuler];
+      
+      let html = `
+        <div class="header">
+          <h1>⏰ ORE PLANETARIE</h1>
+          <div class="location">📍 ${CITY_NAME}</div>
+          <div class="date">${now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        </div>
+        
+        <div class="day-ruler">
+          <div class="label">Giorno governato da</div>
+          <div class="planet ${dayRulerInfo.color}">
+            <span>${dayRulerInfo.symbol}</span>
+            <span>${dayRulerInfo.name}</span>
+          </div>
+        </div>
+        
+        <div class="sun-info">
+          <div class="sun-info-item">
+            <div class="icon">🌅</div>
+            <div class="time">${formatTime(data.sunrise)}</div>
+            <div class="label">Alba</div>
+          </div>
+          <div class="sun-info-item">
+            <div class="icon">🌇</div>
+            <div class="time">${formatTime(data.sunset)}</div>
+            <div class="label">Tramonto</div>
+          </div>
+        </div>
+      `;
+      
+      if (currentHour && planetInfo) {
+        html += `
+          <div class="current-banner">
+            <div class="label">Ora Planetaria Corrente</div>
+            <div class="planet-row">
+              <span class="planet-symbol ${planetInfo.color}">${planetInfo.symbol}</span>
+              <div class="planet-info">
+                <div class="planet-name ${planetInfo.color}">${planetInfo.name}</div>
+                <div class="planet-time">${formatTime(currentHour.start)} - ${formatTime(currentHour.end)}</div>
+              </div>
+            </div>
+            <div class="countdown">
+              Termina tra <span>${remaining.mins}m ${remaining.secs}s</span>
+            </div>
+          </div>
+        `;
+      }
+      
+      html += `
+        <div class="toggle-container">
+          <button class="toggle-btn active" id="btnDay" onclick="showDay()">
+            ☀️ Diurne (1-12)
+          </button>
+          <button class="toggle-btn" id="btnNight" onclick="showNight()">
+            🌙 Notturne (13-24)
+          </button>
+        </div>
+        
+        <div class="hours-grid" id="hoursDay">
+          ${dayHours.map(h => renderHourRow(h, now, currentHour)).join('')}
+        </div>
+        
+        <div class="hours-grid" id="hoursNight" style="display: none;">
+          ${nightHours.map(h => renderHourRow(h, now, currentHour)).join('')}
+        </div>
+      `;
+      
+      document.getElementById('app').innerHTML = html;
+    }
+    
+    function renderHourRow(hour, now, currentHour) {
+      const planetInfo = PLANETS[hour.planet];
+      const isCurrent = currentHour && hour.number === currentHour.number;
+      const isPast = now >= hour.end;
+      
+      let classes = 'hour-row';
+      if (isCurrent) classes += ' current';
+      else if (isPast) classes += ' past';
+      
+      return `
+        <div class="${classes}">
+          <div class="hour-num">${hour.number}</div>
+          <div class="planet-symbol-small ${planetInfo.color}">${planetInfo.symbol}</div>
+          <div class="planet-name-small ${planetInfo.color}">${planetInfo.name}</div>
+          <div class="hour-time">${formatTime(hour.start)}</div>
+          <div class="hour-time">${formatTime(hour.end)}</div>
+        </div>
+      `;
+    }
+    
+    function showDay() {
+      document.getElementById('hoursDay').style.display = 'flex';
+      document.getElementById('hoursNight').style.display = 'none';
+      document.getElementById('btnDay').classList.add('active');
+      document.getElementById('btnNight').classList.remove('active');
+    }
+    
+    function showNight() {
+      document.getElementById('hoursDay').style.display = 'none';
+      document.getElementById('hoursNight').style.display = 'flex';
+      document.getElementById('btnDay').classList.remove('active');
+      document.getElementById('btnNight').classList.add('active');
+    }
+    
+    // Avvia
+    render();
+    
+    // Aggiorna ogni secondo per il countdown
+    setInterval(render, 1000);
+  </script>
+</body>
+</html>
