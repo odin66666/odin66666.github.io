@@ -43,14 +43,14 @@
     .tab.on { background: rgba(212,175,55,0.2); color: var(--gold); }
     
     .grid { display: flex; flex-direction: column; gap: 5px; }
-    .row { display: grid; grid-template-columns: 32px 36px 1fr 60px 60px; align-items: center; padding: 8px 10px; background: var(--card); border-radius: 8px; gap: 6px; }
-    .row.cur { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08)); border: 1px solid var(--gold); }
-    .row.past { opacity: 0.4; }
-    .row .n { font-size: 12px; font-weight: bold; color: var(--dim); text-align: center; }
-    .row.cur .n { color: var(--gold); }
-    .row .s { font-size: 20px; text-align: center; }
-    .row .nm { font-size: 13px; }
-    .row .tm { font-size: 12px; color: var(--dim); text-align: center; font-family: monospace; }
+    .hrow { display: grid; grid-template-columns: 32px 36px 1fr 60px 60px; align-items: center; padding: 8px 10px; background: var(--card); border-radius: 8px; gap: 6px; }
+    .hrow.cur { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08)); border: 1px solid var(--gold); }
+    .hrow.past { opacity: 0.4; }
+    .hrow .n { font-size: 12px; font-weight: bold; color: var(--dim); text-align: center; }
+    .hrow.cur .n { color: var(--gold); }
+    .hrow .s { font-size: 20px; text-align: center; }
+    .hrow .nm { font-size: 13px; }
+    .hrow .tm { font-size: 12px; color: var(--dim); text-align: center; font-family: monospace; }
     
     .c-sun { color: var(--sun); } .c-moon { color: var(--moon); } .c-mars { color: var(--mars); }
     .c-mercury { color: var(--mercury); } .c-jupiter { color: var(--jupiter); }
@@ -98,7 +98,6 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// PARAMETRI URL
 const P = new URLSearchParams(window.location.search);
 const CITY = P.get('city') || 'Roma';
 const LAT = parseFloat(P.get('lat')) || 41.9028;
@@ -120,21 +119,53 @@ const PLANETS = {
 const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
 const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
 
-// CONVERSIONE TIMEZONE CORRETTA
-// getTimezoneOffset() restituisce minuti da UTC a locale (negativo per Est)
-// Es: Italia (CET) = -60, Londra (GMT) = 0
-function getCityTime() {
-  const now = new Date();
-  // Differenza = offset_locale + offset_target
-  // Per Italia->Londra: (-60) + (0*60) = -60 min = sottrai 1h
-  // Per Italia->Roma: (-60) + (1*60) = 0 min = nessun cambio
-  const diffMs = (now.getTimezoneOffset() + TZ * 60) * 60000;
-  return new Date(now.getTime() + diffMs);
+// Converti minuti in stringa HH:MM
+function minToStr(min) {
+  min = Math.floor(min);
+  if (min < 0) min += 1440;
+  if (min >= 1440) min -= 1440;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// Alba/Tramonto - calcola in ora locale della città
-function sunTimes(lat, lon, d, tz) {
-  const doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+// Ottieni ora corrente della città in minuti dalla mezzanotte
+function getCityMinutes() {
+  const now = new Date();
+  // Ora UTC in minuti
+  const utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+  // Aggiungi offset timezone della città
+  let cityMin = utcMin + (TZ * 60);
+  if (cityMin < 0) cityMin += 1440;
+  if (cityMin >= 1440) cityMin -= 1440;
+  return cityMin;
+}
+
+// Calcola giorno della settimana per la città
+function getCityDay() {
+  const now = new Date();
+  // Crea data in UTC
+  const utcDay = now.getUTCDay();
+  const utcHour = now.getUTCHours();
+  const cityHour = utcHour + TZ;
+  
+  let day = utcDay;
+  if (cityHour >= 24) day = (day + 1) % 7;
+  if (cityHour < 0) day = (day + 6) % 7;
+  
+  return day;
+}
+
+// Calcola giorno dell'anno
+function getDayOfYear() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  return Math.floor(diff / 86400000);
+}
+
+// Calcola alba/tramonto in minuti dalla mezzanotte (ora locale città)
+function sunTimesMin(lat, lon, doy, tz) {
   const latRad = lat * Math.PI / 180;
   const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
   const decRad = dec * Math.PI / 180;
@@ -146,95 +177,110 @@ function sunTimes(lat, lon, d, tz) {
   cosH = Math.max(-1, Math.min(1, cosH));
   const H = Math.acos(cosH) * 180 / Math.PI;
   
-  // Calcola in minuti UTC, poi aggiungi timezone
-  const noon = 720 - (lon * 4) - eot;
-  const srMinUTC = noon - (H * 4);
-  const ssMinUTC = noon + (H * 4);
+  const noon = 720 - (lon * 4) - eot;  // Mezzogiorno solare UTC in minuti
+  const srUTC = noon - (H * 4);  // Alba UTC
+  const ssUTC = noon + (H * 4);  // Tramonto UTC
   
   // Converti in ora locale della città
-  const srMin = srMinUTC + (tz * 60);
-  const ssMin = ssMinUTC + (tz * 60);
+  const sr = srUTC + (tz * 60);
+  const ss = ssUTC + (tz * 60);
   
-  const sr = new Date(d); sr.setHours(0, 0, 0, 0); sr.setMinutes(srMin);
-  const ss = new Date(d); ss.setHours(0, 0, 0, 0); ss.setMinutes(ssMin);
   return { sr, ss };
 }
 
-function calcHours(lat, lon, d, tz) {
-  const { sr, ss } = sunTimes(lat, lon, d, tz);
-  const tom = new Date(d); tom.setDate(tom.getDate() + 1);
-  const { sr: nextSr } = sunTimes(lat, lon, tom, tz);
+// Calcola tutte le ore planetarie (in minuti)
+function calcHours(lat, lon, doy, tz, dayOfWeek) {
+  const { sr, ss } = sunTimesMin(lat, lon, doy, tz);
+  const { sr: nextSr } = sunTimesMin(lat, lon, doy + 1, tz);
   
   const dayLen = (ss - sr) / 12;
-  const nightLen = (nextSr - ss) / 12;
+  const nightLen = ((nextSr + 1440) - ss) / 12;  // +1440 perché alba domani
   
-  // JS getDay(): 0=Dom, 1=Lun... -> Python: 0=Lun, 6=Dom
-  const jsDay = d.getDay();
-  const pyDay = (jsDay + 6) % 7;
-  
+  // JS getDay: 0=Dom -> Python: 0=Lun
+  const pyDay = (dayOfWeek + 6) % 7;
   const ruler = RULERS[pyDay];
   const ri = SEQ.indexOf(ruler);
   
   const hrs = [];
   
-  let t = new Date(sr);
+  let t = sr;
   for (let i = 0; i < 12; i++) {
     const p = SEQ[(ri + i) % 7];
-    const e = new Date(t.getTime() + dayLen);
-    hrs.push({ num: i + 1, p, st: new Date(t), en: e, day: true });
+    const e = t + dayLen;
+    hrs.push({ num: i + 1, p, st: t, en: e, day: true });
     t = e;
   }
   
-  t = new Date(ss);
+  t = ss;
   for (let i = 0; i < 12; i++) {
     const p = SEQ[(ri + 12 + i) % 7];
-    const e = new Date(t.getTime() + nightLen);
-    hrs.push({ num: i + 13, p, st: new Date(t), en: e, day: false });
+    const e = t + nightLen;
+    hrs.push({ num: i + 13, p, st: t, en: e, day: false });
     t = e;
   }
   
   return { hrs, sr, ss, ruler };
 }
 
-function fmt(d) { 
-  const h = d.getHours().toString().padStart(2, '0');
-  const m = d.getMinutes().toString().padStart(2, '0');
-  return h + ':' + m;
-}
-
-function getCur(hrs, now) {
-  const nowMs = now.getTime();
+// Trova ora corrente
+function getCur(hrs, nowMin) {
+  // Per le ore notturne che passano la mezzanotte
   for (const h of hrs) {
-    if (nowMs >= h.st.getTime() && nowMs < h.en.getTime()) return h;
+    let st = h.st;
+    let en = h.en;
+    
+    // Normalizza per confronto
+    if (en > 1440) {
+      // L'ora finisce dopo mezzanotte
+      if (nowMin >= st || nowMin < (en - 1440)) return h;
+    } else {
+      if (nowMin >= st && nowMin < en) return h;
+    }
   }
   return null;
 }
 
-function mkRow(h, now, cur) {
+function mkRow(h, nowMin, cur) {
   const pl = PLANETS[h.p];
   const isCur = cur && h.num === cur.num;
-  const isPast = now.getTime() >= h.en.getTime();
-  let cls = 'row';
+  
+  // Determina se è passata
+  let isPast = false;
+  if (h.en <= 1440) {
+    isPast = nowMin >= h.en;
+  } else {
+    // Ora che passa mezzanotte - passata solo se siamo nel giorno dopo e dopo la fine
+    isPast = nowMin >= (h.en - 1440) && nowMin < h.st;
+  }
+  
+  let cls = 'hrow';
   if (isCur) cls += ' cur';
   else if (isPast) cls += ' past';
-  return `<div class="${cls}"><div class="n">${h.num}</div><div class="s ${pl.c}">${pl.s}</div><div class="nm ${pl.c}">${pl.n}</div><div class="tm">${fmt(h.st)}</div><div class="tm">${fmt(h.en)}</div></div>`;
+  
+  return `<div class="${cls}"><div class="n">${h.num}</div><div class="s ${pl.c}">${pl.s}</div><div class="nm ${pl.c}">${pl.n}</div><div class="tm">${minToStr(h.st)}</div><div class="tm">${minToStr(h.en)}</div></div>`;
 }
 
 let DATA = null;
 
 function init() {
-  const now = getCityTime();
-  DATA = calcHours(LAT, LON, now, TZ);
-  const cur = getCur(DATA.hrs, now);
+  const nowMin = getCityMinutes();
+  const doy = getDayOfYear();
+  const dow = getCityDay();
   
-  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + fmt(now);
-  document.getElementById('dateText').textContent = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  DATA = calcHours(LAT, LON, doy, TZ, dow);
+  const cur = getCur(DATA.hrs, nowMin);
+  
+  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + minToStr(nowMin);
+  
+  const days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+  const now = new Date();
+  document.getElementById('dateText').textContent = days[dow] + ' ' + now.getDate() + '/' + (now.getMonth()+1) + '/' + now.getFullYear();
   
   const rl = PLANETS[DATA.ruler];
   document.getElementById('rulerText').innerHTML = `<span class="${rl.c}">${rl.s} ${rl.n}</span>`;
   
-  document.getElementById('srText').textContent = fmt(DATA.sr);
-  document.getElementById('ssText').textContent = fmt(DATA.ss);
+  document.getElementById('srText').textContent = minToStr(DATA.sr);
+  document.getElementById('ssText').textContent = minToStr(DATA.ss);
   
   if (cur) {
     const pl = PLANETS[cur.p];
@@ -242,7 +288,7 @@ function init() {
     document.getElementById('curSym').className = 'sym ' + pl.c;
     document.getElementById('curName').textContent = pl.n;
     document.getElementById('curName').className = 'name ' + pl.c;
-    document.getElementById('curTime').textContent = fmt(cur.st) + ' - ' + fmt(cur.en);
+    document.getElementById('curTime').textContent = minToStr(cur.st) + ' - ' + minToStr(cur.en);
     document.getElementById('curBanner').style.display = 'block';
   } else {
     document.getElementById('curBanner').style.display = 'none';
@@ -250,19 +296,25 @@ function init() {
   
   const dayH = DATA.hrs.filter(h => h.day);
   const nightH = DATA.hrs.filter(h => !h.day);
-  document.getElementById('gridDay').innerHTML = dayH.map(h => mkRow(h, now, cur)).join('');
-  document.getElementById('gridNight').innerHTML = nightH.map(h => mkRow(h, now, cur)).join('');
+  document.getElementById('gridDay').innerHTML = dayH.map(h => mkRow(h, nowMin, cur)).join('');
+  document.getElementById('gridNight').innerHTML = nightH.map(h => mkRow(h, nowMin, cur)).join('');
 }
 
 function updateCD() {
   if (!DATA) return;
-  const now = getCityTime();
-  const cur = getCur(DATA.hrs, now);
+  const nowMin = getCityMinutes();
+  const cur = getCur(DATA.hrs, nowMin);
+  
   if (cur) {
-    const rem = Math.max(0, Math.floor((cur.en.getTime() - now.getTime()) / 1000));
-    document.getElementById('cdText').textContent = Math.floor(rem / 60) + 'm ' + (rem % 60) + 's';
+    let rem = cur.en - nowMin;
+    if (rem < 0) rem += 1440;
+    const remSec = Math.floor(rem * 60);
+    const m = Math.floor(remSec / 60);
+    const s = remSec % 60;
+    document.getElementById('cdText').textContent = m + 'm ' + s + 's';
   }
-  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + fmt(now);
+  
+  document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + minToStr(nowMin);
 }
 
 function showTab(which) {
