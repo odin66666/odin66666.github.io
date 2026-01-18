@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ore Planetarie DEBUG</title>
+  <title>Ore Planetarie</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,8 +18,6 @@
     .header h1 { font-size: 18px; color: var(--gold); }
     .header .loc { font-size: 12px; color: var(--dim); margin-top: 4px; }
     .header .date { font-size: 13px; margin-top: 2px; }
-    
-    .debug { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 11px; font-family: monospace; color: #0f0; }
     
     .banner { background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 12px; text-align: center; }
     .banner .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; }
@@ -71,8 +69,6 @@
     <div class="localtime" id="localTime"></div>
   </div>
   
-  <div class="debug" id="debugBox">DEBUG...</div>
-  
   <div class="ruler">
     <div class="l">Giorno di</div>
     <div class="p" id="rulerText"></div>
@@ -106,7 +102,14 @@ const P = new URLSearchParams(window.location.search);
 const CITY = P.get('city') || 'Roma';
 const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
-const TZ = parseFloat(P.get('tz')) || 1;
+
+// FIX: 0 || 1 = 1, quindi usiamo check esplicito per null
+const tzParam = P.get('tz');
+const TZ = tzParam !== null ? parseFloat(tzParam) : 1;
+
+// Timezone locale dell'utente (passato dal bot)
+const localTzParam = P.get('local_tz');
+const LOCAL_TZ = localTzParam !== null ? parseFloat(localTzParam) : 1;  // Default Italia
 
 document.getElementById('locText').textContent = '📍 ' + CITY;
 
@@ -132,31 +135,22 @@ function minToStr(min) {
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
+// Converti ora locale del dispositivo in ora della città target
+// Formula: cityTime = localTime + (targetTZ - localTZ) * 60
 function getCityMinutes() {
   const now = new Date();
-  const localH = now.getHours();
-  const localM = now.getMinutes();
-  const localMin = localH * 60 + localM;
-  const offsetMin = now.getTimezoneOffset();
-  const utcMin = localMin + offsetMin;
-  const cityMin = utcMin + (TZ * 60);
-  
-  // DEBUG
-  const dbg = document.getElementById('debugBox');
-  dbg.innerHTML = `URL params: city=${CITY}, lat=${LAT}, lon=${LON}, tz=${TZ}<br>
-Browser: ${localH}:${localM} (offset=${offsetMin}min)<br>
-Calcolo: local=${localMin} + offset=${offsetMin} = UTC ${utcMin} (${minToStr(utcMin)})<br>
-UTC + TZ*60 = ${utcMin} + ${TZ*60} = ${cityMin} (${minToStr(cityMin)})`;
-  
+  const localMin = now.getHours() * 60 + now.getMinutes();
+  // Differenza tra timezone città e timezone utente
+  const diffHours = TZ - LOCAL_TZ;
+  const cityMin = localMin + (diffHours * 60);
   return cityMin;
 }
 
 function getCityDayOfWeek() {
   const now = new Date();
   const localMin = now.getHours() * 60 + now.getMinutes();
-  const offsetMin = now.getTimezoneOffset();
-  const utcMin = localMin + offsetMin;
-  const cityMin = utcMin + (TZ * 60);
+  const diffHours = TZ - LOCAL_TZ;
+  const cityMin = localMin + (diffHours * 60);
   
   let day = now.getDay();
   if (cityMin >= 1440) day = (day + 1) % 7;
