@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ore Planetarie</title>
+  <title>Ore Planetarie DEBUG</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,6 +18,8 @@
     .header h1 { font-size: 18px; color: var(--gold); }
     .header .loc { font-size: 12px; color: var(--dim); margin-top: 4px; }
     .header .date { font-size: 13px; margin-top: 2px; }
+    
+    .debug { background: #1a1a2e; border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 11px; font-family: monospace; color: #0f0; }
     
     .banner { background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 12px; text-align: center; }
     .banner .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; }
@@ -69,6 +71,8 @@
     <div class="localtime" id="localTime"></div>
   </div>
   
+  <div class="debug" id="debugBox">DEBUG...</div>
+  
   <div class="ruler">
     <div class="l">Giorno di</div>
     <div class="p" id="rulerText"></div>
@@ -119,52 +123,53 @@ const PLANETS = {
 const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
 const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
 
-// Converti minuti in stringa HH:MM
 function minToStr(min) {
   min = Math.floor(min);
-  if (min < 0) min += 1440;
-  if (min >= 1440) min -= 1440;
+  while (min < 0) min += 1440;
+  while (min >= 1440) min -= 1440;
   const h = Math.floor(min / 60);
   const m = min % 60;
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// Ottieni ora corrente della città in minuti dalla mezzanotte
 function getCityMinutes() {
   const now = new Date();
-  // Ora UTC in minuti
-  const utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-  // Aggiungi offset timezone della città
-  let cityMin = utcMin + (TZ * 60);
-  if (cityMin < 0) cityMin += 1440;
-  if (cityMin >= 1440) cityMin -= 1440;
+  const localH = now.getHours();
+  const localM = now.getMinutes();
+  const localMin = localH * 60 + localM;
+  const offsetMin = now.getTimezoneOffset();
+  const utcMin = localMin + offsetMin;
+  const cityMin = utcMin + (TZ * 60);
+  
+  // DEBUG
+  const dbg = document.getElementById('debugBox');
+  dbg.innerHTML = `URL params: city=${CITY}, lat=${LAT}, lon=${LON}, tz=${TZ}<br>
+Browser: ${localH}:${localM} (offset=${offsetMin}min)<br>
+Calcolo: local=${localMin} + offset=${offsetMin} = UTC ${utcMin} (${minToStr(utcMin)})<br>
+UTC + TZ*60 = ${utcMin} + ${TZ*60} = ${cityMin} (${minToStr(cityMin)})`;
+  
   return cityMin;
 }
 
-// Calcola giorno della settimana per la città
-function getCityDay() {
+function getCityDayOfWeek() {
   const now = new Date();
-  // Crea data in UTC
-  const utcDay = now.getUTCDay();
-  const utcHour = now.getUTCHours();
-  const cityHour = utcHour + TZ;
+  const localMin = now.getHours() * 60 + now.getMinutes();
+  const offsetMin = now.getTimezoneOffset();
+  const utcMin = localMin + offsetMin;
+  const cityMin = utcMin + (TZ * 60);
   
-  let day = utcDay;
-  if (cityHour >= 24) day = (day + 1) % 7;
-  if (cityHour < 0) day = (day + 6) % 7;
-  
+  let day = now.getDay();
+  if (cityMin >= 1440) day = (day + 1) % 7;
+  if (cityMin < 0) day = (day + 6) % 7;
   return day;
 }
 
-// Calcola giorno dell'anno
 function getDayOfYear() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now - start;
-  return Math.floor(diff / 86400000);
+  return Math.floor((now - start) / 86400000);
 }
 
-// Calcola alba/tramonto in minuti dalla mezzanotte (ora locale città)
 function sunTimesMin(lat, lon, doy, tz) {
   const latRad = lat * Math.PI / 180;
   const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
@@ -177,26 +182,23 @@ function sunTimesMin(lat, lon, doy, tz) {
   cosH = Math.max(-1, Math.min(1, cosH));
   const H = Math.acos(cosH) * 180 / Math.PI;
   
-  const noon = 720 - (lon * 4) - eot;  // Mezzogiorno solare UTC in minuti
-  const srUTC = noon - (H * 4);  // Alba UTC
-  const ssUTC = noon + (H * 4);  // Tramonto UTC
+  const noon = 720 - (lon * 4) - eot;
+  const srUTC = noon - (H * 4);
+  const ssUTC = noon + (H * 4);
   
-  // Converti in ora locale della città
   const sr = srUTC + (tz * 60);
   const ss = ssUTC + (tz * 60);
   
   return { sr, ss };
 }
 
-// Calcola tutte le ore planetarie (in minuti)
 function calcHours(lat, lon, doy, tz, dayOfWeek) {
   const { sr, ss } = sunTimesMin(lat, lon, doy, tz);
   const { sr: nextSr } = sunTimesMin(lat, lon, doy + 1, tz);
   
   const dayLen = (ss - sr) / 12;
-  const nightLen = ((nextSr + 1440) - ss) / 12;  // +1440 perché alba domani
+  const nightLen = ((nextSr + 1440) - ss) / 12;
   
-  // JS getDay: 0=Dom -> Python: 0=Lun
   const pyDay = (dayOfWeek + 6) % 7;
   const ruler = RULERS[pyDay];
   const ri = SEQ.indexOf(ruler);
@@ -222,16 +224,17 @@ function calcHours(lat, lon, doy, tz, dayOfWeek) {
   return { hrs, sr, ss, ruler };
 }
 
-// Trova ora corrente
 function getCur(hrs, nowMin) {
-  // Per le ore notturne che passano la mezzanotte
+  while (nowMin < 0) nowMin += 1440;
+  while (nowMin >= 1440) nowMin -= 1440;
+  
   for (const h of hrs) {
     let st = h.st;
     let en = h.en;
+    while (st < 0) st += 1440;
+    while (en < 0) en += 1440;
     
-    // Normalizza per confronto
     if (en > 1440) {
-      // L'ora finisce dopo mezzanotte
       if (nowMin >= st || nowMin < (en - 1440)) return h;
     } else {
       if (nowMin >= st && nowMin < en) return h;
@@ -243,15 +246,7 @@ function getCur(hrs, nowMin) {
 function mkRow(h, nowMin, cur) {
   const pl = PLANETS[h.p];
   const isCur = cur && h.num === cur.num;
-  
-  // Determina se è passata
-  let isPast = false;
-  if (h.en <= 1440) {
-    isPast = nowMin >= h.en;
-  } else {
-    // Ora che passa mezzanotte - passata solo se siamo nel giorno dopo e dopo la fine
-    isPast = nowMin >= (h.en - 1440) && nowMin < h.st;
-  }
+  let isPast = h.en <= 1440 && nowMin >= h.en;
   
   let cls = 'hrow';
   if (isCur) cls += ' cur';
@@ -265,7 +260,7 @@ let DATA = null;
 function init() {
   const nowMin = getCityMinutes();
   const doy = getDayOfYear();
-  const dow = getCityDay();
+  const dow = getCityDayOfWeek();
   
   DATA = calcHours(LAT, LON, doy, TZ, dow);
   const cur = getCur(DATA.hrs, nowMin);
@@ -308,12 +303,8 @@ function updateCD() {
   if (cur) {
     let rem = cur.en - nowMin;
     if (rem < 0) rem += 1440;
-    const remSec = Math.floor(rem * 60);
-    const m = Math.floor(remSec / 60);
-    const s = remSec % 60;
-    document.getElementById('cdText').textContent = m + 'm ' + s + 's';
+    document.getElementById('cdText').textContent = Math.floor(rem) + 'm';
   }
-  
   document.getElementById('localTime').textContent = '🕐 Ora ' + CITY + ': ' + minToStr(nowMin);
 }
 
