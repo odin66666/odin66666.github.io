@@ -10,8 +10,6 @@
     :root {
       --bg: #0a0a0f; --card: #12121a; --gold: #d4af37; --text: #e8e8e8; --dim: #888;
       --success: #4ade80; --warning: #fbbf24;
-      --sun: #ffd700; --moon: #c0c0c0; --mars: #ff4444; --mercury: #8b4513;
-      --jupiter: #ff8c00; --venus: #90ee90; --saturn: #4a4a4a;
     }
     body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; }
     .container { max-width: 500px; margin: 0 auto; }
@@ -31,6 +29,10 @@
     .planet-bar { background: var(--card); border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: center; }
     .planet-bar .lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; }
     .planet-bar .planet { font-size: 16px; font-weight: bold; }
+    
+    .phase-indicator { background: var(--card); border-radius: 8px; padding: 8px; margin-bottom: 12px; text-align: center; }
+    .phase-indicator .lbl { font-size: 10px; color: var(--dim); }
+    .phase-indicator .phase { font-size: 14px; color: var(--gold); font-weight: bold; }
     
     .mantra-box { background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center; }
     .mantra-box .lbl { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
@@ -61,7 +63,6 @@
     .aff-section .lbl { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .aff-section .text { font-size: 13px; font-style: italic; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
     .aff-section .counter { font-size: 14px; color: var(--gold); margin-bottom: 10px; }
-    .aff-section .tap-area { margin-bottom: 0; }
     
     .progress-info { background: var(--card); border-radius: 8px; padding: 12px; margin-bottom: 15px; }
     .progress-info .row { display: flex; justify-content: space-between; margin-bottom: 6px; }
@@ -73,14 +74,15 @@
     .status-complete .icon { font-size: 64px; margin-bottom: 15px; }
     .status-complete .title { font-size: 22px; color: var(--gold); font-weight: bold; margin-bottom: 8px; }
     .status-complete .sub { font-size: 14px; color: var(--dim); }
+    .status-complete .btn { margin-top: 20px; padding: 15px 30px; background: var(--gold); color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     
     .timer { font-size: 12px; color: var(--dim); text-align: center; margin-bottom: 10px; }
     
     .hide { display: none !important; }
     
-    .c-sun { color: var(--sun); } .c-moon { color: var(--moon); } .c-mars { color: var(--mars); }
-    .c-mercury { color: var(--mercury); } .c-jupiter { color: var(--jupiter); }
-    .c-venus { color: var(--venus); } .c-saturn { color: var(--saturn); }
+    .c-sun { color: #ffd700; } .c-moon { color: #c0c0c0; } .c-mars { color: #ff4444; }
+    .c-mercury { color: #8b4513; } .c-jupiter { color: #ff8c00; }
+    .c-venus { color: #90ee90; } .c-saturn { color: #4a4a4a; }
   </style>
 </head>
 <body>
@@ -106,8 +108,13 @@
   </div>
   
   <div class="planet-bar">
-    <div class="lbl">Ora Planetaria Corrente</div>
+    <div class="lbl">Ora Planetaria</div>
     <div class="planet" id="planetText">Calcolo...</div>
+  </div>
+  
+  <div class="phase-indicator hide" id="phaseIndicator">
+    <div class="lbl">Fase</div>
+    <div class="phase" id="phaseText">1/2</div>
   </div>
   
   <div id="mainSection">
@@ -161,16 +168,13 @@
       <span class="lbl">Giorni completati:</span>
       <span class="val" id="daysCompleted">0 / 40</span>
     </div>
-    <div class="row">
-      <span class="lbl">Data inizio:</span>
-      <span class="val" id="startDate">---</span>
-    </div>
   </div>
   
   <div class="status-complete hide" id="completeSection">
     <div class="icon">✅</div>
     <div class="title">Sessione Completata!</div>
     <div class="sub" id="completeMsg">Ottimo lavoro!</div>
+    <button class="btn" onclick="closeWebapp()">CHIUDI</button>
   </div>
 </div>
 
@@ -180,58 +184,35 @@ if (tg) { tg.ready(); tg.expand(); }
 
 // === WEB AUDIO API ===
 let audioCtx = null;
-
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
-
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playTick() {
   initAudio();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.frequency.value = 800;
-  osc.type = 'sine';
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = 800; osc.type = 'sine';
   gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-  osc.start(audioCtx.currentTime);
-  osc.stop(audioCtx.currentTime + 0.1);
+  osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.1);
 }
-
 function playLast() {
   initAudio();
-  // Suono più lungo e alto per "quasi finito"
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.frequency.value = 1200;
-  osc.type = 'sine';
+  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = 1200; osc.type = 'sine';
   gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-  osc.start(audioCtx.currentTime);
-  osc.stop(audioCtx.currentTime + 0.3);
+  osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.3);
 }
-
 function playComplete() {
   initAudio();
-  // Melodia di completamento
-  const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
-  notes.forEach((freq, i) => {
+  [523, 659, 784, 1047].forEach((freq, i) => {
     setTimeout(() => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.frequency.value = freq; osc.type = 'sine';
       gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.2);
+      osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.2);
     }, i * 150);
   });
 }
@@ -241,63 +222,64 @@ const P = new URLSearchParams(window.location.search);
 const USER_ID = P.get('user_id') || '0';
 const SPELL_ID = P.get('spell_id') || '';
 const SPELL_NAME = decodeURIComponent(P.get('spell_name') || 'Incantesimo');
-const MANTRA = decodeURIComponent(P.get('mantra') || '---');
-const PRONUNCIATION = decodeURIComponent(P.get('pronunciation') || '');
-const REPS = parseInt(P.get('reps')) || 108;
-const DURATION = parseInt(P.get('duration')) || 0;
 const CATEGORY = P.get('category') || 'mantra';
+const DURATION = parseInt(P.get('duration')) || 0;
 const AFFIRMATION = decodeURIComponent(P.get('affirmation') || '');
 const AFF_REPS = parseInt(P.get('aff_reps')) || 3;
 const DAY_NUM = parseInt(P.get('day_num')) || 1;
 const DAYS_TOTAL = parseInt(P.get('days_total')) || DURATION || 0;
-const START_DATE = P.get('start_date') || '';
-
-// Coordinate per ore planetarie
 const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
-const TZ_PARAM = P.get('tz');
-const TZ = TZ_PARAM !== null ? parseFloat(TZ_PARAM) : 1;
+const TZ = P.get('tz') !== null ? parseFloat(P.get('tz')) : 1;
+
+// === MANTRAS (singolo o multipli) ===
+let MANTRAS = [];
+const mantrasJson = P.get('mantras_json');
+if (mantrasJson) {
+  try {
+    MANTRAS = JSON.parse(decodeURIComponent(mantrasJson));
+  } catch(e) { console.error('Error parsing mantras:', e); }
+}
+
+// Se non ci sono mantras multipli, usa singolo
+if (MANTRAS.length === 0) {
+  MANTRAS = [{
+    word: decodeURIComponent(P.get('mantra') || '---'),
+    pronunciation: decodeURIComponent(P.get('pronunciation') || ''),
+    reps: parseInt(P.get('reps')) || 108
+  }];
+}
 
 // === STATO ===
+let currentMantraIndex = 0;
 let count = 0;
+let totalRepsCompleted = 0;
 let affCount = 0;
 let phase = 'counting';
 let startTime = Date.now();
 let currentPlanet = null;
 
-// === PIANETI ===
+const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 const PLANETS = {
-  sun: { s: '☉', n: 'Sole', c: 'c-sun' },
-  moon: { s: '☽', n: 'Luna', c: 'c-moon' },
-  mars: { s: '♂', n: 'Marte', c: 'c-mars' },
-  mercury: { s: '☿', n: 'Mercurio', c: 'c-mercury' },
-  jupiter: { s: '♃', n: 'Giove', c: 'c-jupiter' },
-  venus: { s: '♀', n: 'Venere', c: 'c-venus' },
+  sun: { s: '☉', n: 'Sole', c: 'c-sun' }, moon: { s: '☽', n: 'Luna', c: 'c-moon' },
+  mars: { s: '♂', n: 'Marte', c: 'c-mars' }, mercury: { s: '☿', n: 'Mercurio', c: 'c-mercury' },
+  jupiter: { s: '♃', n: 'Giove', c: 'c-jupiter' }, venus: { s: '♀', n: 'Venere', c: 'c-venus' },
   saturn: { s: '♄', n: 'Saturno', c: 'c-saturn' }
 };
-
 const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
 const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
-const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
-// === CALCOLO ORE PLANETARIE ===
 function sunTimesMin(lat, lon, doy, tz) {
   const latRad = lat * Math.PI / 180;
   const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
   const decRad = dec * Math.PI / 180;
   const B = 2 * Math.PI / 365 * (doy - 81);
   const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
-  const zenith = 90.833 * Math.PI / 180;
-  
-  let cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+  let cosH = (Math.cos(90.833 * Math.PI / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
   cosH = Math.max(-1, Math.min(1, cosH));
   const H = Math.acos(cosH) * 180 / Math.PI;
-  
   const noon = 720 - (lon * 4) - eot;
-  const sr = noon - (H * 4) + (tz * 60);
-  const ss = noon + (H * 4) + (tz * 60);
-  
-  return { sr, ss };
+  return { sr: noon - (H * 4) + (tz * 60), ss: noon + (H * 4) + (tz * 60) };
 }
 
 function getCurrentPlanetaryHour() {
@@ -305,27 +287,17 @@ function getCurrentPlanetaryHour() {
   const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const dow = now.getDay();
-  
   const { sr, ss } = sunTimesMin(LAT, LON, doy, TZ);
   const { sr: nextSr } = sunTimesMin(LAT, LON, doy + 1, TZ);
-  
   const pyDay = (dow + 6) % 7;
-  const ruler = RULERS[pyDay];
-  const ri = SEQ.indexOf(ruler);
-  
+  const ri = SEQ.indexOf(RULERS[pyDay]);
   let hourIndex;
   if (nowMin >= sr && nowMin < ss) {
-    const hourLen = (ss - sr) / 12;
-    hourIndex = Math.floor((nowMin - sr) / hourLen);
+    hourIndex = Math.floor((nowMin - sr) / ((ss - sr) / 12));
   } else {
     const hourLen = ((nextSr + 1440) - ss) / 12;
-    if (nowMin >= ss) {
-      hourIndex = Math.floor((nowMin - ss) / hourLen) + 12;
-    } else {
-      hourIndex = Math.floor((nowMin + 1440 - ss) / hourLen) + 12;
-    }
+    hourIndex = (nowMin >= ss ? Math.floor((nowMin - ss) / hourLen) : Math.floor((nowMin + 1440 - ss) / hourLen)) + 12;
   }
-  
   return SEQ[(ri + hourIndex) % 7];
 }
 
@@ -340,41 +312,66 @@ function updateTimer() {
   const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
   const s = (elapsed % 60).toString().padStart(2, '0');
   document.getElementById('timerText').textContent = `⏱️ ${m}:${s}`;
-  
-  const now = new Date();
-  document.getElementById('timeNow').textContent = now.toTimeString().slice(0,5);
+  document.getElementById('timeNow').textContent = new Date().toTimeString().slice(0,5);
 }
 
-function updateCounterDisplay() {
-  document.getElementById('countNum').textContent = count;
+function getCurrentMantra() {
+  return MANTRAS[currentMantraIndex] || MANTRAS[0];
+}
+
+function updateMantraDisplay() {
+  const m = getCurrentMantra();
+  document.getElementById('mantraText').textContent = m.word;
+  document.getElementById('pronText').textContent = m.pronunciation || '';
+  document.getElementById('totalReps').textContent = m.reps;
   
-  const pct = count / REPS;
-  const offset = 515 * (1 - pct);
-  document.getElementById('progressRing').style.strokeDashoffset = offset;
-  
-  const ring = document.getElementById('progressRing');
-  if (count >= REPS - 3 && count < REPS) {
-    ring.style.stroke = '#fbbf24';
-  } else if (count >= REPS) {
-    ring.style.stroke = '#4ade80';
-  } else {
-    ring.style.stroke = '#d4af37';
+  // Mostra fase se mantras multipli
+  if (MANTRAS.length > 1) {
+    document.getElementById('phaseIndicator').classList.remove('hide');
+    document.getElementById('phaseText').textContent = `${currentMantraIndex + 1}/${MANTRAS.length}: ${m.word}`;
   }
 }
 
+function updateCounterDisplay() {
+  const m = getCurrentMantra();
+  document.getElementById('countNum').textContent = count;
+  const pct = count / m.reps;
+  document.getElementById('progressRing').style.strokeDashoffset = 515 * (1 - pct);
+  
+  const ring = document.getElementById('progressRing');
+  if (count >= m.reps - 3 && count < m.reps) ring.style.stroke = '#fbbf24';
+  else if (count >= m.reps) ring.style.stroke = '#4ade80';
+  else ring.style.stroke = '#d4af37';
+}
+
 function incrementCounter() {
-  if (count >= REPS) return;
+  const m = getCurrentMantra();
+  if (count >= m.reps) return;
   
   count++;
   updateCounterDisplay();
   
-  if (count === REPS - 1) {
+  if (count === m.reps - 1) {
     playLast();
     if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-  } else if (count === REPS) {
+  } else if (count >= m.reps) {
     playComplete();
     if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-    onCountingComplete();
+    totalRepsCompleted += count;
+    
+    // Check se ci sono altri mantras
+    if (currentMantraIndex < MANTRAS.length - 1) {
+      // Passa al prossimo mantra
+      setTimeout(() => {
+        currentMantraIndex++;
+        count = 0;
+        updateMantraDisplay();
+        updateCounterDisplay();
+      }, 1000);
+    } else {
+      // Tutti i mantras completati
+      onCountingComplete();
+    }
   } else {
     playTick();
     if (navigator.vibrate) navigator.vibrate(20);
@@ -382,17 +379,13 @@ function incrementCounter() {
 }
 
 function decrementCounter() {
-  if (count > 0) {
-    count--;
-    updateCounterDisplay();
-  }
+  if (count > 0) { count--; updateCounterDisplay(); }
 }
 
 function resetCounter() {
-  if (confirm('Vuoi resettare il contatore?')) {
+  if (confirm('Vuoi resettare il contatore corrente?')) {
     count = 0;
     updateCounterDisplay();
-    startTime = Date.now();
   }
 }
 
@@ -409,10 +402,8 @@ function onCountingComplete() {
 function incrementAff() {
   affCount++;
   document.getElementById('affDone').textContent = affCount;
-  
   playTick();
   if (navigator.vibrate) navigator.vibrate(50);
-  
   if (affCount >= AFF_REPS) {
     playComplete();
     completeSession();
@@ -421,18 +412,17 @@ function incrementAff() {
 
 function completeSession() {
   phase = 'complete';
-  
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const totalReps = MANTRAS.reduce((sum, m) => sum + m.reps, 0);
   
   document.getElementById('mainSection').classList.add('hide');
   document.getElementById('affSection').classList.add('hide');
   document.getElementById('progressInfo').classList.add('hide');
+  document.getElementById('phaseIndicator').classList.add('hide');
   document.getElementById('completeSection').classList.remove('hide');
   
-  let msg = `${count} ripetizioni in ${Math.floor(elapsed/60)}m ${elapsed%60}s`;
-  if (DURATION > 0) {
-    msg += ` • Giorno ${DAY_NUM}/${DAYS_TOTAL}`;
-  }
+  let msg = `${totalReps} ripetizioni in ${Math.floor(elapsed/60)}m ${elapsed%60}s`;
+  if (DURATION > 0) msg += ` • Giorno ${DAY_NUM}/${DAYS_TOTAL}`;
   document.getElementById('completeMsg').textContent = msg;
   
   // Invia dati a Telegram
@@ -441,7 +431,7 @@ function completeSession() {
       action: 'spell_session_complete',
       user_id: USER_ID,
       spell_id: SPELL_ID,
-      reps_done: count,
+      reps_done: totalReps,
       aff_done: affCount,
       duration_seconds: elapsed,
       planetary_hour: currentPlanet,
@@ -449,15 +439,13 @@ function completeSession() {
       timestamp: new Date().toISOString()
     }));
   }
-  
-  // Chiudi dopo 3 secondi
-  setTimeout(() => {
-    if (tg) tg.close();
-  }, 3000);
+}
+
+function closeWebapp() {
+  if (tg) tg.close();
 }
 
 function init() {
-  // Header
   document.getElementById('spellName').textContent = SPELL_NAME;
   const catLabel = document.getElementById('catLabel');
   catLabel.classList.add(CATEGORY);
@@ -465,16 +453,12 @@ function init() {
   else if (CATEGORY === 'necronomicon') catLabel.textContent = '📜 Necronomicon';
   else if (CATEGORY === 'aura') catLabel.textContent = '🔮 Aura Magick';
   
-  // Info
   document.getElementById('dayNum').textContent = DAY_NUM;
   document.getElementById('dayName').textContent = DAYS_IT[new Date().getDay()];
   
-  // Mantra
-  document.getElementById('mantraText').textContent = MANTRA;
-  if (PRONUNCIATION && PRONUNCIATION !== 'undefined') {
-    document.getElementById('pronText').textContent = PRONUNCIATION;
-  }
-  document.getElementById('totalReps').textContent = REPS;
+  // Setup mantras
+  updateMantraDisplay();
+  updateCounterDisplay();
   
   // Affermazione
   if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 5) {
@@ -486,29 +470,14 @@ function init() {
   if (DURATION > 0) {
     document.getElementById('durationText').textContent = `${DURATION} giorni`;
     document.getElementById('daysCompleted').textContent = `${DAY_NUM - 1} / ${DURATION}`;
-    if (START_DATE && START_DATE !== 'undefined') {
-      try {
-        const d = new Date(START_DATE);
-        document.getElementById('startDate').textContent = d.toLocaleDateString('it-IT');
-      } catch(e) {
-        document.getElementById('startDate').textContent = '---';
-      }
-    }
   } else {
     document.getElementById('progressInfo').classList.add('hide');
   }
   
-  // Ora planetaria
   updatePlanetDisplay();
-  
-  // Timer
   setInterval(updateTimer, 1000);
   setInterval(updatePlanetDisplay, 60000);
-  
-  updateCounterDisplay();
   updateTimer();
-  
-  // Init audio al primo click
   document.body.addEventListener('click', initAudio, { once: true });
 }
 
