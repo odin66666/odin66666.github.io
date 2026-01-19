@@ -1,570 +1,518 @@
-"""
-Sistema di tracking per incantesimi (Mantra, Necronomicon, Aura)
-Stessa logica dei lavori runici:
-- Il giorno inizia all'alba (6:00)
-- Recovery mode per giorni persi (2 sessioni a 6 ore di distanza)
-- Salva progresso, statistiche e storico
-"""
-
-import json
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, List, Optional
-
-# File per salvare i dati
-SPELL_TRACKER_FILE = Path(__file__).parent / "spell_tracker_data.json"
-
-
-def load_tracker_data() -> dict:
-    """Carica i dati del tracker"""
-    if SPELL_TRACKER_FILE.exists():
-        try:
-            with open(SPELL_TRACKER_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return {}
-    return {}
-
-
-def save_tracker_data(data: dict):
-    """Salva i dati del tracker"""
-    with open(SPELL_TRACKER_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-def get_dawn_today() -> datetime:
-    """
-    Ottiene l'alba di oggi (6:00 come default).
-    Il giorno planetario inizia all'alba, non a mezzanotte.
-    """
-    now = datetime.now()
-    dawn = now.replace(hour=6, minute=0, second=0, microsecond=0)
-    return dawn
-
-
-def check_already_done_today(work: Dict) -> bool:
-    """
-    Verifica se il lavoro è già stato fatto oggi (dall'ultima alba).
-    Ritorna True se GIA' FATTO oggi.
-    """
-    last_completed = work.get("last_completed")
-    if not last_completed:
-        return False
-    
-    try:
-        if isinstance(last_completed, str):
-            last_dt = datetime.fromisoformat(last_completed.replace('Z', '+00:00').replace('+00:00', ''))
-        else:
-            last_dt = last_completed
-        
-        dawn_today = get_dawn_today()
-        now = datetime.now()
-        
-        # Se siamo prima dell'alba, l'ultimo giorno valido è l'alba di ieri
-        if now.hour < 6:
-            dawn_today = dawn_today - timedelta(days=1)
-        
-        # Se l'ultimo completamento è dopo l'alba di oggi, è già stato fatto
-        if last_dt >= dawn_today:
-            return True
-        
-        return False
-    except Exception as e:
-        print(f"[ERROR] check_already_done_today: {e}")
-        return False
-
-
-def check_missed_day(work: Dict) -> bool:
-    """
-    Verifica se è stato saltato un giorno.
-    Ritorna True se ha saltato ieri.
-    """
-    last_completed = work.get("last_completed")
-    if not last_completed:
-        return False
-    
-    try:
-        if isinstance(last_completed, str):
-            last_dt = datetime.fromisoformat(last_completed.replace('Z', '+00:00').replace('+00:00', ''))
-        else:
-            last_dt = last_completed
-        
-        dawn_today = get_dawn_today()
-        now = datetime.now()
-        
-        # Se siamo prima dell'alba, usiamo l'alba di ieri
-        if now.hour < 6:
-            dawn_today = dawn_today - timedelta(days=1)
-        
-        dawn_yesterday = dawn_today - timedelta(days=1)
-        
-        # Se l'ultimo completamento è prima dell'alba di ieri, ha saltato
-        if last_dt < dawn_yesterday:
-            return True
-        
-        return False
-    except Exception as e:
-        print(f"[ERROR] check_missed_day: {e}")
-        return False
-
-
-def get_user_spell_data(user_id: int) -> dict:
-    """Ottiene i dati degli incantesimi per un utente"""
-    data = load_tracker_data()
-    user_key = str(user_id)
-    
-    if user_key not in data:
-        data[user_key] = {
-            'active_works': {},
-            'completed_works': [],
-            'total_sessions': 0,
-            'total_reps': 0,
-            'streak_days': 0,
-            'last_session_date': None
-        }
-        save_tracker_data(data)
-    
-    return data[user_key]
-
-
-def start_spell_work(user_id: int, spell_id: str, spell_info: dict) -> dict:
-    """
-    Inizia un nuovo lavoro o ritorna quello esistente.
-    Controlla anche se deve entrare in recovery mode.
-    """
-    data = load_tracker_data()
-    user_key = str(user_id)
-    
-    if user_key not in data:
-        data[user_key] = {
-            'active_works': {},
-            'completed_works': [],
-            'total_sessions': 0,
-            'total_reps': 0,
-            'streak_days': 0,
-            'last_session_date': None
-        }
-    
-    user_data = data[user_key]
-    now = datetime.now()
-    
-    # Se esiste già un lavoro attivo
-    if spell_id in user_data['active_works']:
-        work = user_data['active_works'][spell_id]
-        
-        # Solo per lavori con durata > 0
-        if work.get('duration_days', 0) > 0:
-            # Controlla se ha saltato un giorno
-            if check_missed_day(work) and not work.get('recovery_mode') and not work.get('recovery_used'):
-                # Attiva recovery mode!
-                work['recovery_mode'] = True
-                work['recovery_first_session'] = None
-                user_data['active_works'][spell_id] = work
-                save_tracker_data(data)
-                
-                return {
-                    'status': 'recovery_needed',
-                    'message': '⚠️ Hai saltato un giorno! Puoi recuperare facendo 2 sessioni oggi (a 6 ore di distanza).',
-                    'work': work
-                }
-            
-            # Se già in recovery mode ma non ha ancora fatto prima sessione
-            if work.get('recovery_mode') and not work.get('recovery_first_session'):
-                return {
-                    'status': 'recovery_needed',
-                    'message': '⚠️ Modalità recupero attiva. Completa la prima sessione.',
-                    'work': work
-                }
-            
-            # Se in recovery e ha fatto prima sessione, controlla 6 ore
-            if work.get('recovery_mode') and work.get('recovery_first_session'):
-                first_dt = datetime.fromisoformat(work['recovery_first_session'])
-                hours_passed = (now - first_dt).total_seconds() / 3600
-                
-                if hours_passed < 6:
-                    remaining = 6 - hours_passed
-                    hours = int(remaining)
-                    mins = int((remaining - hours) * 60)
-                    return {
-                        'status': 'recovery_wait',
-                        'message': f'⏳ Attendi ancora {hours}h {mins}m per la seconda sessione di recupero.',
-                        'work': work
-                    }
-                else:
-                    return {
-                        'status': 'recovery_second',
-                        'message': '✅ Puoi fare la seconda sessione di recupero!',
-                        'work': work
-                    }
-        
-        return {
-            'status': 'existing',
-            'work': work
-        }
-    
-    # Crea nuovo lavoro
-    duration = spell_info.get('duration_days', 0) or 0
-    
-    new_work = {
-        'spell_id': spell_id,
-        'spell_name': spell_info.get('name', spell_id),
-        'category': spell_info.get('category', 'mantra'),
-        'duration_days': duration,
-        'reps_per_session': spell_info.get('reps_per_session', 108),
-        'affirmation': spell_info.get('affirmation', ''),
-        'aff_reps': spell_info.get('aff_reps', 3),
-        'start_date': now.isoformat(),
-        'start_day_of_week': now.strftime('%A'),
-        'current_day': 1,
-        'total_days': duration,
-        'sessions': [],
-        'status': 'active',
-        'last_completed': None,
-        'recovery_mode': False,
-        'recovery_first_session': None,
-        'recovery_used': False,
-        'end_date': None
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Contatore Incantesimi</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --card: #12121a; --gold: #d4af37; --text: #e8e8e8; --dim: #888;
+      --success: #4ade80; --warning: #fbbf24;
+      --sun: #ffd700; --moon: #c0c0c0; --mars: #ff4444; --mercury: #8b4513;
+      --jupiter: #ff8c00; --venus: #90ee90; --saturn: #4a4a4a;
     }
+    body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 12px; min-height: 100vh; }
+    .container { max-width: 500px; margin: 0 auto; }
     
-    user_data['active_works'][spell_id] = new_work
-    save_tracker_data(data)
+    .header { text-align: center; padding: 12px 0; border-bottom: 1px solid rgba(212,175,55,0.3); margin-bottom: 12px; }
+    .header h1 { font-size: 18px; color: var(--gold); margin-bottom: 4px; }
+    .header .cat { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .header .cat.mantra { color: #ff9800; }
+    .header .cat.necronomicon { color: #9c27b0; }
+    .header .cat.aura { color: #00bcd4; }
     
-    return {
-        'status': 'new',
-        'work': new_work
+    .info-bar { display: flex; justify-content: space-around; background: var(--card); border-radius: 8px; padding: 10px; margin-bottom: 12px; }
+    .info-item { text-align: center; }
+    .info-item .val { font-size: 14px; font-weight: bold; color: var(--gold); }
+    .info-item .lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; }
+    
+    .planet-bar { background: var(--card); border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: center; }
+    .planet-bar .lbl { font-size: 9px; color: var(--dim); text-transform: uppercase; margin-bottom: 4px; }
+    .planet-bar .planet { font-size: 16px; font-weight: bold; }
+    
+    .mantra-box { background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid rgba(212,175,55,0.3); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center; }
+    .mantra-box .lbl { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .mantra-box .text { font-size: 20px; font-weight: bold; color: var(--gold); word-break: break-word; line-height: 1.3; }
+    .mantra-box .pron { font-size: 11px; color: var(--dim); margin-top: 6px; font-style: italic; }
+    
+    .counter-section { text-align: center; padding: 20px 0; }
+    .counter-ring { width: 180px; height: 180px; margin: 0 auto 15px; position: relative; }
+    .counter-ring svg { transform: rotate(-90deg); }
+    .counter-ring circle { fill: none; stroke-width: 8; }
+    .counter-ring .bg { stroke: var(--card); }
+    .counter-ring .progress { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 0.3s; }
+    .counter-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .counter-display .num { font-size: 48px; font-weight: bold; color: var(--gold); line-height: 1; }
+    .counter-display .of { font-size: 14px; color: var(--dim); }
+    
+    .tap-area { width: 100%; padding: 25px; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; margin-bottom: 12px; transition: all 0.1s; }
+    .tap-area:active { transform: scale(0.98); }
+    .tap-area.primary { background: linear-gradient(135deg, var(--gold), #b8960f); color: #000; }
+    .tap-area.complete { background: linear-gradient(135deg, var(--success), #22c55e); color: #000; }
+    .tap-area:disabled { opacity: 0.5; }
+    
+    .controls { display: flex; gap: 10px; margin-bottom: 15px; }
+    .ctrl-btn { flex: 1; padding: 12px; border: 1px solid var(--dim); background: transparent; color: var(--dim); border-radius: 8px; font-size: 13px; cursor: pointer; }
+    .ctrl-btn:active { border-color: var(--gold); color: var(--gold); }
+    
+    .aff-section { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+    .aff-section .lbl { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .aff-section .text { font-size: 13px; font-style: italic; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+    .aff-section .counter { font-size: 14px; color: var(--gold); margin-bottom: 10px; }
+    .aff-section .tap-area { margin-bottom: 0; }
+    
+    .progress-info { background: var(--card); border-radius: 8px; padding: 12px; margin-bottom: 15px; }
+    .progress-info .row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .progress-info .row:last-child { margin-bottom: 0; }
+    .progress-info .lbl { font-size: 12px; color: var(--dim); }
+    .progress-info .val { font-size: 12px; color: var(--text); font-weight: bold; }
+    
+    .status-complete { text-align: center; padding: 40px 20px; }
+    .status-complete .icon { font-size: 64px; margin-bottom: 15px; }
+    .status-complete .title { font-size: 22px; color: var(--gold); font-weight: bold; margin-bottom: 8px; }
+    .status-complete .sub { font-size: 14px; color: var(--dim); }
+    
+    .timer { font-size: 12px; color: var(--dim); text-align: center; margin-bottom: 10px; }
+    
+    .hide { display: none !important; }
+    
+    .c-sun { color: var(--sun); } .c-moon { color: var(--moon); } .c-mars { color: var(--mars); }
+    .c-mercury { color: var(--mercury); } .c-jupiter { color: var(--jupiter); }
+    .c-venus { color: var(--venus); } .c-saturn { color: var(--saturn); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1 id="spellName">Caricamento...</h1>
+    <div class="cat" id="catLabel">Incantesimo</div>
+  </div>
+  
+  <div class="info-bar">
+    <div class="info-item">
+      <div class="val" id="dayNum">1</div>
+      <div class="lbl">Giorno</div>
+    </div>
+    <div class="info-item">
+      <div class="val" id="dayName">---</div>
+      <div class="lbl">Oggi</div>
+    </div>
+    <div class="info-item">
+      <div class="val" id="timeNow">--:--</div>
+      <div class="lbl">Ora</div>
+    </div>
+  </div>
+  
+  <div class="planet-bar">
+    <div class="lbl">Ora Planetaria Corrente</div>
+    <div class="planet" id="planetText">Calcolo...</div>
+  </div>
+  
+  <div id="mainSection">
+    <div class="mantra-box">
+      <div class="lbl">🔊 Vibrazione</div>
+      <div class="text" id="mantraText">---</div>
+      <div class="pron" id="pronText"></div>
+    </div>
+    
+    <div class="counter-section">
+      <div class="counter-ring">
+        <svg width="180" height="180">
+          <circle class="bg" cx="90" cy="90" r="82"></circle>
+          <circle class="progress" id="progressRing" cx="90" cy="90" r="82" 
+                  stroke-dasharray="515" stroke-dashoffset="515"></circle>
+        </svg>
+        <div class="counter-display">
+          <div class="num" id="countNum">0</div>
+          <div class="of">di <span id="totalReps">108</span></div>
+        </div>
+      </div>
+      
+      <div class="timer" id="timerText">⏱️ 00:00</div>
+      
+      <button class="tap-area primary" id="tapBtn" onclick="incrementCounter()">
+        🔢 TOCCA PER CONTARE
+      </button>
+      
+      <div class="controls">
+        <button class="ctrl-btn" onclick="decrementCounter()">➖ Correggi</button>
+        <button class="ctrl-btn" onclick="resetCounter()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="aff-section hide" id="affSection">
+    <div class="lbl">✍️ Affermazione</div>
+    <div class="text" id="affText"></div>
+    <div class="counter">Ripeti: <span id="affDone">0</span> / <span id="affTotal">3</span></div>
+    <button class="tap-area primary" onclick="incrementAff()">
+      📣 AFFERMA
+    </button>
+  </div>
+  
+  <div class="progress-info" id="progressInfo">
+    <div class="row">
+      <span class="lbl">Durata lavoro:</span>
+      <span class="val" id="durationText">40 giorni</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Giorni completati:</span>
+      <span class="val" id="daysCompleted">0 / 40</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Data inizio:</span>
+      <span class="val" id="startDate">---</span>
+    </div>
+  </div>
+  
+  <div class="status-complete hide" id="completeSection">
+    <div class="icon">✅</div>
+    <div class="title">Sessione Completata!</div>
+    <div class="sub" id="completeMsg">Ottimo lavoro!</div>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+// === WEB AUDIO API ===
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playTick() {
+  initAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 800;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+
+function playLast() {
+  initAudio();
+  // Suono più lungo e alto per "quasi finito"
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 1200;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.3);
+}
+
+function playComplete() {
+  initAudio();
+  // Melodia di completamento
+  const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.2);
+    }, i * 150);
+  });
+}
+
+// === PARAMETRI URL ===
+const P = new URLSearchParams(window.location.search);
+const USER_ID = P.get('user_id') || '0';
+const SPELL_ID = P.get('spell_id') || '';
+const SPELL_NAME = decodeURIComponent(P.get('spell_name') || 'Incantesimo');
+const MANTRA = decodeURIComponent(P.get('mantra') || '---');
+const PRONUNCIATION = decodeURIComponent(P.get('pronunciation') || '');
+const REPS = parseInt(P.get('reps')) || 108;
+const DURATION = parseInt(P.get('duration')) || 0;
+const CATEGORY = P.get('category') || 'mantra';
+const AFFIRMATION = decodeURIComponent(P.get('affirmation') || '');
+const AFF_REPS = parseInt(P.get('aff_reps')) || 3;
+const DAY_NUM = parseInt(P.get('day_num')) || 1;
+const DAYS_TOTAL = parseInt(P.get('days_total')) || DURATION || 0;
+const START_DATE = P.get('start_date') || '';
+
+// Coordinate per ore planetarie
+const LAT = parseFloat(P.get('lat')) || 41.9028;
+const LON = parseFloat(P.get('lon')) || 12.4964;
+const TZ_PARAM = P.get('tz');
+const TZ = TZ_PARAM !== null ? parseFloat(TZ_PARAM) : 1;
+
+// === STATO ===
+let count = 0;
+let affCount = 0;
+let phase = 'counting';
+let startTime = Date.now();
+let currentPlanet = null;
+
+// === PIANETI ===
+const PLANETS = {
+  sun: { s: '☉', n: 'Sole', c: 'c-sun' },
+  moon: { s: '☽', n: 'Luna', c: 'c-moon' },
+  mars: { s: '♂', n: 'Marte', c: 'c-mars' },
+  mercury: { s: '☿', n: 'Mercurio', c: 'c-mercury' },
+  jupiter: { s: '♃', n: 'Giove', c: 'c-jupiter' },
+  venus: { s: '♀', n: 'Venere', c: 'c-venus' },
+  saturn: { s: '♄', n: 'Saturno', c: 'c-saturn' }
+};
+
+const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
+const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
+const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+// === CALCOLO ORE PLANETARIE ===
+function sunTimesMin(lat, lon, doy, tz) {
+  const latRad = lat * Math.PI / 180;
+  const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
+  const decRad = dec * Math.PI / 180;
+  const B = 2 * Math.PI / 365 * (doy - 81);
+  const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+  const zenith = 90.833 * Math.PI / 180;
+  
+  let cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+  cosH = Math.max(-1, Math.min(1, cosH));
+  const H = Math.acos(cosH) * 180 / Math.PI;
+  
+  const noon = 720 - (lon * 4) - eot;
+  const sr = noon - (H * 4) + (tz * 60);
+  const ss = noon + (H * 4) + (tz * 60);
+  
+  return { sr, ss };
+}
+
+function getCurrentPlanetaryHour() {
+  const now = new Date();
+  const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const dow = now.getDay();
+  
+  const { sr, ss } = sunTimesMin(LAT, LON, doy, TZ);
+  const { sr: nextSr } = sunTimesMin(LAT, LON, doy + 1, TZ);
+  
+  const pyDay = (dow + 6) % 7;
+  const ruler = RULERS[pyDay];
+  const ri = SEQ.indexOf(ruler);
+  
+  let hourIndex;
+  if (nowMin >= sr && nowMin < ss) {
+    const hourLen = (ss - sr) / 12;
+    hourIndex = Math.floor((nowMin - sr) / hourLen);
+  } else {
+    const hourLen = ((nextSr + 1440) - ss) / 12;
+    if (nowMin >= ss) {
+      hourIndex = Math.floor((nowMin - ss) / hourLen) + 12;
+    } else {
+      hourIndex = Math.floor((nowMin + 1440 - ss) / hourLen) + 12;
     }
+  }
+  
+  return SEQ[(ri + hourIndex) % 7];
+}
 
+function updatePlanetDisplay() {
+  currentPlanet = getCurrentPlanetaryHour();
+  const p = PLANETS[currentPlanet];
+  document.getElementById('planetText').innerHTML = `<span class="${p.c}">${p.s} ${p.n}</span>`;
+}
 
-def record_spell_session(
-    user_id: int, 
-    spell_id: str, 
-    reps_done: int,
-    aff_done: int = 0,
-    planetary_hour: str = None,
-    duration_seconds: int = 0
-) -> dict:
-    """
-    Registra una sessione completata.
-    Gestisce anche recovery mode.
-    """
-    data = load_tracker_data()
-    user_key = str(user_id)
-    
-    if user_key not in data:
-        return {'error': True, 'message': 'Utente non trovato'}
-    
-    user_data = data[user_key]
-    now = datetime.now()
-    
-    # Crea lavoro se non esiste (per incantesimi senza durata)
-    if spell_id not in user_data['active_works']:
-        # Per incantesimi singoli senza durata
-        user_data['active_works'][spell_id] = {
-            'spell_id': spell_id,
-            'spell_name': spell_id,
-            'category': 'unknown',
-            'duration_days': 0,
-            'reps_per_session': reps_done,
-            'current_day': 0,
-            'total_days': 0,
-            'sessions': [],
-            'status': 'active',
-            'last_completed': None,
-            'start_date': now.isoformat()
-        }
-    
-    work = user_data['active_works'][spell_id]
-    duration_days = work.get('duration_days', 0)
-    
-    # === GESTIONE RECOVERY MODE ===
-    if work.get('recovery_mode') and duration_days > 0:
-        first_session = work.get('recovery_first_session')
-        
-        if first_session:
-            # SECONDA sessione di recupero
-            first_dt = datetime.fromisoformat(first_session)
-            hours_passed = (now - first_dt).total_seconds() / 3600
-            
-            if hours_passed < 6:
-                remaining = 6 - hours_passed
-                hours = int(remaining)
-                mins = int((remaining - hours) * 60)
-                return {
-                    'status': 'recovery_wait',
-                    'message': f'⏳ Devi aspettare ancora {hours}h {mins}m per la seconda sessione.'
-                }
-            
-            # Completa recovery!
-            work['recovery_mode'] = False
-            work['recovery_used'] = True
-            work['recovery_completed'] = now.isoformat()
-            work['last_completed'] = now.isoformat()
-            work['current_day'] += 1
-            
-            # Registra sessione
-            session = {
-                'date': now.isoformat(),
-                'day_of_week': now.strftime('%A'),
-                'time': now.strftime('%H:%M'),
-                'reps_done': reps_done,
-                'aff_done': aff_done,
-                'planetary_hour': planetary_hour,
-                'duration_seconds': duration_seconds,
-                'day_number': work['current_day'],
-                'is_recovery': True,
-                'recovery_session': 2
-            }
-            work['sessions'].append(session)
-            
-            # Statistiche
-            user_data['total_sessions'] += 1
-            user_data['total_reps'] += reps_done
-            
-            # Verifica completamento
-            if work['current_day'] > work['total_days']:
-                work['status'] = 'completed'
-                work['end_date'] = now.isoformat()
-                user_data['completed_works'].append(work.copy())
-                del user_data['active_works'][spell_id]
-                save_tracker_data(data)
-                
-                return {
-                    'status': 'work_completed',
-                    'message': '🎉 Lavoro completato!',
-                    'work': work,
-                    'streak': user_data.get('streak_days', 1)
-                }
-            
-            save_tracker_data(data)
-            
-            return {
-                'status': 'recovery_complete',
-                'message': f'✅ Recupero completato! Ora sei al giorno {work["current_day"]}/{work["total_days"]}',
-                'work': work,
-                'streak': user_data.get('streak_days', 1)
-            }
-        else:
-            # PRIMA sessione di recupero
-            work['recovery_first_session'] = now.isoformat()
-            work['current_day'] += 1
-            
-            # Registra sessione
-            session = {
-                'date': now.isoformat(),
-                'day_of_week': now.strftime('%A'),
-                'time': now.strftime('%H:%M'),
-                'reps_done': reps_done,
-                'aff_done': aff_done,
-                'planetary_hour': planetary_hour,
-                'duration_seconds': duration_seconds,
-                'day_number': work['current_day'],
-                'is_recovery': True,
-                'recovery_session': 1
-            }
-            work['sessions'].append(session)
-            
-            user_data['total_sessions'] += 1
-            user_data['total_reps'] += reps_done
-            
-            save_tracker_data(data)
-            
-            next_session = now + timedelta(hours=6)
-            return {
-                'status': 'recovery_first_done',
-                'message': f'✅ Prima sessione di recupero completata!\n\nFai la seconda sessione dopo le {next_session.strftime("%H:%M")}',
-                'work': work,
-                'streak': user_data.get('streak_days', 1)
-            }
-    
-    # === CONTROLLO NORMALE: già fatto oggi? ===
-    if duration_days > 0 and check_already_done_today(work):
-        dawn = get_dawn_today()
-        if now.hour < 6:
-            next_dawn = dawn
-        else:
-            next_dawn = dawn + timedelta(days=1)
-        
-        hours_left = int((next_dawn - now).total_seconds() // 3600)
-        mins_left = int(((next_dawn - now).total_seconds() % 3600) // 60)
-        
-        return {
-            'status': 'already_done_today',
-            'message': f'✅ Hai già completato la sessione di oggi!\n\n🌅 Prossima alba tra {hours_left}h {mins_left}m',
-            'work': work
-        }
-    
-    # === REGISTRA SESSIONE NORMALE ===
-    work['last_completed'] = now.isoformat()
-    if duration_days > 0:
-        work['current_day'] += 1
-    
-    session = {
-        'date': now.isoformat(),
-        'day_of_week': now.strftime('%A'),
-        'time': now.strftime('%H:%M'),
-        'reps_done': reps_done,
-        'aff_done': aff_done,
-        'planetary_hour': planetary_hour,
-        'duration_seconds': duration_seconds,
-        'day_number': work.get('current_day', 1)
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+  const s = (elapsed % 60).toString().padStart(2, '0');
+  document.getElementById('timerText').textContent = `⏱️ ${m}:${s}`;
+  
+  const now = new Date();
+  document.getElementById('timeNow').textContent = now.toTimeString().slice(0,5);
+}
+
+function updateCounterDisplay() {
+  document.getElementById('countNum').textContent = count;
+  
+  const pct = count / REPS;
+  const offset = 515 * (1 - pct);
+  document.getElementById('progressRing').style.strokeDashoffset = offset;
+  
+  const ring = document.getElementById('progressRing');
+  if (count >= REPS - 3 && count < REPS) {
+    ring.style.stroke = '#fbbf24';
+  } else if (count >= REPS) {
+    ring.style.stroke = '#4ade80';
+  } else {
+    ring.style.stroke = '#d4af37';
+  }
+}
+
+function incrementCounter() {
+  if (count >= REPS) return;
+  
+  count++;
+  updateCounterDisplay();
+  
+  if (count === REPS - 1) {
+    playLast();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  } else if (count === REPS) {
+    playComplete();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+    onCountingComplete();
+  } else {
+    playTick();
+    if (navigator.vibrate) navigator.vibrate(20);
+  }
+}
+
+function decrementCounter() {
+  if (count > 0) {
+    count--;
+    updateCounterDisplay();
+  }
+}
+
+function resetCounter() {
+  if (confirm('Vuoi resettare il contatore?')) {
+    count = 0;
+    updateCounterDisplay();
+    startTime = Date.now();
+  }
+}
+
+function onCountingComplete() {
+  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 5) {
+    phase = 'affirming';
+    document.getElementById('mainSection').classList.add('hide');
+    document.getElementById('affSection').classList.remove('hide');
+  } else {
+    completeSession();
+  }
+}
+
+function incrementAff() {
+  affCount++;
+  document.getElementById('affDone').textContent = affCount;
+  
+  playTick();
+  if (navigator.vibrate) navigator.vibrate(50);
+  
+  if (affCount >= AFF_REPS) {
+    playComplete();
+    completeSession();
+  }
+}
+
+function completeSession() {
+  phase = 'complete';
+  
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  
+  document.getElementById('mainSection').classList.add('hide');
+  document.getElementById('affSection').classList.add('hide');
+  document.getElementById('progressInfo').classList.add('hide');
+  document.getElementById('completeSection').classList.remove('hide');
+  
+  let msg = `${count} ripetizioni in ${Math.floor(elapsed/60)}m ${elapsed%60}s`;
+  if (DURATION > 0) {
+    msg += ` • Giorno ${DAY_NUM}/${DAYS_TOTAL}`;
+  }
+  document.getElementById('completeMsg').textContent = msg;
+  
+  // Invia dati a Telegram
+  if (tg) {
+    tg.sendData(JSON.stringify({
+      action: 'spell_session_complete',
+      user_id: USER_ID,
+      spell_id: SPELL_ID,
+      reps_done: count,
+      aff_done: affCount,
+      duration_seconds: elapsed,
+      planetary_hour: currentPlanet,
+      day_of_week: DAYS_IT[new Date().getDay()],
+      timestamp: new Date().toISOString()
+    }));
+  }
+  
+  // Chiudi dopo 3 secondi
+  setTimeout(() => {
+    if (tg) tg.close();
+  }, 3000);
+}
+
+function init() {
+  // Header
+  document.getElementById('spellName').textContent = SPELL_NAME;
+  const catLabel = document.getElementById('catLabel');
+  catLabel.classList.add(CATEGORY);
+  if (CATEGORY === 'mantra') catLabel.textContent = '🕉️ Mantra Sanscrito';
+  else if (CATEGORY === 'necronomicon') catLabel.textContent = '📜 Necronomicon';
+  else if (CATEGORY === 'aura') catLabel.textContent = '🔮 Aura Magick';
+  
+  // Info
+  document.getElementById('dayNum').textContent = DAY_NUM;
+  document.getElementById('dayName').textContent = DAYS_IT[new Date().getDay()];
+  
+  // Mantra
+  document.getElementById('mantraText').textContent = MANTRA;
+  if (PRONUNCIATION && PRONUNCIATION !== 'undefined') {
+    document.getElementById('pronText').textContent = PRONUNCIATION;
+  }
+  document.getElementById('totalReps').textContent = REPS;
+  
+  // Affermazione
+  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 5) {
+    document.getElementById('affText').textContent = AFFIRMATION;
+    document.getElementById('affTotal').textContent = AFF_REPS;
+  }
+  
+  // Progress info
+  if (DURATION > 0) {
+    document.getElementById('durationText').textContent = `${DURATION} giorni`;
+    document.getElementById('daysCompleted').textContent = `${DAY_NUM - 1} / ${DURATION}`;
+    if (START_DATE && START_DATE !== 'undefined') {
+      try {
+        const d = new Date(START_DATE);
+        document.getElementById('startDate').textContent = d.toLocaleDateString('it-IT');
+      } catch(e) {
+        document.getElementById('startDate').textContent = '---';
+      }
     }
-    work['sessions'].append(session)
-    
-    # Statistiche globali
-    user_data['total_sessions'] += 1
-    user_data['total_reps'] += reps_done
-    
-    # Aggiorna streak
-    last_date = user_data.get('last_session_date')
-    if last_date:
-        try:
-            last = datetime.fromisoformat(last_date).date()
-            if (now.date() - last).days == 1:
-                user_data['streak_days'] = user_data.get('streak_days', 0) + 1
-            elif (now.date() - last).days > 1:
-                user_data['streak_days'] = 1
-        except:
-            user_data['streak_days'] = 1
-    else:
-        user_data['streak_days'] = 1
-    
-    user_data['last_session_date'] = now.isoformat()
-    
-    # Verifica completamento lavoro
-    if duration_days > 0 and work['current_day'] > work['total_days']:
-        work['status'] = 'completed'
-        work['end_date'] = now.isoformat()
-        user_data['completed_works'].append(work.copy())
-        del user_data['active_works'][spell_id]
-        save_tracker_data(data)
-        
-        return {
-            'status': 'work_completed',
-            'message': f'🎉 Lavoro completato! {work["total_days"]} giorni!',
-            'work': work,
-            'streak': user_data['streak_days']
-        }
-    
-    save_tracker_data(data)
-    
-    return {
-        'status': 'session_recorded',
-        'session': session,
-        'work': work,
-        'streak': user_data['streak_days']
-    }
+  } else {
+    document.getElementById('progressInfo').classList.add('hide');
+  }
+  
+  // Ora planetaria
+  updatePlanetDisplay();
+  
+  // Timer
+  setInterval(updateTimer, 1000);
+  setInterval(updatePlanetDisplay, 60000);
+  
+  updateCounterDisplay();
+  updateTimer();
+  
+  // Init audio al primo click
+  document.body.addEventListener('click', initAudio, { once: true });
+}
 
-
-def get_spell_work(user_id: int, spell_id: str) -> Optional[dict]:
-    """Ottiene un lavoro specifico"""
-    user_data = get_user_spell_data(user_id)
-    
-    if spell_id in user_data['active_works']:
-        return user_data['active_works'][spell_id]
-    
-    for work in user_data['completed_works']:
-        if work.get('spell_id') == spell_id:
-            return work
-    
-    return None
-
-
-def can_do_session_today(user_id: int, spell_id: str) -> dict:
-    """Controlla se può fare la sessione oggi"""
-    user_data = get_user_spell_data(user_id)
-    now = datetime.now()
-    
-    if spell_id not in user_data['active_works']:
-        return {'can_do': True, 'reason': 'new_work'}
-    
-    work = user_data['active_works'][spell_id]
-    
-    # Per lavori senza durata
-    if work.get('duration_days', 0) == 0:
-        return {'can_do': True, 'reason': 'no_duration'}
-    
-    # Se in recovery mode
-    if work.get('recovery_mode'):
-        first_session = work.get('recovery_first_session')
-        if first_session:
-            first_dt = datetime.fromisoformat(first_session)
-            hours_passed = (now - first_dt).total_seconds() / 3600
-            if hours_passed >= 6:
-                return {'can_do': True, 'reason': 'recovery_second'}
-            else:
-                remaining = 6 - hours_passed
-                hours = int(remaining)
-                mins = int((remaining - hours) * 60)
-                return {
-                    'can_do': False, 
-                    'reason': 'recovery_wait',
-                    'message': f'Attendi {hours}h {mins}m per la seconda sessione'
-                }
-        else:
-            return {'can_do': True, 'reason': 'recovery_first'}
-    
-    # Controlla se già fatto oggi
-    if check_already_done_today(work):
-        dawn = get_dawn_today()
-        if now.hour < 6:
-            next_dawn = dawn
-        else:
-            next_dawn = dawn + timedelta(days=1)
-        
-        hours_left = int((next_dawn - now).total_seconds() // 3600)
-        mins_left = int(((next_dawn - now).total_seconds() % 3600) // 60)
-        
-        return {
-            'can_do': False, 
-            'reason': 'already_done',
-            'message': f'Già fatto oggi! Prossima alba tra {hours_left}h {mins_left}m'
-        }
-    
-    # Controlla se ha saltato un giorno
-    if check_missed_day(work) and not work.get('recovery_used'):
-        return {
-            'can_do': True,
-            'reason': 'missed_day',
-            'message': 'Hai saltato un giorno! Puoi recuperare con 2 sessioni oggi.'
-        }
-    
-    return {'can_do': True, 'reason': 'ok'}
-
-
-def get_active_spell_works(user_id: int) -> List[dict]:
-    """Ritorna lista dei lavori attivi"""
-    user_data = get_user_spell_data(user_id)
-    works = []
-    
-    for spell_id, work in user_data['active_works'].items():
-        work['days_remaining'] = max(0, work.get('total_days', 0) - work.get('current_day', 0) + 1)
-        work['done_today'] = check_already_done_today(work) if work.get('duration_days', 0) > 0 else False
-        works.append(work)
-    
-    return works
-
-
-def get_spell_stats(user_id: int) -> dict:
-    """Ritorna statistiche globali"""
-    user_data = get_user_spell_data(user_id)
-    
-    return {
-        'total_sessions': user_data.get('total_sessions', 0),
-        'total_reps': user_data.get('total_reps', 0),
-        'streak_days': user_data.get('streak_days', 0),
-        'active_works_count': len(user_data.get('active_works', {})),
-        'completed_works_count': len(user_data.get('completed_works', []))
-    }
-
-
-def reset_spell_work(user_id: int, spell_id: str) -> bool:
-    """Reset di un lavoro (admin/test)"""
-    data = load_tracker_data()
-    user_key = str(user_id)
-    
-    if user_key in data and spell_id in data[user_key].get('active_works', {}):
-        del data[user_key]['active_works'][spell_id]
-        save_tracker_data(data)
-        return True
-    
-    return False
+init();
+</script>
+</body>
+</html>
