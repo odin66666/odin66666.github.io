@@ -85,13 +85,11 @@
 </head>
 <body>
 <div class="container">
-  <!-- Header -->
   <div class="header">
     <h1 id="spellName">Caricamento...</h1>
     <div class="cat" id="catLabel">Incantesimo</div>
   </div>
   
-  <!-- Info Bar -->
   <div class="info-bar">
     <div class="info-item">
       <div class="val" id="dayNum">1</div>
@@ -107,22 +105,18 @@
     </div>
   </div>
   
-  <!-- Planetary Hour -->
   <div class="planet-bar">
     <div class="lbl">Ora Planetaria Corrente</div>
     <div class="planet" id="planetText">Calcolo...</div>
   </div>
   
-  <!-- Main Section -->
   <div id="mainSection">
-    <!-- Mantra Box -->
     <div class="mantra-box">
       <div class="lbl">🔊 Vibrazione</div>
       <div class="text" id="mantraText">---</div>
       <div class="pron" id="pronText"></div>
     </div>
     
-    <!-- Counter Ring -->
     <div class="counter-section">
       <div class="counter-ring">
         <svg width="180" height="180">
@@ -149,7 +143,6 @@
     </div>
   </div>
   
-  <!-- Affirmation Section -->
   <div class="aff-section hide" id="affSection">
     <div class="lbl">✍️ Affermazione</div>
     <div class="text" id="affText"></div>
@@ -159,7 +152,6 @@
     </button>
   </div>
   
-  <!-- Progress Info -->
   <div class="progress-info" id="progressInfo">
     <div class="row">
       <span class="lbl">Durata lavoro:</span>
@@ -175,7 +167,6 @@
     </div>
   </div>
   
-  <!-- Complete Status -->
   <div class="status-complete hide" id="completeSection">
     <div class="icon">✅</div>
     <div class="title">Sessione Completata!</div>
@@ -183,26 +174,69 @@
   </div>
 </div>
 
-<!-- Audio -->
-<audio id="audioTick" preload="auto"></audio>
-<audio id="audioLast" preload="auto"></audio>
-<audio id="audioComplete" preload="auto"></audio>
-
 <script>
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
-// Audio URLs (stessi dei quadrati)
-const AUDIO_BASE = 'https://odin66666.github.io/audio';
-const audioTick = document.getElementById('audioTick');
-const audioLast = document.getElementById('audioLast');
-const audioComplete = document.getElementById('audioComplete');
+// === WEB AUDIO API ===
+let audioCtx = null;
 
-audioTick.src = AUDIO_BASE + '/tick.mp3';
-audioLast.src = AUDIO_BASE + '/last.mp3';
-audioComplete.src = AUDIO_BASE + '/complete.mp3';
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
 
-// Parametri URL
+function playTick() {
+  initAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 800;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+
+function playLast() {
+  initAudio();
+  // Suono più lungo e alto per "quasi finito"
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 1200;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.3);
+}
+
+function playComplete() {
+  initAudio();
+  // Melodia di completamento
+  const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.2);
+    }, i * 150);
+  });
+}
+
+// === PARAMETRI URL ===
 const P = new URLSearchParams(window.location.search);
 const USER_ID = P.get('user_id') || '0';
 const SPELL_ID = P.get('spell_id') || '';
@@ -218,20 +252,20 @@ const DAY_NUM = parseInt(P.get('day_num')) || 1;
 const DAYS_TOTAL = parseInt(P.get('days_total')) || DURATION || 0;
 const START_DATE = P.get('start_date') || '';
 
-// Coordinate per ore planetarie (passate o default Roma)
+// Coordinate per ore planetarie
 const LAT = parseFloat(P.get('lat')) || 41.9028;
 const LON = parseFloat(P.get('lon')) || 12.4964;
 const TZ_PARAM = P.get('tz');
 const TZ = TZ_PARAM !== null ? parseFloat(TZ_PARAM) : 1;
 
-// Stato
+// === STATO ===
 let count = 0;
 let affCount = 0;
 let phase = 'counting';
 let startTime = Date.now();
 let currentPlanet = null;
 
-// Pianeti
+// === PIANETI ===
 const PLANETS = {
   sun: { s: '☉', n: 'Sole', c: 'c-sun' },
   moon: { s: '☽', n: 'Luna', c: 'c-moon' },
@@ -246,7 +280,7 @@ const SEQ = ['saturn', 'jupiter', 'mars', 'sun', 'venus', 'mercury', 'moon'];
 const RULERS = {0:'moon', 1:'mars', 2:'mercury', 3:'jupiter', 4:'venus', 5:'saturn', 6:'sun'};
 const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
-// Calcolo ore planetarie
+// === CALCOLO ORE PLANETARIE ===
 function sunTimesMin(lat, lon, doy, tz) {
   const latRad = lat * Math.PI / 180;
   const dec = -23.45 * Math.cos(2 * Math.PI / 365 * (doy + 10));
@@ -279,25 +313,20 @@ function getCurrentPlanetaryHour() {
   const ruler = RULERS[pyDay];
   const ri = SEQ.indexOf(ruler);
   
-  let isDay = nowMin >= sr && nowMin < ss;
-  let hourLen, hourIndex, baseTime;
-  
-  if (isDay) {
-    hourLen = (ss - sr) / 12;
+  let hourIndex;
+  if (nowMin >= sr && nowMin < ss) {
+    const hourLen = (ss - sr) / 12;
     hourIndex = Math.floor((nowMin - sr) / hourLen);
-    baseTime = sr;
   } else {
-    hourLen = ((nextSr + 1440) - ss) / 12;
+    const hourLen = ((nextSr + 1440) - ss) / 12;
     if (nowMin >= ss) {
-      hourIndex = Math.floor((nowMin - ss) / hourLen);
+      hourIndex = Math.floor((nowMin - ss) / hourLen) + 12;
     } else {
-      hourIndex = Math.floor((nowMin + 1440 - ss) / hourLen);
+      hourIndex = Math.floor((nowMin + 1440 - ss) / hourLen) + 12;
     }
-    hourIndex += 12;
   }
   
-  const planetIndex = (ri + hourIndex) % 7;
-  return SEQ[planetIndex];
+  return SEQ[(ri + hourIndex) % 7];
 }
 
 function updatePlanetDisplay() {
@@ -312,7 +341,6 @@ function updateTimer() {
   const s = (elapsed % 60).toString().padStart(2, '0');
   document.getElementById('timerText').textContent = `⏱️ ${m}:${s}`;
   
-  // Aggiorna ora corrente
   const now = new Date();
   document.getElementById('timeNow').textContent = now.toTimeString().slice(0,5);
 }
@@ -320,35 +348,18 @@ function updateTimer() {
 function updateCounterDisplay() {
   document.getElementById('countNum').textContent = count;
   
-  // Aggiorna ring
   const pct = count / REPS;
   const offset = 515 * (1 - pct);
   document.getElementById('progressRing').style.strokeDashoffset = offset;
   
-  // Cambia colore ring se quasi finito
   const ring = document.getElementById('progressRing');
   if (count >= REPS - 3 && count < REPS) {
-    ring.style.stroke = '#fbbf24'; // Warning yellow
+    ring.style.stroke = '#fbbf24';
   } else if (count >= REPS) {
-    ring.style.stroke = '#4ade80'; // Success green
+    ring.style.stroke = '#4ade80';
   } else {
-    ring.style.stroke = '#d4af37'; // Gold
+    ring.style.stroke = '#d4af37';
   }
-}
-
-function playSound(type) {
-  try {
-    if (type === 'tick') {
-      audioTick.currentTime = 0;
-      audioTick.play().catch(() => {});
-    } else if (type === 'last') {
-      audioLast.currentTime = 0;
-      audioLast.play().catch(() => {});
-    } else if (type === 'complete') {
-      audioComplete.currentTime = 0;
-      audioComplete.play().catch(() => {});
-    }
-  } catch (e) {}
 }
 
 function incrementCounter() {
@@ -357,13 +368,15 @@ function incrementCounter() {
   count++;
   updateCounterDisplay();
   
-  // Suoni
   if (count === REPS - 1) {
-    playSound('last');
+    playLast();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
   } else if (count === REPS) {
-    playSound('complete');
+    playComplete();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
     onCountingComplete();
   } else {
+    playTick();
     if (navigator.vibrate) navigator.vibrate(20);
   }
 }
@@ -384,7 +397,7 @@ function resetCounter() {
 }
 
 function onCountingComplete() {
-  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 0) {
+  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 5) {
     phase = 'affirming';
     document.getElementById('mainSection').classList.add('hide');
     document.getElementById('affSection').classList.remove('hide');
@@ -397,10 +410,11 @@ function incrementAff() {
   affCount++;
   document.getElementById('affDone').textContent = affCount;
   
+  playTick();
   if (navigator.vibrate) navigator.vibrate(50);
   
   if (affCount >= AFF_REPS) {
-    playSound('complete');
+    playComplete();
     completeSession();
   }
 }
@@ -415,15 +429,11 @@ function completeSession() {
   document.getElementById('progressInfo').classList.add('hide');
   document.getElementById('completeSection').classList.remove('hide');
   
-  // Messaggio
   let msg = `${count} ripetizioni in ${Math.floor(elapsed/60)}m ${elapsed%60}s`;
   if (DURATION > 0) {
     msg += ` • Giorno ${DAY_NUM}/${DAYS_TOTAL}`;
   }
   document.getElementById('completeMsg').textContent = msg;
-  
-  // Vibrazione successo
-  if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
   
   // Invia dati a Telegram
   if (tg) {
@@ -467,7 +477,7 @@ function init() {
   document.getElementById('totalReps').textContent = REPS;
   
   // Affermazione
-  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 0) {
+  if (AFFIRMATION && AFFIRMATION !== 'undefined' && AFFIRMATION.length > 5) {
     document.getElementById('affText').textContent = AFFIRMATION;
     document.getElementById('affTotal').textContent = AFF_REPS;
   }
@@ -477,8 +487,12 @@ function init() {
     document.getElementById('durationText').textContent = `${DURATION} giorni`;
     document.getElementById('daysCompleted').textContent = `${DAY_NUM - 1} / ${DURATION}`;
     if (START_DATE && START_DATE !== 'undefined') {
-      const d = new Date(START_DATE);
-      document.getElementById('startDate').textContent = d.toLocaleDateString('it-IT');
+      try {
+        const d = new Date(START_DATE);
+        document.getElementById('startDate').textContent = d.toLocaleDateString('it-IT');
+      } catch(e) {
+        document.getElementById('startDate').textContent = '---';
+      }
     }
   } else {
     document.getElementById('progressInfo').classList.add('hide');
@@ -489,10 +503,13 @@ function init() {
   
   // Timer
   setInterval(updateTimer, 1000);
-  setInterval(updatePlanetDisplay, 60000); // Aggiorna ogni minuto
+  setInterval(updatePlanetDisplay, 60000);
   
   updateCounterDisplay();
   updateTimer();
+  
+  // Init audio al primo click
+  document.body.addEventListener('click', initAudio, { once: true });
 }
 
 init();
