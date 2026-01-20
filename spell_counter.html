@@ -124,13 +124,13 @@
           <div class="of">di <span id="totalReps">108</span></div>
         </div>
       </div>
-      <div class="timer" id="timerText">â±ï¸ 00:00</div>
+      <div class="timer" id="timerText">⏱️ 00:00</div>
       <div class="avg-time" id="avgTimeText">Media: -- sec/rep</div>
       <button class="tap-area primary" id="tapBtn" onclick="incrementCounter()">📢 TOCCA PER CONTARE</button>
       <div class="controls">
-        <button class="ctrl-btn" onclick="decrementCounter()">âž– Correggi</button>
+        <button class="ctrl-btn" onclick="decrementCounter()">➖ Correggi</button>
         <button class="ctrl-btn" onclick="showHistory()">📜 Storico</button>
-        <button class="ctrl-btn" onclick="resetCounter()">â†º Reset</button>
+        <button class="ctrl-btn" onclick="resetCounter()">↺ Reset</button>
       </div>
     </div>
   </div>
@@ -153,12 +153,12 @@
 </div>
 <div class="warning-popup hide" id="warningPopup">
   <div class="warning-box">
-    <div class="icon">âš ï¸</div>
+    <div class="icon">⚠️</div>
     <div class="title">Click troppo veloce!</div>
     <div class="msg" id="warningMsg">Hai cliccato molto più velocemente della tua media.</div>
     <div class="detail" id="warningDetail">Media: 5.2s - Questo click: 1.3s</div>
     <div class="btns">
-      <button class="btn-cancel" onclick="cancelClick()">âŒ Annulla</button>
+      <button class="btn-cancel" onclick="cancelClick()">❌ Annulla</button>
       <button class="btn-confirm" onclick="confirmClick()">✅ Conferma</button>
     </div>
   </div>
@@ -247,7 +247,7 @@ function updateMoonDisplay() {
 function sunTimesMin(lat,lon,doy,tz) { const latRad=lat*Math.PI/180,dec=-23.45*Math.cos(2*Math.PI/365*(doy+10)),decRad=dec*Math.PI/180,B=2*Math.PI/365*(doy-81),eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); let cosH=(Math.cos(90.833*Math.PI/180)-Math.sin(latRad)*Math.sin(decRad))/(Math.cos(latRad)*Math.cos(decRad)); cosH=Math.max(-1,Math.min(1,cosH)); const H=Math.acos(cosH)*180/Math.PI,noon=720-(lon*4)-eot; return {sr:noon-(H*4)+(tz*60),ss:noon+(H*4)+(tz*60)}; }
 function getCurrentPlanetaryHour() { const now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),dow=now.getDay(),{sr,ss}=sunTimesMin(LAT,LON,doy,TZ),{sr:nextSr}=sunTimesMin(LAT,LON,doy+1,TZ),pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]); let hourIndex; if(nowMin>=sr&&nowMin<ss){hourIndex=Math.floor((nowMin-sr)/((ss-sr)/12));}else{const hourLen=((nextSr+1440)-ss)/12;hourIndex=(nowMin>=ss?Math.floor((nowMin-ss)/hourLen):Math.floor((nowMin+1440-ss)/hourLen))+12;} return SEQ[(ri+hourIndex)%7]; }
 function updatePlanetDisplay() { currentPlanet=getCurrentPlanetaryHour(); const p=PLANETS[currentPlanet]; document.getElementById('planetText').innerHTML=`<span class="${p.c}">${p.s} ${p.n}</span>`; }
-function updateTimer() { const e=Math.floor((Date.now()-startTime)/1000),m=Math.floor(e/60).toString().padStart(2,'0'),s=(e%60).toString().padStart(2,'0'); document.getElementById('timerText').textContent=`â±ï¸ ${m}:${s}`; document.getElementById('timeNow').textContent=new Date().toTimeString().slice(0,5); }
+function updateTimer() { const e=Math.floor((Date.now()-startTime)/1000),m=Math.floor(e/60).toString().padStart(2,'0'),s=(e%60).toString().padStart(2,'0'); document.getElementById('timerText').textContent=`⏱️ ${m}:${s}`; document.getElementById('timeNow').textContent=new Date().toTimeString().slice(0,5); }
 function getAverageClickTime() { if(clickHistory.length<MIN_CLICKS_FOR_AVG)return null; const d=clickHistory.filter(c=>c.delta>0).map(c=>c.delta); if(d.length<MIN_CLICKS_FOR_AVG)return null; return d.reduce((a,b)=>a+b,0)/d.length; }
 function updateAvgDisplay() { const a=getAverageClickTime(); if(a){document.getElementById('avgTimeText').textContent=`Media: ${a.toFixed(1)} sec/rep`;}else{document.getElementById('avgTimeText').textContent=`Media: calcolo tra ${MIN_CLICKS_FOR_AVG-clickHistory.length} click`;} }
 function getCurrentMantra() { return MANTRAS[currentMantraIndex] || MANTRAS[0]; }
@@ -261,7 +261,7 @@ function applyClick(ts,delta,confirmed=false) { const m=getCurrentMantra(); coun
 function incrementCounter() { const m=getCurrentMantra(); if(count>=m.reps)return; const now=Date.now(),delta=lastClickTime?(now-lastClickTime)/1000:0,avg=getAverageClickTime(); if(avg&&delta>0&&delta<avg*THRESHOLD_FACTOR){pendingClick={timestamp:now,delta:delta};showWarning(avg,delta);return;} lastClickTime=now; applyClick(now,delta); }
 function decrementCounter() { if(count>0){count--;if(clickHistory.length>0)clickHistory.pop();updateCounterDisplay();updateAvgDisplay();} }
 function resetCounter() { if(confirm('Vuoi resettare il contatore corrente?')){count=0;clickHistory=[];lastClickTime=null;updateCounterDisplay();updateAvgDisplay();} }
-function showHistory() { const l=document.getElementById('historyList'); l.innerHTML=''; if(clickHistory.length===0){l.innerHTML='<div style="text-align:center;color:var(--dim);padding:20px">Nessun click registrato</div>';}else{clickHistory.forEach(c=>{const d=document.createElement('div');d.className='history-item'+(c.confirmed?' warning':'');const t=new Date(c.timestamp).toTimeString().slice(0,8),dt=c.delta>0?`+${c.delta.toFixed(1)}s`:'-';d.innerHTML=`<span class="rep">Rep ${c.rep}</span><span class="time">${t}</span><span class="delta">${dt}${c.confirmed?' âš ï¸':''}</span>`;l.appendChild(d);});} document.getElementById('historyPopup').classList.remove('hide'); }
+function showHistory() { const l=document.getElementById('historyList'); l.innerHTML=''; if(clickHistory.length===0){l.innerHTML='<div style="text-align:center;color:var(--dim);padding:20px">Nessun click registrato</div>';}else{clickHistory.forEach(c=>{const d=document.createElement('div');d.className='history-item'+(c.confirmed?' warning':'');const t=new Date(c.timestamp).toTimeString().slice(0,8),dt=c.delta>0?`+${c.delta.toFixed(1)}s`:'-';d.innerHTML=`<span class="rep">Rep ${c.rep}</span><span class="time">${t}</span><span class="delta">${dt}${c.confirmed?' ⚠️':''}</span>`;l.appendChild(d);});} document.getElementById('historyPopup').classList.remove('hide'); }
 function hideHistory() { document.getElementById('historyPopup').classList.add('hide'); }
 function onCountingComplete() { if(AFFIRMATION&&AFFIRMATION!=='undefined'&&AFFIRMATION.length>5){phase='affirming';document.getElementById('mainSection').classList.add('hide');document.getElementById('affSection').classList.remove('hide');}else{showCompleteScreen();} }
 function incrementAff() { affCount++; document.getElementById('affDone').textContent=affCount; playTick(); if(navigator.vibrate)navigator.vibrate(50); if(affCount>=AFF_REPS){playComplete();showCompleteScreen();} }
@@ -311,7 +311,7 @@ function init() {
   document.getElementById('spellName').textContent=SPELL_NAME; 
   const c=document.getElementById('catLabel'); 
   c.classList.add(CATEGORY); 
-  if(CATEGORY==='mantra')c.textContent='🕉️ Mantra Sanscrito'; 
+  if(CATEGORY==='mantra')c.textContent='ð🕉️ Mantra Sanscrito'; 
   else if(CATEGORY==='necronomicon')c.textContent='📜 Necronomicon'; 
   else if(CATEGORY==='aura')c.textContent='🔮 Aura Magick'; 
   document.getElementById('dayNum').textContent=DAY_NUM; 
@@ -328,8 +328,7 @@ function init() {
     document.getElementById('daysCompleted').textContent=`${DAY_NUM-1} / ${DURATION}`;
   }else{
     document.getElementById('progressInfo').classList.add('hide');
-  }
-  // Salva segno luna all'inizio
+  } 
   startMoonSign = getMoonSign();
   updatePlanetDisplay();
   updateMoonDisplay(); 
