@@ -109,7 +109,7 @@
   </div>
   <div id="mainSection">
     <div class="mantra-box">
-      <div class="lbl">📊 Vibrazione</div>
+      <div class="lbl">Vibrazione</div>
       <div class="text" id="mantraText">---</div>
       <div class="pron" id="pronText"></div>
     </div>
@@ -124,48 +124,48 @@
           <div class="of">di <span id="totalReps">108</span></div>
         </div>
       </div>
-      <div class="timer" id="timerText">⏱️ 00:00</div>
+      <div class="timer" id="timerText">00:00</div>
       <div class="avg-time" id="avgTimeText">Media: -- sec/rep</div>
-      <button class="tap-area primary" id="tapBtn" onclick="incrementCounter()">📢 TOCCA PER CONTARE</button>
+      <button class="tap-area primary" id="tapBtn" onclick="incrementCounter()">TOCCA PER CONTARE</button>
       <div class="controls">
-        <button class="ctrl-btn" onclick="decrementCounter()">➖ Correggi</button>
-        <button class="ctrl-btn" onclick="showHistory()">📜 Storico</button>
-        <button class="ctrl-btn" onclick="resetCounter()">↺ Reset</button>
+        <button class="ctrl-btn" onclick="decrementCounter()">- Correggi</button>
+        <button class="ctrl-btn" onclick="showHistory()">Storico</button>
+        <button class="ctrl-btn" onclick="resetCounter()">Reset</button>
       </div>
     </div>
   </div>
   <div class="aff-section hide" id="affSection">
-    <div class="lbl">✍️ Affermazione</div>
+    <div class="lbl">Affermazione</div>
     <div class="text" id="affText"></div>
     <div class="counter">Ripeti: <span id="affDone">0</span> / <span id="affTotal">3</span></div>
-    <button class="tap-area primary" onclick="incrementAff()">📣 AFFERMA</button>
+    <button class="tap-area primary" onclick="incrementAff()">AFFERMA</button>
   </div>
   <div class="progress-info" id="progressInfo">
     <div class="row"><span class="lbl">Durata lavoro:</span><span class="val" id="durationText">40 giorni</span></div>
     <div class="row"><span class="lbl">Giorni completati:</span><span class="val" id="daysCompleted">0 / 40</span></div>
   </div>
   <div class="status-complete hide" id="completeSection">
-    <div class="icon">✅</div>
+    <div class="icon">&#10004;</div>
     <div class="title">Sessione Completata!</div>
     <div class="sub" id="completeMsg">Ottimo lavoro!</div>
-    <button class="btn" onclick="saveAndClose()">💾 SALVA E CHIUDI</button>
+    <button class="btn" onclick="saveAndClose()">SALVA E CHIUDI</button>
   </div>
 </div>
 <div class="warning-popup hide" id="warningPopup">
   <div class="warning-box">
-    <div class="icon">⚠️</div>
+    <div class="icon">&#9888;</div>
     <div class="title">Click troppo veloce!</div>
-    <div class="msg" id="warningMsg">Hai cliccato molto più velocemente della tua media.</div>
+    <div class="msg" id="warningMsg">Hai cliccato molto piu velocemente della tua media.</div>
     <div class="detail" id="warningDetail">Media: 5.2s - Questo click: 1.3s</div>
     <div class="btns">
-      <button class="btn-cancel" onclick="cancelClick()">❌ Annulla</button>
-      <button class="btn-confirm" onclick="confirmClick()">✅ Conferma</button>
+      <button class="btn-cancel" onclick="cancelClick()">Annulla</button>
+      <button class="btn-confirm" onclick="confirmClick()">Conferma</button>
     </div>
   </div>
 </div>
 <div class="history-popup hide" id="historyPopup">
   <div class="history-box">
-    <div class="title">📜 Storico Click</div>
+    <div class="title">Storico Click</div>
     <div class="history-list" id="historyList"></div>
     <button class="tap-area primary" style="margin-top:15px" onclick="hideHistory()">CHIUDI</button>
   </div>
@@ -176,10 +176,68 @@ if (tg) { tg.ready(); tg.expand(); }
 
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-function playTick() { initAudio(); const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination); o.frequency.value=800;o.type='sine'; g.gain.setValueAtTime(0.3,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.1); o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.1); }
-function playLast() { initAudio(); const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination); o.frequency.value=1200;o.type='sine'; g.gain.setValueAtTime(0.4,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.3); }
-function playComplete() { initAudio(); [523,659,784,1047].forEach((f,i)=>{ setTimeout(()=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination); o.frequency.value=f;o.type='sine'; g.gain.setValueAtTime(0.3,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.2); },i*150); }); }
-function playWarning() { initAudio(); [400,400,600].forEach((f,i)=>{ setTimeout(()=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination); o.frequency.value=f;o.type='square'; g.gain.setValueAtTime(0.4,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15); o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.15); },i*180); }); }
+
+function playTick() { 
+  initAudio(); 
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain(); 
+  o.connect(g);g.connect(audioCtx.destination); 
+  o.frequency.value=800;o.type='sine'; 
+  g.gain.setValueAtTime(0.3,audioCtx.currentTime); 
+  g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.1); 
+  o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.1); 
+}
+
+function playTen() { 
+  initAudio(); 
+  [600, 900].forEach((f, i) => {
+    setTimeout(() => {
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain(); 
+      o.connect(g);g.connect(audioCtx.destination); 
+      o.frequency.value=f;o.type='sine'; 
+      g.gain.setValueAtTime(0.4,audioCtx.currentTime); 
+      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15); 
+      o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.15); 
+    }, i * 100);
+  });
+}
+
+function playLast() { 
+  initAudio(); 
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain(); 
+  o.connect(g);g.connect(audioCtx.destination); 
+  o.frequency.value=1200;o.type='sine'; 
+  g.gain.setValueAtTime(0.4,audioCtx.currentTime); 
+  g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.3); 
+  o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.3); 
+}
+
+function playComplete() { 
+  initAudio(); 
+  [523,659,784,1047].forEach((f,i)=>{ 
+    setTimeout(()=>{ 
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain(); 
+      o.connect(g);g.connect(audioCtx.destination); 
+      o.frequency.value=f;o.type='sine'; 
+      g.gain.setValueAtTime(0.3,audioCtx.currentTime); 
+      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.2); 
+      o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.2); 
+    },i*150); 
+  }); 
+}
+
+function playWarning() { 
+  initAudio(); 
+  [400,400,600].forEach((f,i)=>{ 
+    setTimeout(()=>{ 
+      const o=audioCtx.createOscillator(),g=audioCtx.createGain(); 
+      o.connect(g);g.connect(audioCtx.destination); 
+      o.frequency.value=f;o.type='square'; 
+      g.gain.setValueAtTime(0.4,audioCtx.currentTime); 
+      g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15); 
+      o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.15); 
+    },i*180); 
+  }); 
+}
 
 const P = new URLSearchParams(window.location.search);
 const USER_ID = P.get('user_id') || '0';
@@ -204,74 +262,224 @@ let currentMantraIndex = 0, count = 0, totalRepsCompleted = 0, affCount = 0, pha
 let clickHistory = [], lastClickTime = null, pendingClick = null;
 const MIN_CLICKS_FOR_AVG = 10, THRESHOLD_FACTOR = 0.4;
 
-// Dati sessione per salvataggio finale
 let sessionData = null;
 
-const DAYS_IT = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-const PLANETS = { sun:{s:'☉',n:'Sole',c:'c-sun'}, moon:{s:'☽',n:'Luna',c:'c-moon'}, mars:{s:'♂',n:'Marte',c:'c-mars'}, mercury:{s:'☿',n:'Mercurio',c:'c-mercury'}, jupiter:{s:'♃',n:'Giove',c:'c-jupiter'}, venus:{s:'♀',n:'Venere',c:'c-venus'}, saturn:{s:'♄',n:'Saturno',c:'c-saturn'} };
+const DAYS_IT = ['Domenica', 'Lunedi', 'Martedi', 'Mercoledi', 'Giovedi', 'Venerdi', 'Sabato'];
+const PLANETS = { sun:{s:'\u2609',n:'Sole',c:'c-sun'}, moon:{s:'\u263D',n:'Luna',c:'c-moon'}, mars:{s:'\u2642',n:'Marte',c:'c-mars'}, mercury:{s:'\u263F',n:'Mercurio',c:'c-mercury'}, jupiter:{s:'\u2643',n:'Giove',c:'c-jupiter'}, venus:{s:'\u2640',n:'Venere',c:'c-venus'}, saturn:{s:'\u2644',n:'Saturno',c:'c-saturn'} };
 const SEQ = ['saturn','jupiter','mars','sun','venus','mercury','moon'];
 const RULERS = {0:'moon',1:'mars',2:'mercury',3:'jupiter',4:'venus',5:'saturn',6:'sun'};
 
 const ZODIAC_SIGNS = [
-    {name: "Ariete", symbol: "♈"},
-    {name: "Toro", symbol: "♉"},
-    {name: "Gemelli", symbol: "♊"},
-    {name: "Cancro", symbol: "♋"},
-    {name: "Leone", symbol: "♌"},
-    {name: "Vergine", symbol: "♍"},
-    {name: "Bilancia", symbol: "♎"},
-    {name: "Scorpione", symbol: "♏"},
-    {name: "Sagittario", symbol: "♐"},
-    {name: "Capricorno", symbol: "♑"},
-    {name: "Acquario", symbol: "♒"},
-    {name: "Pesci", symbol: "♓"}
+  {name: "Ariete", symbol: "\u2648"},
+  {name: "Toro", symbol: "\u2649"},
+  {name: "Gemelli", symbol: "\u264A"},
+  {name: "Cancro", symbol: "\u264B"},
+  {name: "Leone", symbol: "\u264C"},
+  {name: "Vergine", symbol: "\u264D"},
+  {name: "Bilancia", symbol: "\u264E"},
+  {name: "Scorpione", symbol: "\u264F"},
+  {name: "Sagittario", symbol: "\u2650"},
+  {name: "Capricorno", symbol: "\u2651"},
+  {name: "Acquario", symbol: "\u2652"},
+  {name: "Pesci", symbol: "\u2653"}
 ];
 
 function getMoonSign() {
-    const now = new Date();
-    const epoch = new Date(2000, 0, 6, 18, 0, 0);
-    const msPerDay = 86400000;
-    const daysSinceEpoch = (now - epoch) / msPerDay;
-    const lunarCycle = 27.321661;
-    const daysPerSign = lunarCycle / 12;
-    const positionInCycle = daysSinceEpoch % lunarCycle;
-    const signIndex = Math.floor(positionInCycle / daysPerSign) % 12;
-    return ZODIAC_SIGNS[signIndex];
+  const now = new Date();
+  const epoch = new Date(2000, 0, 6, 18, 0, 0);
+  const msPerDay = 86400000;
+  const daysSinceEpoch = (now - epoch) / msPerDay;
+  const lunarCycle = 27.321661;
+  const daysPerSign = lunarCycle / 12;
+  const positionInCycle = daysSinceEpoch % lunarCycle;
+  const signIndex = Math.floor(positionInCycle / daysPerSign) % 12;
+  return ZODIAC_SIGNS[signIndex];
 }
 
 function updateMoonDisplay() {
-    const moon = getMoonSign();
-    document.getElementById('moonText').innerHTML = `<span style="color:#9d4edd">${moon.symbol} ${moon.name}</span>`;
+  const moon = getMoonSign();
+  document.getElementById('moonText').innerHTML = '<span style="color:#9d4edd">' + moon.symbol + ' ' + moon.name + '</span>';
 }
 
-function sunTimesMin(lat,lon,doy,tz) { const latRad=lat*Math.PI/180,dec=-23.45*Math.cos(2*Math.PI/365*(doy+10)),decRad=dec*Math.PI/180,B=2*Math.PI/365*(doy-81),eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); let cosH=(Math.cos(90.833*Math.PI/180)-Math.sin(latRad)*Math.sin(decRad))/(Math.cos(latRad)*Math.cos(decRad)); cosH=Math.max(-1,Math.min(1,cosH)); const H=Math.acos(cosH)*180/Math.PI,noon=720-(lon*4)-eot; return {sr:noon-(H*4)+(tz*60),ss:noon+(H*4)+(tz*60)}; }
-function getCurrentPlanetaryHour() { const now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),dow=now.getDay(),{sr,ss}=sunTimesMin(LAT,LON,doy,TZ),{sr:nextSr}=sunTimesMin(LAT,LON,doy+1,TZ),pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]); let hourIndex; if(nowMin>=sr&&nowMin<ss){hourIndex=Math.floor((nowMin-sr)/((ss-sr)/12));}else{const hourLen=((nextSr+1440)-ss)/12;hourIndex=(nowMin>=ss?Math.floor((nowMin-ss)/hourLen):Math.floor((nowMin+1440-ss)/hourLen))+12;} return SEQ[(ri+hourIndex)%7]; }
-function updatePlanetDisplay() { currentPlanet=getCurrentPlanetaryHour(); const p=PLANETS[currentPlanet]; document.getElementById('planetText').innerHTML=`<span class="${p.c}">${p.s} ${p.n}</span>`; }
-function updateTimer() { const e=Math.floor((Date.now()-startTime)/1000),m=Math.floor(e/60).toString().padStart(2,'0'),s=(e%60).toString().padStart(2,'0'); document.getElementById('timerText').textContent=`⏱️ ${m}:${s}`; document.getElementById('timeNow').textContent=new Date().toTimeString().slice(0,5); }
-function getAverageClickTime() { if(clickHistory.length<MIN_CLICKS_FOR_AVG)return null; const d=clickHistory.filter(c=>c.delta>0).map(c=>c.delta); if(d.length<MIN_CLICKS_FOR_AVG)return null; return d.reduce((a,b)=>a+b,0)/d.length; }
-function updateAvgDisplay() { const a=getAverageClickTime(); if(a){document.getElementById('avgTimeText').textContent=`Media: ${a.toFixed(1)} sec/rep`;}else{document.getElementById('avgTimeText').textContent=`Media: calcolo tra ${MIN_CLICKS_FOR_AVG-clickHistory.length} click`;} }
+function sunTimesMin(lat,lon,doy,tz) { 
+  const latRad=lat*Math.PI/180,dec=-23.45*Math.cos(2*Math.PI/365*(doy+10)),decRad=dec*Math.PI/180,B=2*Math.PI/365*(doy-81),eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); 
+  let cosH=(Math.cos(90.833*Math.PI/180)-Math.sin(latRad)*Math.sin(decRad))/(Math.cos(latRad)*Math.cos(decRad)); 
+  cosH=Math.max(-1,Math.min(1,cosH)); 
+  const H=Math.acos(cosH)*180/Math.PI,noon=720-(lon*4)-eot; 
+  return {sr:noon-(H*4)+(tz*60),ss:noon+(H*4)+(tz*60)}; 
+}
+
+function getCurrentPlanetaryHour() { 
+  const now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),dow=now.getDay(),{sr,ss}=sunTimesMin(LAT,LON,doy,TZ),{sr:nextSr}=sunTimesMin(LAT,LON,doy+1,TZ),pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]); 
+  let hourIndex; 
+  if(nowMin>=sr&&nowMin<ss){hourIndex=Math.floor((nowMin-sr)/((ss-sr)/12));}
+  else{const hourLen=((nextSr+1440)-ss)/12;hourIndex=(nowMin>=ss?Math.floor((nowMin-ss)/hourLen):Math.floor((nowMin+1440-ss)/hourLen))+12;} 
+  return SEQ[(ri+hourIndex)%7]; 
+}
+
+function updatePlanetDisplay() { 
+  currentPlanet=getCurrentPlanetaryHour(); 
+  const p=PLANETS[currentPlanet]; 
+  document.getElementById('planetText').innerHTML='<span class="' + p.c + '">' + p.s + ' ' + p.n + '</span>'; 
+}
+
+function updateTimer() { 
+  const e=Math.floor((Date.now()-startTime)/1000),m=Math.floor(e/60).toString().padStart(2,'0'),s=(e%60).toString().padStart(2,'0'); 
+  document.getElementById('timerText').textContent=m + ':' + s; 
+  document.getElementById('timeNow').textContent=new Date().toTimeString().slice(0,5); 
+}
+
+function getAverageClickTime() { 
+  if(clickHistory.length<MIN_CLICKS_FOR_AVG)return null; 
+  const d=clickHistory.filter(c=>c.delta>0).map(c=>c.delta); 
+  if(d.length<MIN_CLICKS_FOR_AVG)return null; 
+  return d.reduce((a,b)=>a+b,0)/d.length; 
+}
+
+function updateAvgDisplay() { 
+  const a=getAverageClickTime(); 
+  if(a){document.getElementById('avgTimeText').textContent='Media: ' + a.toFixed(1) + ' sec/rep';}
+  else{document.getElementById('avgTimeText').textContent='Media: calcolo tra ' + (MIN_CLICKS_FOR_AVG-clickHistory.length) + ' click';} 
+}
+
 function getCurrentMantra() { return MANTRAS[currentMantraIndex] || MANTRAS[0]; }
-function updateMantraDisplay() { const m=getCurrentMantra(); document.getElementById('mantraText').textContent=m.word; document.getElementById('pronText').textContent=m.pronunciation||''; document.getElementById('totalReps').textContent=m.reps; if(MANTRAS.length>1){document.getElementById('phaseIndicator').classList.remove('hide');document.getElementById('phaseText').textContent=`${currentMantraIndex+1}/${MANTRAS.length}: ${m.word}`;} }
-function updateCounterDisplay() { const m=getCurrentMantra(); document.getElementById('countNum').textContent=count; document.getElementById('progressRing').style.strokeDashoffset=515*(1-count/m.reps); const r=document.getElementById('progressRing'); if(count>=m.reps-3&&count<m.reps)r.style.stroke='#fbbf24'; else if(count>=m.reps)r.style.stroke='#4ade80'; else r.style.stroke='#d4af37'; }
-function showWarning(avg,click) { document.getElementById('warningMsg').textContent='Hai cliccato molto più velocemente della tua media.'; document.getElementById('warningDetail').textContent=`Media: ${avg.toFixed(1)}s - Questo click: ${click.toFixed(1)}s`; document.getElementById('warningPopup').classList.remove('hide'); playWarning(); if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]); }
+
+function updateMantraDisplay() { 
+  const m=getCurrentMantra(); 
+  document.getElementById('mantraText').textContent=m.word; 
+  document.getElementById('pronText').textContent=m.pronunciation||''; 
+  document.getElementById('totalReps').textContent=m.reps; 
+  if(MANTRAS.length>1){
+    document.getElementById('phaseIndicator').classList.remove('hide');
+    document.getElementById('phaseText').textContent=(currentMantraIndex+1) + '/' + MANTRAS.length + ': ' + m.word;
+  } 
+}
+
+function updateCounterDisplay() { 
+  const m=getCurrentMantra(); 
+  document.getElementById('countNum').textContent=count; 
+  document.getElementById('progressRing').style.strokeDashoffset=515*(1-count/m.reps); 
+  const r=document.getElementById('progressRing'); 
+  if(count>=m.reps-3&&count<m.reps)r.style.stroke='#fbbf24'; 
+  else if(count>=m.reps)r.style.stroke='#4ade80'; 
+  else r.style.stroke='#d4af37'; 
+}
+
+function showWarning(avg,click) { 
+  document.getElementById('warningMsg').textContent='Hai cliccato molto piu velocemente della tua media.'; 
+  document.getElementById('warningDetail').textContent='Media: ' + avg.toFixed(1) + 's - Questo click: ' + click.toFixed(1) + 's'; 
+  document.getElementById('warningPopup').classList.remove('hide'); 
+  playWarning(); 
+  if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]); 
+}
+
 function hideWarning() { document.getElementById('warningPopup').classList.add('hide'); }
 function cancelClick() { pendingClick=null; hideWarning(); }
 function confirmClick() { if(pendingClick){applyClick(pendingClick.timestamp,pendingClick.delta,true);pendingClick=null;} hideWarning(); }
-function applyClick(ts,delta,confirmed=false) { const m=getCurrentMantra(); count++; clickHistory.push({rep:count,timestamp:ts,delta:delta,confirmed:confirmed}); updateCounterDisplay(); updateAvgDisplay(); if(count===m.reps-1){playLast();if(navigator.vibrate)navigator.vibrate([100,50,100]);}else if(count>=m.reps){playComplete();if(navigator.vibrate)navigator.vibrate([100,50,100,50,200]);totalRepsCompleted+=count;if(currentMantraIndex<MANTRAS.length-1){setTimeout(()=>{currentMantraIndex++;count=0;clickHistory=[];lastClickTime=null;updateMantraDisplay();updateCounterDisplay();updateAvgDisplay();},1000);}else{onCountingComplete();}}else{playTick();if(navigator.vibrate)navigator.vibrate(20);} }
-function incrementCounter() { const m=getCurrentMantra(); if(count>=m.reps)return; const now=Date.now(),delta=lastClickTime?(now-lastClickTime)/1000:0,avg=getAverageClickTime(); if(avg&&delta>0&&delta<avg*THRESHOLD_FACTOR){pendingClick={timestamp:now,delta:delta};showWarning(avg,delta);return;} lastClickTime=now; applyClick(now,delta); }
-function decrementCounter() { if(count>0){count--;if(clickHistory.length>0)clickHistory.pop();updateCounterDisplay();updateAvgDisplay();} }
-function resetCounter() { if(confirm('Vuoi resettare il contatore corrente?')){count=0;clickHistory=[];lastClickTime=null;updateCounterDisplay();updateAvgDisplay();} }
-function showHistory() { const l=document.getElementById('historyList'); l.innerHTML=''; if(clickHistory.length===0){l.innerHTML='<div style="text-align:center;color:var(--dim);padding:20px">Nessun click registrato</div>';}else{clickHistory.forEach(c=>{const d=document.createElement('div');d.className='history-item'+(c.confirmed?' warning':'');const t=new Date(c.timestamp).toTimeString().slice(0,8),dt=c.delta>0?`+${c.delta.toFixed(1)}s`:'-';d.innerHTML=`<span class="rep">Rep ${c.rep}</span><span class="time">${t}</span><span class="delta">${dt}${c.confirmed?' ⚠️':''}</span>`;l.appendChild(d);});} document.getElementById('historyPopup').classList.remove('hide'); }
+
+function applyClick(ts,delta,confirmed) { 
+  confirmed = confirmed || false;
+  const m=getCurrentMantra(); 
+  count++; 
+  clickHistory.push({rep:count,timestamp:ts,delta:delta,confirmed:confirmed}); 
+  updateCounterDisplay(); 
+  updateAvgDisplay(); 
+  
+  if(count===m.reps-1){
+    playLast();
+    if(navigator.vibrate)navigator.vibrate([100,50,100]);
+  } else if(count>=m.reps){
+    playComplete();
+    if(navigator.vibrate)navigator.vibrate([100,50,100,50,200]);
+    totalRepsCompleted+=count;
+    if(currentMantraIndex<MANTRAS.length-1){
+      setTimeout(function(){
+        currentMantraIndex++;count=0;clickHistory=[];lastClickTime=null;
+        updateMantraDisplay();updateCounterDisplay();updateAvgDisplay();
+      },1000);
+    } else {
+      onCountingComplete();
+    }
+  } else if(count % 10 === 0) {
+    playTen();
+    if(navigator.vibrate)navigator.vibrate([50,30,50]);
+  } else {
+    playTick();
+    if(navigator.vibrate)navigator.vibrate(20);
+  } 
+}
+
+function incrementCounter() { 
+  const m=getCurrentMantra(); 
+  if(count>=m.reps)return; 
+  const now=Date.now(),delta=lastClickTime?(now-lastClickTime)/1000:0,avg=getAverageClickTime(); 
+  if(avg&&delta>0&&delta<avg*THRESHOLD_FACTOR){
+    pendingClick={timestamp:now,delta:delta};
+    showWarning(avg,delta);
+    return;
+  } 
+  lastClickTime=now; 
+  applyClick(now,delta,false); 
+}
+
+function decrementCounter() { 
+  if(count>0){
+    count--;
+    if(clickHistory.length>0)clickHistory.pop();
+    updateCounterDisplay();
+    updateAvgDisplay();
+  } 
+}
+
+function resetCounter() { 
+  if(confirm('Vuoi resettare il contatore corrente?')){
+    count=0;clickHistory=[];lastClickTime=null;
+    updateCounterDisplay();updateAvgDisplay();
+  } 
+}
+
+function showHistory() { 
+  var l=document.getElementById('historyList'); 
+  l.innerHTML=''; 
+  if(clickHistory.length===0){
+    l.innerHTML='<div style="text-align:center;color:var(--dim);padding:20px">Nessun click registrato</div>';
+  } else {
+    clickHistory.forEach(function(c){
+      var d=document.createElement('div');
+      d.className='history-item'+(c.confirmed?' warning':'');
+      var t=new Date(c.timestamp).toTimeString().slice(0,8),dt=c.delta>0?'+'+c.delta.toFixed(1)+'s':'-';
+      d.innerHTML='<span class="rep">Rep ' + c.rep + '</span><span class="time">' + t + '</span><span class="delta">' + dt + (c.confirmed?' !':'') + '</span>';
+      l.appendChild(d);
+    });
+  } 
+  document.getElementById('historyPopup').classList.remove('hide'); 
+}
+
 function hideHistory() { document.getElementById('historyPopup').classList.add('hide'); }
-function onCountingComplete() { if(AFFIRMATION&&AFFIRMATION!=='undefined'&&AFFIRMATION.length>5){phase='affirming';document.getElementById('mainSection').classList.add('hide');document.getElementById('affSection').classList.remove('hide');}else{showCompleteScreen();} }
-function incrementAff() { affCount++; document.getElementById('affDone').textContent=affCount; playTick(); if(navigator.vibrate)navigator.vibrate(50); if(affCount>=AFF_REPS){playComplete();showCompleteScreen();} }
+
+function onCountingComplete() { 
+  if(AFFIRMATION&&AFFIRMATION!=='undefined'&&AFFIRMATION.length>5){
+    phase='affirming';
+    document.getElementById('mainSection').classList.add('hide');
+    document.getElementById('affSection').classList.remove('hide');
+  } else {
+    showCompleteScreen();
+  } 
+}
+
+function incrementAff() { 
+  affCount++; 
+  document.getElementById('affDone').textContent=affCount; 
+  playTick(); 
+  if(navigator.vibrate)navigator.vibrate(50); 
+  if(affCount>=AFF_REPS){playComplete();showCompleteScreen();} 
+}
 
 function showCompleteScreen() {
   phase = 'complete';
-  const elapsed = Math.floor((Date.now() - startTime) / 1000);
-  const totalReps = MANTRAS.reduce((s, m) => s + m.reps, 0);
+  var elapsed = Math.floor((Date.now() - startTime) / 1000);
+  var totalReps = MANTRAS.reduce(function(s, m){ return s + m.reps; }, 0);
   
-  // Salva i dati per quando l'utente preme CHIUDI
   sessionData = {
     action: 'spell_session_complete',
     user_id: USER_ID,
@@ -291,29 +499,26 @@ function showCompleteScreen() {
   document.getElementById('phaseIndicator').classList.add('hide');
   document.getElementById('completeSection').classList.remove('hide');
   
-  let msg = `${totalReps} ripetizioni in ${Math.floor(elapsed/60)}m ${elapsed%60}s`;
-  if (DURATION > 0) msg += ` • Giorno ${DAY_NUM}/${DAYS_TOTAL}`;
+  var msg = totalReps + ' ripetizioni in ' + Math.floor(elapsed/60) + 'm ' + (elapsed%60) + 's';
+  if (DURATION > 0) msg += ' - Giorno ' + DAY_NUM + '/' + DAYS_TOTAL;
   document.getElementById('completeMsg').textContent = msg;
 }
 
 function saveAndClose() {
-  // Invia dati a Telegram - questo chiuderà automaticamente la webapp
   if (tg && sessionData) {
     tg.sendData(JSON.stringify(sessionData));
-    // sendData chiude automaticamente la webapp
   } else {
-    // Fallback se non in Telegram
     alert('Sessione completata!');
   }
 }
 
 function init() { 
   document.getElementById('spellName').textContent=SPELL_NAME; 
-  const c=document.getElementById('catLabel'); 
+  var c=document.getElementById('catLabel'); 
   c.classList.add(CATEGORY); 
-  if(CATEGORY==='mantra')c.textContent='ð🕉️ Mantra Sanscrito'; 
-  else if(CATEGORY==='necronomicon')c.textContent='📜 Necronomicon'; 
-  else if(CATEGORY==='aura')c.textContent='🔮 Aura Magick'; 
+  if(CATEGORY==='mantra')c.textContent='Mantra Sanscrito'; 
+  else if(CATEGORY==='necronomicon')c.textContent='Necronomicon'; 
+  else if(CATEGORY==='aura')c.textContent='Aura Magick'; 
   document.getElementById('dayNum').textContent=DAY_NUM; 
   document.getElementById('dayName').textContent=DAYS_IT[new Date().getDay()]; 
   updateMantraDisplay(); 
@@ -324,9 +529,9 @@ function init() {
     document.getElementById('affTotal').textContent=AFF_REPS;
   } 
   if(DURATION>0){
-    document.getElementById('durationText').textContent=`${DURATION} giorni`;
-    document.getElementById('daysCompleted').textContent=`${DAY_NUM-1} / ${DURATION}`;
-  }else{
+    document.getElementById('durationText').textContent=DURATION + ' giorni';
+    document.getElementById('daysCompleted').textContent=(DAY_NUM-1) + ' / ' + DURATION;
+  } else {
     document.getElementById('progressInfo').classList.add('hide');
   } 
   startMoonSign = getMoonSign();
