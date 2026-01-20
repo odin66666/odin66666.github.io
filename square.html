@@ -77,6 +77,7 @@
         .view-only-banner { background: #10b981; color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: none; font-size: 0.9rem; }
         .planetary-hours-section { background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(123, 44, 191, 0.1)); border-radius: 10px; padding: 10px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); }
         .time-row, .planetary-row { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 5px 0; }
+        .session-start-row { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 5px 0; border-top: 1px solid rgba(212, 175, 55, 0.2); margin-top: 5px; }
         .time-icon, .planetary-icon { font-size: 1.2rem; }
         .time-label, .planetary-label { color: #888; font-size: 0.8rem; }
         .time-value, .planetary-value { color: #d4af37; font-weight: bold; font-size: 1rem; }
@@ -118,6 +119,12 @@
             <span class="planetary-value" id="currentPlanetaryHour">--</span>
             <span class="planetary-end">(fino alle <span id="planetaryHourEnd">--:--</span>)</span>
         </div>
+        <div class="session-start-row" id="sessionStartRow">
+            <span class="time-icon">▶️</span>
+            <span class="time-label">Iniziato:</span>
+            <span class="time-value" id="sessionStartTime">--:--</span>
+            <span class="planetary-end">(<span id="sessionStartPlanetary">--</span>)</span>
+        </div>
     </div>
     
     <div class="step-indicator" id="stepIndicator">
@@ -130,9 +137,9 @@
     <div class="view-only-info" id="viewOnlyInfo">
         <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
         <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
-        <div class="info-row"><span class="info-label">🕐 Iniziato alle:</span><span class="info-value" id="infoStartTime">--:--</span></div>
-        <div class="info-row"><span class="info-label">🪐 Ora Planetaria:</span><span class="info-value" id="infoStartPlanetary">--</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row" id="infoStartRow"><span class="info-label">🕐 Iniziato:</span><span class="info-value" id="infoStartTime">--</span></div>
+        <div class="info-row" id="infoPlanetaryRow"><span class="info-label">🪐 Ora Planetaria:</span><span class="info-value" id="infoStartPlanetary">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
         <div class="view-mantra" id="viewMantra">
             <div class="view-mantra-label">MANTRA</div>
@@ -921,6 +928,7 @@ function setupViewOnlyMode(planetInfo) {
     document.getElementById("affirmationSection").style.display = "none";
     document.getElementById("saveSection").style.display = "none";
     document.getElementById("closeSection").style.display = "block";
+    document.getElementById("sessionStartRow").style.display = "none";
     
     document.getElementById("currentDay").textContent = state.completed;
     
@@ -934,6 +942,36 @@ function setupViewOnlyMode(planetInfo) {
     document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT", {day: "numeric", month: "long", year: "numeric"});
     document.getElementById("progressVisual").style.width = progressPct + "%";
     document.getElementById("progressVisual").textContent = progressPct + "%";
+    
+    // Mostra info inizio lavoro se disponibili
+    var params = new URLSearchParams(window.location.search);
+    var workStartTime = params.get("work_start_time") || "";
+    var workStartPlanetary = params.get("work_start_planetary") || "";
+    
+    if (workStartTime) {
+        try {
+            var dt = new Date(workStartTime);
+            document.getElementById("infoStartTime").textContent = 
+                dt.toLocaleDateString("it-IT", {day: "2-digit", month: "2-digit", year: "numeric"}) + 
+                " " + dt.getHours().toString().padStart(2, "0") + ":" + 
+                dt.getMinutes().toString().padStart(2, "0");
+        } catch(e) {
+            document.getElementById("infoStartRow").style.display = "none";
+        }
+    } else {
+        document.getElementById("infoStartRow").style.display = "none";
+    }
+    
+    if (workStartPlanetary) {
+        var pName = PLANETARY_NAMES[workStartPlanetary];
+        if (pName) {
+            document.getElementById("infoStartPlanetary").textContent = pName.symbol + " " + pName.name;
+        } else {
+            document.getElementById("infoStartPlanetary").textContent = workStartPlanetary;
+        }
+    } else {
+        document.getElementById("infoPlanetaryRow").style.display = "none";
+    }
     
     if (state.mantra) {
         document.getElementById("viewMantraText").textContent = state.mantra;
@@ -1003,6 +1041,8 @@ function init() {
     
     if (state.viewOnly) {
         setupViewOnlyMode(planetInfo);
+        // Nasconde info sessione in view only
+        document.getElementById("sessionStartRow").style.display = "none";
     } else {
         if (state.affTotal <= 0) {
             document.getElementById("step2").style.display = "none";
@@ -1010,6 +1050,13 @@ function init() {
         document.getElementById("saveSection").style.display = "block";
         loadAudio();
         updateVibrationUI();
+        
+        // Mostra ora inizio sessione
+        var startDt = new Date();
+        document.getElementById("sessionStartTime").textContent = 
+            startDt.getHours().toString().padStart(2, "0") + ":" + 
+            startDt.getMinutes().toString().padStart(2, "0");
+        document.getElementById("sessionStartPlanetary").textContent = startPlanetaryHour;
     }
     
     buildGrid();
