@@ -13,12 +13,6 @@
         .header h1 { font-size: 1.2rem; color: #d4af37; }
         .planet-symbol { font-size: 2.5rem; margin: 5px 0; }
         .subtitle { font-size: 0.8rem; color: #888; }
-        .planetary-hours-section { background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(123, 44, 191, 0.1)); border-radius: 10px; padding: 10px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); }
-        .time-row, .planetary-row { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 5px 0; }
-        .time-icon, .planetary-icon { font-size: 1.2rem; }
-        .time-label, .planetary-label { color: #888; font-size: 0.8rem; }
-        .time-value, .planetary-value { color: #d4af37; font-weight: bold; font-size: 1rem; }
-        .planetary-end { color: #888; font-size: 0.75rem; }
         .step-indicator { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
         .step { padding: 6px 12px; border-radius: 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1); color: #888; }
         .step.active { background: linear-gradient(135deg, #7b2cbf, #d4af37); color: white; }
@@ -67,6 +61,12 @@
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: #d4af37; border: 2px solid #d4af37; border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
         .view-only-banner { background: #10b981; color: white; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: none; font-size: 0.9rem; }
+        .planetary-hours-section { background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(123, 44, 191, 0.1)); border-radius: 10px; padding: 10px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .time-row, .planetary-row { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 5px 0; }
+        .time-icon, .planetary-icon { font-size: 1.2rem; }
+        .time-label, .planetary-label { color: #888; font-size: 0.8rem; }
+        .time-value, .planetary-value { color: #d4af37; font-weight: bold; font-size: 1rem; }
+        .planetary-end { color: #888; font-size: 0.75rem; }
         .view-only-info { background: #12121f; border-radius: 12px; padding: 15px; margin: 10px 0; border: 1px solid rgba(16, 185, 129, 0.3); display: none; }
         .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
         .info-row:last-child { border-bottom: none; }
@@ -116,7 +116,7 @@
     <div class="view-only-info" id="viewOnlyInfo">
         <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
         <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
         <div class="view-mantra" id="viewMantra">
             <div class="view-mantra-label">MANTRA</div>
@@ -154,7 +154,7 @@
             <button class="btn btn-vibra" id="btnVibMain">⚡ VIBRA ⚡</button>
         </div>
         <div class="settings-row">
-            <span>🔊 Suoni</span>
+            <span>📊 Suoni</span>
             <label class="toggle"><input type="checkbox" id="soundToggle" checked><span class="toggle-slider"></span></label>
         </div>
     </div>
@@ -185,7 +185,7 @@
     
     <!-- PULSANTE CHIUDI (view only) -->
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" id="btnClose">← CHIUDI</button>
+        <button class="btn btn-close" id="btnClose">← CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
@@ -261,7 +261,10 @@ function getSunTimes(lat, lon, date) {
     var declination = -23.45 * Math.cos(2 * Math.PI * (dayOfYear + 10) / 365);
     var latRad = lat * Math.PI / 180;
     var decRad = declination * Math.PI / 180;
-    var hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad));
+    var cosHA = -Math.tan(latRad) * Math.tan(decRad);
+    if (cosHA < -1) cosHA = -1;
+    if (cosHA > 1) cosHA = 1;
+    var hourAngle = Math.acos(cosHA);
     var sunrise = 12 - (hourAngle * 180 / Math.PI) / 15;
     var sunset = 12 + (hourAngle * 180 / Math.PI) / 15;
     return {sunrise: sunrise, sunset: sunset};
@@ -271,11 +274,9 @@ function getCurrentPlanetaryHour(lat, lon) {
     var now = new Date();
     var localHours = now.getHours() + now.getMinutes() / 60;
     var sunTimes = getSunTimes(lat || 51.5, lon || -0.1, now);
-    
     var dayOfWeek = now.getDay();
     var dayRuler = DAY_RULERS[dayOfWeek];
     var rulerIndex = PLANETARY_ORDER.indexOf(dayRuler);
-    
     var isDaytime = localHours >= sunTimes.sunrise && localHours < sunTimes.sunset;
     var hourLength, hourNum, hourStart;
     
@@ -308,20 +309,26 @@ function getCurrentPlanetaryHour(lat, lon) {
 
 function updatePlanetaryHours() {
     var now = new Date();
-    document.getElementById("currentTime").textContent = 
-        now.getHours().toString().padStart(2, "0") + ":" + 
-        now.getMinutes().toString().padStart(2, "0");
+    var timeEl = document.getElementById("currentTime");
+    if (timeEl) {
+        timeEl.textContent = now.getHours().toString().padStart(2, "0") + ":" + now.getMinutes().toString().padStart(2, "0");
+    }
     
     var ph = getCurrentPlanetaryHour();
     var pInfo = PLANETARY_NAMES[ph.planet];
     
-    document.getElementById("currentPlanetaryIcon").textContent = pInfo.symbol;
-    document.getElementById("currentPlanetaryHour").textContent = pInfo.name;
+    var iconEl = document.getElementById("currentPlanetaryIcon");
+    var hourEl = document.getElementById("currentPlanetaryHour");
+    var endEl = document.getElementById("planetaryHourEnd");
     
-    var endH = Math.floor(ph.hourEnd);
-    var endM = Math.round((ph.hourEnd - endH) * 60);
-    document.getElementById("planetaryHourEnd").textContent = 
-        endH.toString().padStart(2, "0") + ":" + endM.toString().padStart(2, "0");
+    if (iconEl) iconEl.textContent = pInfo.symbol;
+    if (hourEl) hourEl.textContent = pInfo.name;
+    
+    if (endEl) {
+        var endH = Math.floor(ph.hourEnd);
+        var endM = Math.round((ph.hourEnd - endH) * 60);
+        endEl.textContent = endH.toString().padStart(2, "0") + ":" + endM.toString().padStart(2, "0");
+    }
 }
 
 /**
@@ -330,7 +337,7 @@ function updatePlanetaryHours() {
  * - Prima colonna: dall'ALTO verso il BASSO
  * - Seconda colonna: dal BASSO verso l'ALTO
  * - Alterna andando verso sinistra
- * - Termina a BASSO-SINISTRA
+ * - Termina a SINISTRA
  */
 function getMaterialPath(size) {
     var path = [];
@@ -338,10 +345,12 @@ function getMaterialPath(size) {
     for (col = size - 1; col >= 0; col--) {
         colFromRight = (size - 1) - col;
         if (colFromRight % 2 === 0) {
+            // Colonne pari (da destra): dall'ALTO verso il BASSO
             for (row = 0; row < size; row++) {
                 path.push([row, col]);
             }
         } else {
+            // Colonne dispari: dal BASSO verso l'ALTO
             for (row = size - 1; row >= 0; row--) {
                 path.push([row, col]);
             }
@@ -356,7 +365,7 @@ function getMaterialPath(size) {
  * - Prima riga: da DESTRA a SINISTRA
  * - Seconda riga: da SINISTRA a DESTRA
  * - Alterna salendo verso l'alto
- * - Termina in ALTO-SINISTRA
+ * - Termina in ALTO
  */
 function getSpiritualPath(size) {
     var path = [];
@@ -364,10 +373,12 @@ function getSpiritualPath(size) {
     for (row = size - 1; row >= 0; row--) {
         rowFromBottom = (size - 1) - row;
         if (rowFromBottom % 2 === 0) {
+            // Righe pari (dal basso): da DESTRA a SINISTRA
             for (col = size - 1; col >= 0; col--) {
                 path.push([row, col]);
             }
         } else {
+            // Righe dispari: da SINISTRA a DESTRA
             for (col = 0; col < size; col++) {
                 path.push([row, col]);
             }
@@ -387,253 +398,382 @@ function addVibration(n) {
     updateVibrationUI();
     
     if (state.vibCount >= state.vibTotal) {
+        console.log("[SQUARE] Vibrations complete! affTotal=" + state.affTotal);
         if (state.affTotal > 0) {
+            console.log("[SQUARE] Will switch to affirmations in 800ms");
+            // Suono generico per passaggio a affermazioni
+            if (state.sound) playAudio("audio50");
             setTimeout(switchToAffirmations, 800);
         } else {
-            showSaveButton();
+            console.log("[SQUARE] No affirmations, showing complete");
+            setTimeout(showComplete, 500);
         }
     }
 }
 
 function addAffirmation(n) {
     if (state.viewOnly || state.phase !== "affirmations") return;
-    state.sound = document.getElementById("soundToggle") ? document.getElementById("soundToggle").checked : true;
     
     if (state.affCount >= state.affTotal) return;
     var prev = state.affCount;
     state.affCount = Math.min(state.affCount + n, state.affTotal);
-    if (state.sound) checkMilestone(prev, state.affCount, state.affTotal);
+    
+    if (state.sound && state.affCount === state.affTotal - 1 && prev < state.affTotal - 1) {
+        playAudio("audioLast");
+    }
+    
     updateAffirmationUI();
     
     if (state.affCount >= state.affTotal) {
-        showCompletedOverlay();
+        setTimeout(showComplete, 500);
+    }
+}
+
+function checkMilestone(prev, curr, total) {
+    if (curr === total - 1 && prev < total - 1) {
+        playAudio("audioLast");
+        return;
+    }
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, m;
+    for (i = 0; i < milestones.length; i++) {
+        m = milestones[i];
+        if (prev < m && curr >= m && m <= total) {
+            playAudio("audio" + m);
+            return;
+        }
     }
 }
 
 function switchToAffirmations() {
+    console.log("[SQUARE] switchToAffirmations called, affTotal=" + state.affTotal);
     state.phase = "affirmations";
-    document.getElementById("step1").classList.remove("active");
-    document.getElementById("step1").classList.add("completed");
-    document.getElementById("step2").classList.add("active");
+    document.getElementById("step1").className = "step completed";
+    document.getElementById("step2").className = "step active";
     document.getElementById("vibrationSection").style.display = "none";
+    document.getElementById("affirmationSection").style.display = "block";
     document.getElementById("dayInfo").style.display = "none";
     document.getElementById("mantraSection").style.display = "none";
-    document.getElementById("affirmationSection").style.display = "block";
+    document.getElementById("saveSection").style.display = "none";  // Nascondo, c'è già nella sezione affermazioni
+    console.log("[SQUARE] affirmationSection display:", document.getElementById("affirmationSection").style.display);
     updateAffirmationUI();
-}
-
-function showSaveButton() {
-    document.getElementById("saveSection").style.display = "block";
-}
-
-function showCompletedOverlay() {
-    document.getElementById("completedOverlay").classList.add("show");
 }
 
 function updateVibrationUI() {
     document.getElementById("vibCounterDisplay").textContent = state.vibCount;
     document.getElementById("vibCounterTotal").textContent = state.vibTotal;
-    var pct = state.vibTotal > 0 ? (state.vibCount / state.vibTotal * 100) : 0;
+    var pct = Math.round((state.vibCount / state.vibTotal) * 100);
     document.getElementById("vibProgressFill").style.width = pct + "%";
+    
+    var left = state.vibTotal - state.vibCount;
+    var msg = document.getElementById("vibMessage");
+    if (left === 0) {
+        msg.textContent = state.affTotal > 0 ? "✧ Vibrazioni complete! Ora le affermazioni..." : "✧ COMPLETATO ✧";
+    } else if (left === 1) {
+        msg.textContent = "⚡ ULTIMA! ⚡";
+    } else if (left <= 5) {
+        msg.textContent = "⚡ ULTIME " + left + "! ⚡";
+    } else {
+        msg.textContent = "";
+    }
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnVibAdd5");
+    var btn10 = document.getElementById("btnVibAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
+    }
 }
 
 function updateAffirmationUI() {
     document.getElementById("affCounterDisplay").textContent = state.affCount;
     document.getElementById("affCounterTotal").textContent = state.affTotal;
-    var pct = state.affTotal > 0 ? (state.affCount / state.affTotal * 100) : 0;
+    var pct = Math.round((state.affCount / state.affTotal) * 100);
     document.getElementById("affProgressFill").style.width = pct + "%";
-}
-
-function checkMilestone(prev, curr, total) {
-    var milestones = [10, 20, 30, 40, 50, 100];
-    for (var i = 0; i < milestones.length; i++) {
-        var m = milestones[i];
-        if (prev < m && curr >= m && m < total) {
-            playAudio("audio" + m);
-            return;
-        }
+    
+    var left = state.affTotal - state.affCount;
+    var msg = document.getElementById("affMessage");
+    if (left === 0) {
+        msg.textContent = "✧ COMPLETATO ✧";
+    } else if (left === 1) {
+        msg.textContent = "⚡ ULTIMA! ⚡";
+    } else if (left <= 5) {
+        msg.textContent = "⚡ ULTIME " + left + "! ⚡";
+    } else {
+        msg.textContent = "";
     }
-    if (curr === total - 1) {
-        playAudio("audioLast");
-    } else if (curr === total) {
-        playAudio("audioComplete");
+    
+    // Disabilita bottoni se mancano poche ripetizioni
+    var btn5 = document.getElementById("btnAffAdd5");
+    var btn10 = document.getElementById("btnAffAdd10");
+    if (left < 5) {
+        btn5.disabled = true;
+        btn5.style.opacity = "0.4";
+    } else {
+        btn5.disabled = false;
+        btn5.style.opacity = "1";
+    }
+    if (left < 10) {
+        btn10.disabled = true;
+        btn10.style.opacity = "0.4";
+    } else {
+        btn10.disabled = false;
+        btn10.style.opacity = "1";
     }
 }
 
 function playAudio(id) {
-    var audio = document.getElementById(id);
-    if (audio && audio.src) {
-        audio.currentTime = 0;
-        audio.play().catch(function() {});
+    var a = document.getElementById(id);
+    if (a && a.src) {
+        a.currentTime = 0;
+        a.play().catch(function(e) { console.log("[AUDIO] Error:", e); });
     }
+}
+
+function showComplete() {
+    if (state.sound) playAudio("audioComplete");
+    document.getElementById("completedOverlay").className = "completed-overlay show";
 }
 
 function saveAndClose() {
     var data = {
+        action: "counter_complete",
         work_id: state.workId,
-        vibrations_done: state.vibCount,
-        affirmations_done: state.affCount,
-        completed: state.vibCount >= state.vibTotal && (state.affTotal === 0 || state.affCount >= state.affTotal)
+        vibrations: state.vibCount,
+        affirmations: state.affCount,
+        total_vibrations: state.vibTotal,
+        total_affirmations: state.affTotal
     };
-    
+    console.log("[SQUARE] Saving:", JSON.stringify(data));
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify(data));
-        window.Telegram.WebApp.close();
+        setTimeout(function() { window.Telegram.WebApp.close(); }, 300);
     } else {
-        alert("Dati salvati: " + JSON.stringify(data));
+        alert("Dati: " + JSON.stringify(data));
     }
 }
 
-function renderGrid() {
+function closeWebApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.close();
+    }
+}
+
+function loadAudio() {
+    if (!state.audioUrl) {
+        console.log("[AUDIO] No audio URL provided");
+        return;
+    }
+    var base = state.audioUrl + "/" + state.lang + "/";
+    console.log("[AUDIO] Loading from:", base);
+    var milestones = [10, 20, 30, 40, 50, 100];
+    var i, el;
+    for (i = 0; i < milestones.length; i++) {
+        el = document.getElementById("audio" + milestones[i]);
+        if (el) el.src = base + milestones[i] + ".mp3";
+    }
+    el = document.getElementById("audioLast");
+    if (el) el.src = base + "last.mp3";
+    el = document.getElementById("audioComplete");
+    if (el) el.src = base + "complete.mp3";
+}
+
+function buildGrid() {
     var grid = GRIDS[state.planet];
-    if (!grid) return;
-    
+    if (!grid) {
+        console.log("[SQUARE] No grid for planet:", state.planet);
+        return;
+    }
     var size = grid.length;
     var container = document.getElementById("squareGrid");
     container.innerHTML = "";
-    
-    var cellSize = Math.min(Math.floor((window.innerWidth - 60) / size), 45);
+    var maxWidth = Math.min(window.innerWidth - 40, 350);
+    var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
     container.style.gridTemplateColumns = "repeat(" + size + ", " + cellSize + "px)";
+    container.style.gridTemplateRows = "repeat(" + size + ", " + cellSize + "px)";
     
+    // Usa il percorso corretto in base alla direzione
     var path = state.direction === "material" ? getMaterialPath(size) : getSpiritualPath(size);
-    var currentIdx = state.day - 1;
     
-    for (var r = 0; r < size; r++) {
-        for (var c = 0; c < size; c++) {
-            var cell = document.createElement("div");
+    // Debug: mostra primi numeri del percorso
+    var debugSeq = [];
+    for (var d = 0; d < Math.min(5, path.length); d++) {
+        debugSeq.push(grid[path[d][0]][path[d][1]]);
+    }
+    console.log("[SQUARE] Direction:", state.direction, "- First 5 numbers:", debugSeq.join(", "));
+    
+    var posMap = {};
+    var i;
+    for (i = 0; i < path.length; i++) {
+        posMap[path[i][0] + "," + path[i][1]] = i;
+    }
+    
+    var r, c, cell, posIdx;
+    
+    for (r = 0; r < size; r++) {
+        for (c = 0; c < size; c++) {
+            cell = document.createElement("div");
             cell.className = "cell";
-            cell.style.width = cellSize + "px";
-            cell.style.height = cellSize + "px";
-            cell.style.fontSize = (cellSize * 0.35) + "px";
             cell.textContent = grid[r][c];
-            
-            var cellIdx = -1;
-            for (var i = 0; i < path.length; i++) {
-                if (path[i][0] === r && path[i][1] === c) {
-                    cellIdx = i;
-                    break;
+            cell.style.fontSize = (cellSize * 0.4) + "px";
+            posIdx = posMap[r + "," + c];
+            if (posIdx !== undefined) {
+                if (state.viewOnly) {
+                    // View-only: mostra il giorno completato
+                    if (posIdx < state.completed - 1) {
+                        cell.className = "cell completed";
+                    } else if (posIdx === state.completed - 1) {
+                        cell.className = "cell completed-today";
+                    }
+                } else {
+                    // Counter mode: mostra giorno corrente
+                    if (posIdx < state.completed) {
+                        cell.className = "cell completed";
+                    } else if (posIdx === state.completed) {
+                        cell.className = "cell current";
+                    }
                 }
             }
-            
-            if (cellIdx < state.completed) {
-                cell.classList.add("completed");
-            } else if (cellIdx === currentIdx) {
-                cell.classList.add("current");
-            }
-            
             container.appendChild(cell);
         }
     }
 }
 
+function setupViewOnlyMode(planetInfo) {
+    console.log("[SQUARE] Setting up view-only mode");
+    document.getElementById("viewOnlyBanner").style.display = "block";
+    document.getElementById("completedDayNum").textContent = state.completed;
+    document.getElementById("viewOnlyInfo").style.display = "block";
+    document.getElementById("stepIndicator").style.display = "none";
+    document.getElementById("dayInfo").style.display = "none";
+    document.getElementById("mantraSection").style.display = "none";
+    document.getElementById("vibrationSection").style.display = "none";
+    document.getElementById("affirmationSection").style.display = "none";
+    document.getElementById("saveSection").style.display = "none";
+    document.getElementById("closeSection").style.display = "block";
+    
+    document.getElementById("currentDay").textContent = state.completed;
+    
+    var remaining = planetInfo.days - state.completed;
+    var progressPct = Math.round((state.completed / planetInfo.days) * 100);
+    var endDate = new Date();
+    endDate.setDate(endDate.getDate() + remaining);
+    
+    document.getElementById("infoCompleted").textContent = state.completed + " / " + planetInfo.days;
+    document.getElementById("infoRemaining").textContent = remaining;
+    document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT", {day: "numeric", month: "long", year: "numeric"});
+    document.getElementById("progressVisual").style.width = progressPct + "%";
+    document.getElementById("progressVisual").textContent = progressPct + "%";
+    
+    if (state.mantra) {
+        document.getElementById("viewMantraText").textContent = state.mantra;
+    }
+    if (state.affirmation) {
+        document.getElementById("viewAffirmation").style.display = "block";
+        document.getElementById("viewAffirmationText").textContent = '"' + state.affirmation + '"';
+    }
+}
+
 function init() {
+    console.log("[SQUARE] Init v5 - Fixed paths...");
+    
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
         window.Telegram.WebApp.ready();
     }
     
-    var p = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams(window.location.search);
+    state.workId = params.get("work_id") || "";
+    state.planet = params.get("planet") || "sun";
+    state.day = parseInt(params.get("day")) || 1;
+    state.completed = parseInt(params.get("completed")) || 0;
+    state.direction = params.get("direction") || "material";
+    state.vibTotal = parseInt(params.get("vibrations")) || parseInt(params.get("total")) || 100;
+    state.affTotal = parseInt(params.get("aff_reps")) || 0;
+    console.log("[SQUARE] aff_reps raw:", params.get("aff_reps"), "parsed affTotal:", state.affTotal);
+    state.lang = params.get("lang") || "it";
+    state.viewOnly = params.get("view_only") === "1";
     
-    state.workId = p.get("work_id") || "";
-    state.planet = p.get("planet") || "sun";
-    state.day = parseInt(p.get("day")) || 1;
-    state.completed = parseInt(p.get("completed")) || 0;
-    state.direction = p.get("direction") || "material";
-    state.vibTotal = parseInt(p.get("vibrations")) || parseInt(p.get("total")) || 111;
-    state.affTotal = parseInt(p.get("aff_reps")) || 0;
-    state.lang = p.get("lang") || "it";
-    state.viewOnly = p.get("view_only") === "1" || p.get("view_only") === "true";
-    state.mantra = decodeURIComponent(p.get("mantra") || "");
-    state.affirmation = decodeURIComponent(p.get("affirmation") || "");
-    
-    var rawAudioUrl = p.get("audio_url") || "";
-    state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : "https://odin66666.github.io/audio";
-    
-    // Setup audio
-    var lang = state.lang || "it";
-    var milestones = [10, 20, 30, 40, 50, 100];
-    for (var i = 0; i < milestones.length; i++) {
-        var el = document.getElementById("audio" + milestones[i]);
-        if (el) el.src = state.audioUrl + "/" + lang + "/" + milestones[i] + ".mp3";
+    var rawAudioUrl = params.get("audio_url") || "";
+    if (rawAudioUrl) {
+        try { state.audioUrl = decodeURIComponent(rawAudioUrl); } catch(e) { state.audioUrl = rawAudioUrl; }
     }
-    document.getElementById("audioLast").src = state.audioUrl + "/" + lang + "/last.mp3";
-    document.getElementById("audioComplete").src = state.audioUrl + "/" + lang + "/complete.mp3";
     
-    // Update UI
-    var planetData = PLANETS[state.planet] || PLANETS.sun;
-    document.getElementById("planetSymbol").textContent = planetData.symbol;
-    document.getElementById("squareTitle").textContent = "QUADRATO DEL " + planetData.name;
+    var affText = params.get("affirmation") || "";
+    var mantra = params.get("mantra") || "";
+    var pron = params.get("pronunciation") || "";
+    try { if (affText) affText = decodeURIComponent(affText); } catch(e) {}
+    try { if (mantra) mantra = decodeURIComponent(mantra); } catch(e) {}
+    try { if (pron) pron = decodeURIComponent(pron); } catch(e) {}
+    
+    state.mantra = mantra;
+    state.affirmation = affText;
+    
+    console.log("[SQUARE] State:", JSON.stringify(state));
+    
+    var planetInfo = PLANETS[state.planet] || PLANETS.sun;
+    document.getElementById("planetSymbol").textContent = planetInfo.symbol;
+    document.getElementById("squareTitle").textContent = "QUADRATO " + planetInfo.name;
     document.getElementById("currentDay").textContent = state.day;
-    document.getElementById("totalDays").textContent = GRIDS[state.planet] ? GRIDS[state.planet].length * GRIDS[state.planet].length : 36;
+    document.getElementById("totalDays").textContent = planetInfo.days;
     document.getElementById("todayVibrations").textContent = state.vibTotal;
     document.getElementById("vibCounterTotal").textContent = state.vibTotal;
+    document.getElementById("mantraText").textContent = mantra || "MANTRA";
+    if (pron) document.getElementById("mantraPronunciation").textContent = "(" + pron + ")";
     
-    if (state.mantra) {
-        document.getElementById("mantraText").textContent = state.mantra;
-    }
-    if (state.affirmation) {
-        document.getElementById("affirmationText").textContent = state.affirmation;
+    if (affText) {
+        document.getElementById("affirmationText").textContent = '"' + affText + '"';
+        document.getElementById("affCounterTotal").textContent = state.affTotal;
     }
     
-    // View only mode
     if (state.viewOnly) {
-        document.getElementById("viewOnlyBanner").style.display = "block";
-        document.getElementById("completedDayNum").textContent = state.day;
-        document.getElementById("stepIndicator").style.display = "none";
-        document.getElementById("dayInfo").style.display = "none";
-        document.getElementById("mantraSection").style.display = "none";
-        document.getElementById("vibrationSection").style.display = "none";
-        document.getElementById("viewOnlyInfo").style.display = "block";
-        document.getElementById("closeSection").style.display = "block";
-        
-        var totalDays = GRIDS[state.planet] ? GRIDS[state.planet].length * GRIDS[state.planet].length : 36;
-        var remaining = totalDays - state.completed;
-        var pct = Math.round((state.completed / totalDays) * 100);
-        
-        document.getElementById("infoCompleted").textContent = state.completed + " / " + totalDays;
-        document.getElementById("infoRemaining").textContent = remaining;
-        document.getElementById("progressVisual").style.width = pct + "%";
-        document.getElementById("progressVisual").textContent = pct + "%";
-        
-        if (state.mantra) {
-            document.getElementById("viewMantraText").textContent = state.mantra;
+        setupViewOnlyMode(planetInfo);
+    } else {
+        if (state.affTotal <= 0) {
+            document.getElementById("step2").style.display = "none";
         }
-        if (state.affirmation) {
-            document.getElementById("viewAffirmation").style.display = "block";
-            document.getElementById("viewAffirmationText").textContent = state.affirmation;
-        }
-        
-        var endDate = new Date();
-        endDate.setDate(endDate.getDate() + remaining);
-        document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT");
+        document.getElementById("saveSection").style.display = "block";
+        loadAudio();
+        updateVibrationUI();
     }
     
-    renderGrid();
-    updateVibrationUI();
+    buildGrid();
+    
+    // Bind vibration buttons
+    document.getElementById("btnVibAdd1").onclick = function() { addVibration(1); };
+    document.getElementById("btnVibAdd5").onclick = function() { addVibration(5); };
+    document.getElementById("btnVibAdd10").onclick = function() { addVibration(10); };
+    document.getElementById("btnVibMain").onclick = function() { addVibration(1); };
+    
+    // Bind affirmation buttons
+    document.getElementById("btnAffAdd1").onclick = function() { addAffirmation(1); };
+    document.getElementById("btnAffAdd5").onclick = function() { addAffirmation(5); };
+    document.getElementById("btnAffAdd10").onclick = function() { addAffirmation(10); };
+    document.getElementById("btnAffMain").onclick = function() { addAffirmation(1); };
+    document.getElementById("btnAffSave").onclick = saveAndClose;
+    
+    // Bind save/close
+    document.getElementById("btnSave").onclick = saveAndClose;
+    document.getElementById("btnClose").onclick = closeWebApp;
+    document.getElementById("btnOverlayClose").onclick = saveAndClose;
+    
+    // Init planetary hours
     updatePlanetaryHours();
     setInterval(updatePlanetaryHours, 60000);
 }
 
-// Event listeners
-document.getElementById("btnVibAdd1").addEventListener("click", function() { addVibration(1); });
-document.getElementById("btnVibAdd5").addEventListener("click", function() { addVibration(5); });
-document.getElementById("btnVibAdd10").addEventListener("click", function() { addVibration(10); });
-document.getElementById("btnVibMain").addEventListener("click", function() { addVibration(1); });
-document.getElementById("btnAffAdd1").addEventListener("click", function() { addAffirmation(1); });
-document.getElementById("btnAffAdd5").addEventListener("click", function() { addAffirmation(5); });
-document.getElementById("btnAffAdd10").addEventListener("click", function() { addAffirmation(10); });
-document.getElementById("btnAffMain").addEventListener("click", function() { addAffirmation(1); });
-document.getElementById("btnAffSave").addEventListener("click", saveAndClose);
-document.getElementById("btnSave").addEventListener("click", saveAndClose);
-document.getElementById("btnClose").addEventListener("click", function() {
-    if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.close();
-    }
-});
-document.getElementById("btnOverlayClose").addEventListener("click", saveAndClose);
-
-// Init on load
-document.addEventListener("DOMContentLoaded", init);
+init();
 </script>
 </body>
 </html>
