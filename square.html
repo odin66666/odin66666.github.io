@@ -57,6 +57,20 @@
         .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
         .completed-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(212, 175, 55, 0.95), rgba(123, 44, 191, 0.95)); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         .completed-overlay.show { display: flex; }
+        .warning-popup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 1001; padding: 20px; }
+        .warning-popup.show { display: flex; }
+        .warning-box { background: #12121f; border: 2px solid #fbbf24; border-radius: 16px; padding: 25px; max-width: 350px; text-align: center; }
+        .warning-box .icon { font-size: 50px; margin-bottom: 15px; }
+        .warning-box .title { font-size: 18px; color: #fbbf24; font-weight: bold; margin-bottom: 10px; }
+        .warning-box .msg { font-size: 14px; color: #e8e8e8; margin-bottom: 8px; }
+        .warning-box .detail { font-size: 12px; color: #888; margin-bottom: 20px; }
+        .warning-box .btns { display: flex; gap: 10px; }
+        .warning-box .btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; }
+        .warning-box .btn-cancel { background: #ef4444; color: #fff; }
+        .warning-box .btn-confirm { background: #10b981; color: #fff; }
+        .start-info { background: rgba(212, 175, 55, 0.1); border-radius: 8px; padding: 8px; margin-top: 10px; text-align: center; font-size: 0.75rem; }
+        .start-info-label { color: #888; }
+        .start-info-value { color: #d4af37; font-weight: bold; }
         .completed-icon { font-size: 4rem; margin-bottom: 10px; }
         .completed-text { font-size: 1.5rem; color: #1a1a1a; margin-bottom: 20px; }
         .close-btn { padding: 12px 30px; background: #1a1a1a; color: #d4af37; border: 2px solid #d4af37; border-radius: 25px; font-family: 'Cinzel', serif; font-size: 1rem; cursor: pointer; }
@@ -117,6 +131,8 @@
         <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
         <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
         <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row"><span class="info-label">🕐 Iniziato alle:</span><span class="info-value" id="infoStartTime">--:--</span></div>
+        <div class="info-row"><span class="info-label">🪐 Ora Planetaria:</span><span class="info-value" id="infoStartPlanetary">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
         <div class="view-mantra" id="viewMantra">
             <div class="view-mantra-label">MANTRA</div>
@@ -185,13 +201,27 @@
     
     <!-- PULSANTE CHIUDI (view only) -->
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" id="btnClose">← CHIUDI</button>
+        <button class="btn btn-close" id="btnClose">🔙 CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
         <div class="completed-icon">✧</div>
         <div class="completed-text">GIORNO COMPLETATO!</div>
         <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
+    </div>
+    
+    <!-- WARNING POPUP ANTI-CLICK -->
+    <div class="warning-popup" id="warningPopup">
+        <div class="warning-box">
+            <div class="icon">⚠️</div>
+            <div class="title">Click troppo veloce!</div>
+            <div class="msg" id="warningMsg">Hai cliccato molto più velocemente della tua media.</div>
+            <div class="detail" id="warningDetail">Media: --s - Questo click: --s</div>
+            <div class="btns">
+                <button class="btn-cancel" id="btnWarnCancel">Annulla</button>
+                <button class="btn-confirm" id="btnWarnConfirm">Conferma</button>
+            </div>
+        </div>
     </div>
     
     <audio id="audio10" preload="auto"></audio>
@@ -331,6 +361,180 @@ function updatePlanetaryHours() {
     }
 }
 
+// ===== ANTI-CLICK INVOLONTARIO =====
+var clickHistory = [];
+var lastClickTime = null;
+var pendingClick = null;
+var MIN_CLICKS_FOR_AVG = 10;
+var THRESHOLD_FACTOR = 0.4;
+var startPlanetaryHour = null;
+var startTime = null;
+
+// ===== AUDIO SINTETIZZATO =====
+var audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playTick() {
+    initAudio();
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.frequency.value = 800;
+    o.type = 'sine';
+    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    o.start(audioCtx.currentTime);
+    o.stop(audioCtx.currentTime + 0.1);
+}
+
+function playVibComplete() {
+    // Suono per fine vibrazioni (diverso da complete)
+    initAudio();
+    var notes = [523, 659, 784]; // Do-Mi-Sol
+    notes.forEach(function(f, i) {
+        setTimeout(function() {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = f;
+            o.type = 'sine';
+            g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            o.start(audioCtx.currentTime);
+            o.stop(audioCtx.currentTime + 0.15);
+        }, i * 120);
+    });
+}
+
+function playFinalComplete() {
+    // Suono per completamento finale (più lungo e celebrativo)
+    initAudio();
+    var notes = [523, 659, 784, 1047]; // Do-Mi-Sol-Do alto
+    notes.forEach(function(f, i) {
+        setTimeout(function() {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = f;
+            o.type = 'sine';
+            g.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            o.start(audioCtx.currentTime);
+            o.stop(audioCtx.currentTime + 0.25);
+        }, i * 150);
+    });
+}
+
+function playWarning() {
+    initAudio();
+    var notes = [400, 400, 600];
+    notes.forEach(function(f, i) {
+        setTimeout(function() {
+            var o = audioCtx.createOscillator();
+            var g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = f;
+            o.type = 'square';
+            g.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            o.start(audioCtx.currentTime);
+            o.stop(audioCtx.currentTime + 0.15);
+        }, i * 180);
+    });
+}
+
+function getAverageClickTime() {
+    if (clickHistory.length < MIN_CLICKS_FOR_AVG) return null;
+    var deltas = clickHistory.filter(function(c) { return c.delta > 0; }).map(function(c) { return c.delta; });
+    if (deltas.length < MIN_CLICKS_FOR_AVG) return null;
+    var sum = deltas.reduce(function(a, b) { return a + b; }, 0);
+    return sum / deltas.length;
+}
+
+function showClickWarning(avg, delta) {
+    // Mostra warning popup per click troppo veloce
+    document.getElementById("warningMsg").textContent = "Hai cliccato molto più velocemente della tua media.";
+    document.getElementById("warningDetail").textContent = "Media: " + avg.toFixed(1) + "s - Questo click: " + delta.toFixed(1) + "s";
+    document.getElementById("warningPopup").classList.add("show");
+    playWarning();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+}
+
+function hideWarning() {
+    document.getElementById("warningPopup").classList.remove("show");
+}
+
+function confirmPendingClick() {
+    if (pendingClick) {
+        var timestamp = pendingClick.timestamp;
+        var delta = pendingClick.delta;
+        var n = pendingClick.n;
+        var type = pendingClick.type;
+        pendingClick = null;
+        hideWarning();
+        
+        // Re-apply il click (già validato)
+        lastClickTime = timestamp;
+        
+        if (type === 'vib') {
+            clickHistory.push({rep: state.vibCount + 1, timestamp: timestamp, delta: delta, confirmed: true});
+            var prev = state.vibCount;
+            state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+            updateVibrationUI();
+            
+            if (state.vibCount >= state.vibTotal) {
+                if (state.affTotal > 0) {
+                    if (state.sound) playVibComplete();
+                    setTimeout(switchToAffirmations, 800);
+                } else {
+                    setTimeout(showComplete, 500);
+                }
+            }
+        } else if (type === 'aff') {
+            clickHistory.push({rep: state.affCount + 1, timestamp: timestamp, delta: delta, confirmed: true});
+            var prevAff = state.affCount;
+            state.affCount = Math.min(state.affCount + n, state.affTotal);
+            updateAffirmationUI();
+            
+            if (state.affCount >= state.affTotal) {
+                setTimeout(showComplete, 500);
+            }
+        }
+    }
+}
+
+function cancelPendingClick() {
+    pendingClick = null;
+    hideWarning();
+}
+
+function applyVibration(timestamp, delta, confirmed) {
+    state.vibCount++;
+    clickHistory.push({rep: state.vibCount, timestamp: timestamp, delta: delta, confirmed: confirmed || false});
+    updateVibrationUI();
+    
+    if (state.vibCount >= state.vibTotal) {
+        console.log("[SQUARE] Vibrations complete! affTotal=" + state.affTotal);
+        if (state.affTotal > 0) {
+            console.log("[SQUARE] Will switch to affirmations in 800ms");
+            if (state.sound) playVibComplete();
+            setTimeout(switchToAffirmations, 800);
+        } else {
+            console.log("[SQUARE] No affirmations, showing complete");
+            setTimeout(showComplete, 500);
+        }
+    }
+}
+
 /**
  * MATERIALE: Serpentina per COLONNE
  * - Inizia da ALTO-DESTRA (row = 0, col = size-1)
@@ -392,17 +596,51 @@ function addVibration(n) {
     state.sound = document.getElementById("soundToggle").checked;
     
     if (state.vibCount >= state.vibTotal) return;
+    
+    // Anti-click: solo per +1 (non per +5/+10)
+    if (n === 1) {
+        var now = Date.now();
+        var delta = lastClickTime ? (now - lastClickTime) / 1000 : 0;
+        var avg = getAverageClickTime();
+        
+        // Se click troppo veloce rispetto alla media
+        if (avg && delta > 0 && delta < avg * THRESHOLD_FACTOR) {
+            pendingClick = {timestamp: now, delta: delta, n: n, type: 'vib'};
+            showClickWarning(avg, delta);
+            return;
+        }
+        
+        lastClickTime = now;
+        clickHistory.push({rep: state.vibCount + 1, timestamp: now, delta: delta});
+    }
+    
+    // Applica la vibrazione
     var prev = state.vibCount;
     state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
-    if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
+    
+    // Suoni milestone
+    if (state.sound) {
+        if (state.vibCount === state.vibTotal - 1 && prev < state.vibTotal - 1) {
+            playAudio("audioLast");
+        } else if (state.vibCount < state.vibTotal) {
+            var milestones = [10, 20, 30, 40, 50, 100];
+            for (var i = 0; i < milestones.length; i++) {
+                var m = milestones[i];
+                if (prev < m && state.vibCount >= m && m <= state.vibTotal) {
+                    playAudio("audio" + m);
+                    break;
+                }
+            }
+        }
+    }
+    
     updateVibrationUI();
     
     if (state.vibCount >= state.vibTotal) {
         console.log("[SQUARE] Vibrations complete! affTotal=" + state.affTotal);
         if (state.affTotal > 0) {
             console.log("[SQUARE] Will switch to affirmations in 800ms");
-            // Suono generico per passaggio a affermazioni
-            if (state.sound) playAudio("audio50");
+            if (state.sound) playVibComplete();
             setTimeout(switchToAffirmations, 800);
         } else {
             console.log("[SQUARE] No affirmations, showing complete");
@@ -415,6 +653,24 @@ function addAffirmation(n) {
     if (state.viewOnly || state.phase !== "affirmations") return;
     
     if (state.affCount >= state.affTotal) return;
+    
+    // Anti-click: solo per +1 (non per +5/+10)
+    if (n === 1) {
+        var now = Date.now();
+        var delta = lastClickTime ? (now - lastClickTime) / 1000 : 0;
+        var avg = getAverageClickTime();
+        
+        // Se click troppo veloce rispetto alla media
+        if (avg && delta > 0 && delta < avg * THRESHOLD_FACTOR) {
+            pendingClick = {timestamp: now, delta: delta, n: n, type: 'aff'};
+            showClickWarning(avg, delta);
+            return;
+        }
+        
+        lastClickTime = now;
+        clickHistory.push({rep: state.affCount + 1, timestamp: now, delta: delta});
+    }
+    
     var prev = state.affCount;
     state.affCount = Math.min(state.affCount + n, state.affTotal);
     
@@ -542,7 +798,7 @@ function playAudio(id) {
 }
 
 function showComplete() {
-    if (state.sound) playAudio("audioComplete");
+    if (state.sound) playFinalComplete();
     document.getElementById("completedOverlay").className = "completed-overlay show";
 }
 
@@ -553,7 +809,10 @@ function saveAndClose() {
         vibrations: state.vibCount,
         affirmations: state.affCount,
         total_vibrations: state.vibTotal,
-        total_affirmations: state.affTotal
+        total_affirmations: state.affTotal,
+        start_planetary_hour: startPlanetaryHour,
+        start_time: startTime,
+        end_time: new Date().toISOString()
     };
     console.log("[SQUARE] Saving:", JSON.stringify(data));
     if (window.Telegram && window.Telegram.WebApp) {
@@ -688,6 +947,11 @@ function setupViewOnlyMode(planetInfo) {
 function init() {
     console.log("[SQUARE] Init v5 - Fixed paths...");
     
+    // Salva ora planetaria e orario di inizio
+    startTime = new Date().toISOString();
+    var ph = getCurrentPlanetaryHour();
+    startPlanetaryHour = PLANETARY_NAMES[ph.planet].name;
+    
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
         window.Telegram.WebApp.ready();
@@ -767,6 +1031,13 @@ function init() {
     document.getElementById("btnSave").onclick = saveAndClose;
     document.getElementById("btnClose").onclick = closeWebApp;
     document.getElementById("btnOverlayClose").onclick = saveAndClose;
+    
+    // Bind warning buttons
+    document.getElementById("btnWarnCancel").onclick = cancelPendingClick;
+    document.getElementById("btnWarnConfirm").onclick = confirmPendingClick;
+    
+    // Init audio on first interaction
+    document.body.addEventListener('click', initAudio, {once: true});
     
     // Init planetary hours
     updatePlanetaryHours();
