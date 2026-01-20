@@ -251,6 +251,11 @@ var state = {
     affirmation: ""
 };
 
+// ===== RUNE MULTIPLE =====
+var RUNES = [];  // Array di {symbol, name, pronunciation, reps}
+var currentRuneIndex = 0;
+var totalRunesCompleted = 0;
+
 // ===== ANTI-CLICK E ORA PLANETARIA =====
 var clickHistory = [];
 var lastClickTime = null;
@@ -387,6 +392,62 @@ function updateMoonDisplay() {
     }
 }
 
+// ===== FUNZIONI RUNE MULTIPLE =====
+function getCurrentRune() {
+    return RUNES[currentRuneIndex] || RUNES[0] || {symbol: "", name: "", pronunciation: "", reps: state.vibTotal};
+}
+
+function updateRuneDisplay() {
+    var rune = getCurrentRune();
+    
+    // Aggiorna simboli e nomi
+    var symbolEl = document.getElementById("runeSymbols");
+    var namesEl = document.getElementById("runeNames");
+    
+    if (RUNES.length > 1) {
+        // Mostra la runa corrente evidenziata
+        symbolEl.textContent = rune.symbol;
+        namesEl.textContent = rune.name + " (" + (currentRuneIndex + 1) + "/" + RUNES.length + ")";
+        
+        // Aggiorna vibTotal per la runa corrente
+        state.vibTotal = rune.reps;
+        document.getElementById("vibTotal").textContent = rune.reps;
+        document.getElementById("vibrationTarget").textContent = rune.reps;
+    } else if (RUNES.length === 1) {
+        symbolEl.textContent = rune.symbol;
+        namesEl.textContent = rune.name;
+    }
+}
+
+function onRuneComplete() {
+    totalRunesCompleted += state.vibCount;
+    
+    if (currentRuneIndex < RUNES.length - 1) {
+        // Passa alla runa successiva
+        currentRuneIndex++;
+        state.vibCount = 0;
+        clickHistory = [];
+        lastClickTime = null;
+        
+        // Aggiorna UI per la nuova runa
+        updateRuneDisplay();
+        updateVibrationUI();
+        updateAvgDisplay();
+        
+        // Messaggio
+        var rune = getCurrentRune();
+        var msg = document.getElementById("vibMessage");
+        if (msg) msg.textContent = "➡️ " + rune.symbol + " " + rune.name;
+    } else {
+        // Tutte le rune completate
+        if (state.affTotal > 0) {
+            setTimeout(switchToAffirmations, 800);
+        } else {
+            setTimeout(showComplete, 500);
+        }
+    }
+}
+
 function showClickWarning(avg, delta) {
     document.getElementById("warningMsg").textContent = "Hai cliccato molto più velocemente della tua media.";
     document.getElementById("warningDetail").textContent = "Media: " + avg.toFixed(1) + "s - Questo click: " + delta.toFixed(1) + "s";
@@ -416,7 +477,10 @@ function confirmPendingClick() {
         updateAvgDisplay();
         
         if (state.vibCount >= state.vibTotal) {
-            if (state.affTotal > 0) {
+            // Per rune multiple, passa alla successiva
+            if (RUNES.length > 1) {
+                onRuneComplete();
+            } else if (state.affTotal > 0) {
                 setTimeout(switchToAffirmations, 800);
             } else {
                 setTimeout(showComplete, 500);
@@ -487,7 +551,10 @@ function addVibration(n) {
     updateVibrationUI();
     
     if (state.vibCount >= state.vibTotal) {
-        if (state.affTotal > 0) {
+        // Per rune multiple, passa alla successiva
+        if (RUNES.length > 1) {
+            onRuneComplete();
+        } else if (state.affTotal > 0) {
             setTimeout(switchToAffirmations, 800);
         } else {
             setTimeout(showComplete, 500);
@@ -749,6 +816,36 @@ function init() {
     state.runes = runes;
     state.runeNames = runeNames;
     
+    // Parse runes_json per combinazioni multiple
+    var runesJson = params.get("runes_json") || "";
+    if (runesJson) {
+        try {
+            runesJson = decodeURIComponent(runesJson);
+            RUNES = JSON.parse(runesJson);
+            console.log("[COUNTER] Parsed RUNES:", RUNES.length, "rune(s)");
+            
+            // Se ci sono rune multiple, inizializza per la prima
+            if (RUNES.length > 0) {
+                currentRuneIndex = 0;
+                var firstRune = RUNES[0];
+                state.vibTotal = firstRune.reps || state.vibTotal;
+            }
+        } catch(e) {
+            console.log("[COUNTER] Error parsing runes_json:", e);
+        }
+    }
+    // Se non c'è runes_json ma ci sono runes, crea una singola runa
+    if (RUNES.length === 0 && runes) {
+        var singleRune = {
+            symbol: runes,
+            name: runeNames || runes,
+            pronunciation: runeNames || runes,
+            reps: state.vibTotal
+        };
+        RUNES.push(singleRune);
+        console.log("[COUNTER] Created single RUNE from params");
+    }
+    
     console.log("[COUNTER] State:", JSON.stringify(state));
     
     // Set work type label
@@ -766,11 +863,20 @@ function init() {
     document.getElementById("vibTotal").textContent = state.vibTotal;
     
     // Show runes if present
-    if (runes) {
+    if (runes || RUNES.length > 0) {
         document.getElementById("runeDisplay").style.display = "block";
-        document.getElementById("runeSymbols").textContent = runes;
-        if (runeNames) {
-            document.getElementById("runeNames").textContent = runeNames;
+        if (RUNES.length > 1) {
+            // Rune multiple - mostra la prima
+            updateRuneDisplay();
+        } else if (RUNES.length === 1) {
+            // Singola runa
+            document.getElementById("runeSymbols").textContent = RUNES[0].symbol;
+            document.getElementById("runeNames").textContent = RUNES[0].name;
+        } else {
+            document.getElementById("runeSymbols").textContent = runes;
+            if (runeNames) {
+                document.getElementById("runeNames").textContent = runeNames;
+            }
         }
     }
     
