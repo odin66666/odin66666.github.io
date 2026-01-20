@@ -105,7 +105,7 @@
   </div>
   <div id="mainSection">
     <div class="mantra-box">
-      <div class="lbl">🔊 Vibrazione</div>
+      <div class="lbl">📊 Vibrazione</div>
       <div class="text" id="mantraText">---</div>
       <div class="pron" id="pronText"></div>
     </div>
@@ -197,6 +197,10 @@ if (mantrasJson) { try { MANTRAS = JSON.parse(decodeURIComponent(mantrasJson)); 
 if (MANTRAS.length === 0) { MANTRAS = [{ word: decodeURIComponent(P.get('mantra') || '---'), pronunciation: decodeURIComponent(P.get('pronunciation') || ''), reps: parseInt(P.get('reps')) || 108 }]; }
 
 let currentMantraIndex = 0, count = 0, totalRepsCompleted = 0, affCount = 0, phase = 'counting', startTime = Date.now(), currentPlanet = null;
+
+// Variabili per tracciare inizio sessione (non cambiano durante la sessione)
+let startPlanetaryHour = null;
+let startTimeISO = null;
 let clickHistory = [], lastClickTime = null, pendingClick = null;
 const MIN_CLICKS_FOR_AVG = 10, THRESHOLD_FACTOR = 0.4;
 
@@ -222,7 +226,24 @@ function hideWarning() { document.getElementById('warningPopup').classList.add('
 function cancelClick() { pendingClick=null; hideWarning(); }
 function confirmClick() { if(pendingClick){applyClick(pendingClick.timestamp,pendingClick.delta,true);pendingClick=null;} hideWarning(); }
 function applyClick(ts,delta,confirmed=false) { const m=getCurrentMantra(); count++; clickHistory.push({rep:count,timestamp:ts,delta:delta,confirmed:confirmed}); updateCounterDisplay(); updateAvgDisplay(); if(count===m.reps-1){playLast();if(navigator.vibrate)navigator.vibrate([100,50,100]);}else if(count>=m.reps){playComplete();if(navigator.vibrate)navigator.vibrate([100,50,100,50,200]);totalRepsCompleted+=count;if(currentMantraIndex<MANTRAS.length-1){setTimeout(()=>{currentMantraIndex++;count=0;clickHistory=[];lastClickTime=null;updateMantraDisplay();updateCounterDisplay();updateAvgDisplay();},1000);}else{onCountingComplete();}}else{playTick();if(navigator.vibrate)navigator.vibrate(20);} }
-function incrementCounter() { const m=getCurrentMantra(); if(count>=m.reps)return; const now=Date.now(),delta=lastClickTime?(now-lastClickTime)/1000:0,avg=getAverageClickTime(); if(avg&&delta>0&&delta<avg*THRESHOLD_FACTOR){pendingClick={timestamp:now,delta:delta};showWarning(avg,delta);return;} lastClickTime=now; applyClick(now,delta); }
+function incrementCounter() { 
+  const m=getCurrentMantra(); 
+  if(count>=m.reps)return; 
+  const now=Date.now(),delta=lastClickTime?(now-lastClickTime)/1000:0;
+  
+  // Anti-click solo dopo 10 ripetizioni
+  if(count >= 10) {
+    const avg=getAverageClickTime(); 
+    if(avg&&delta>0&&delta<avg*THRESHOLD_FACTOR){
+      pendingClick={timestamp:now,delta:delta};
+      showWarning(avg,delta);
+      return;
+    }
+  }
+  
+  lastClickTime=now;
+  applyClick(now,delta); 
+}
 function decrementCounter() { if(count>0){count--;if(clickHistory.length>0)clickHistory.pop();updateCounterDisplay();updateAvgDisplay();} }
 function resetCounter() { if(confirm('Vuoi resettare il contatore corrente?')){count=0;clickHistory=[];lastClickTime=null;updateCounterDisplay();updateAvgDisplay();} }
 function showHistory() { const l=document.getElementById('historyList'); l.innerHTML=''; if(clickHistory.length===0){l.innerHTML='<div style="text-align:center;color:var(--dim);padding:20px">Nessun click registrato</div>';}else{clickHistory.forEach(c=>{const d=document.createElement('div');d.className='history-item'+(c.confirmed?' warning':'');const t=new Date(c.timestamp).toTimeString().slice(0,8),dt=c.delta>0?`+${c.delta.toFixed(1)}s`:'-';d.innerHTML=`<span class="rep">Rep ${c.rep}</span><span class="time">${t}</span><span class="delta">${dt}${c.confirmed?' ⚠️':''}</span>`;l.appendChild(d);});} document.getElementById('historyPopup').classList.remove('hide'); }
@@ -236,6 +257,7 @@ function showCompleteScreen() {
   const totalReps = MANTRAS.reduce((s, m) => s + m.reps, 0);
   
   // Salva i dati per quando l'utente preme CHIUDI
+  const endTimeISO = new Date().toISOString();
   sessionData = {
     action: 'spell_session_complete',
     user_id: USER_ID,
@@ -244,6 +266,9 @@ function showCompleteScreen() {
     aff_done: affCount,
     duration_seconds: elapsed,
     planetary_hour: currentPlanet,
+    start_planetary_hour: startPlanetaryHour,
+    start_time: startTimeISO,
+    end_time: endTimeISO,
     day_of_week: DAYS_IT[new Date().getDay()],
     timestamp: new Date().toISOString()
   };
@@ -270,7 +295,12 @@ function saveAndClose() {
   }
 }
 
-function init() { 
+function init() {
+  // Salva ora planetaria e timestamp di inizio
+  startTimeISO = new Date().toISOString();
+  currentPlanet = getCurrentPlanetaryHour();
+  startPlanetaryHour = currentPlanet;
+ 
   document.getElementById('spellName').textContent=SPELL_NAME; 
   const c=document.getElementById('catLabel'); 
   c.classList.add(CATEGORY); 
