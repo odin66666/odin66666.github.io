@@ -13,6 +13,12 @@
         .header h1 { font-size: 1.2rem; color: #d4af37; }
         .planet-symbol { font-size: 2.5rem; margin: 5px 0; }
         .subtitle { font-size: 0.8rem; color: #888; }
+        .planetary-hours-section { background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(123, 44, 191, 0.1)); border-radius: 10px; padding: 10px; margin: 10px 0; border: 1px solid rgba(212, 175, 55, 0.3); }
+        .time-row, .planetary-row { display: flex; align-items: center; gap: 8px; justify-content: center; padding: 5px 0; }
+        .time-icon, .planetary-icon { font-size: 1.2rem; }
+        .time-label, .planetary-label { color: #888; font-size: 0.8rem; }
+        .time-value, .planetary-value { color: #d4af37; font-weight: bold; font-size: 1rem; }
+        .planetary-end { color: #888; font-size: 0.75rem; }
         .step-indicator { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
         .step { padding: 6px 12px; border-radius: 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1); color: #888; }
         .step.active { background: linear-gradient(135deg, #7b2cbf, #d4af37); color: white; }
@@ -74,66 +80,43 @@
         .view-affirmation { background: rgba(123, 44, 191, 0.1); border-radius: 10px; padding: 12px; margin-top: 10px; }
         .view-affirmation-label { font-size: 0.75rem; color: #888; margin-bottom: 5px; text-align: center; }
         .view-affirmation-text { font-size: 0.9rem; color: #e8e8e8; font-style: italic; text-align: center; }
-        .planet-hour-bar { background: #12121f; border-radius: 8px; padding: 10px; margin: 10px 0; text-align: center; border: 1px solid rgba(212,175,55,0.3); }
-        .planet-hour-bar .lbl { font-size: 0.7rem; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-        .planet-hour-bar .planet { font-size: 1rem; font-weight: bold; }
-        .c-sun { color: #ffd700; } .c-moon { color: #c0c0c0; } .c-mars { color: #ff4444; }
-        .c-mercury { color: #cd853f; } .c-jupiter { color: #ff8c00; } .c-venus { color: #90ee90; } .c-saturn { color: #708090; }
-        .avg-time { font-size: 0.75rem; color: #888; text-align: center; margin: 8px 0; }
-        .extra-controls { display: flex; gap: 8px; margin-top: 8px; }
-        .ctrl-btn { flex: 1; padding: 10px; border: 1px solid #555; background: transparent; color: #888; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-family: 'Cinzel', serif; }
-        .ctrl-btn:active { border-color: #d4af37; color: #d4af37; }
-        .warning-popup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-        .warning-popup.show { display: flex; }
-        .warning-box { background: #12121f; border: 2px solid #fbbf24; border-radius: 16px; padding: 25px; max-width: 350px; text-align: center; }
-        .warning-box .icon { font-size: 50px; margin-bottom: 15px; }
-        .warning-box .title { font-size: 1.1rem; color: #fbbf24; font-weight: bold; margin-bottom: 10px; }
-        .warning-box .msg { font-size: 0.9rem; color: #e8e8e8; margin-bottom: 8px; }
-        .warning-box .detail { font-size: 0.8rem; color: #888; margin-bottom: 20px; }
-        .warning-box .btns { display: flex; gap: 10px; }
-        .warning-box .btns button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: bold; cursor: pointer; font-family: 'Cinzel', serif; }
-        .warning-box .btn-cancel { background: #ef4444; color: #fff; }
-        .warning-box .btn-confirm { background: #10b981; color: #000; }
-        .history-popup { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); display: none; z-index: 2000; overflow-y: auto; padding: 20px; }
-        .history-popup.show { display: block; }
-        .history-box { background: #12121f; border-radius: 12px; padding: 20px; max-width: 400px; margin: 0 auto; }
-        .history-box .title { font-size: 1rem; color: #d4af37; font-weight: bold; margin-bottom: 15px; text-align: center; }
-        .history-list { max-height: 400px; overflow-y: auto; }
-        .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; }
-        .history-item .rep { color: #d4af37; font-weight: bold; }
-        .history-item .time { color: #888; }
-        .history-item .delta { color: #e8e8e8; }
-        .history-item.warning { background: rgba(251,191,36,0.2); }
-        .admin-section { background: rgba(239,68,68,0.1); border: 1px solid #ef4444; border-radius: 10px; padding: 10px; margin: 10px 0; display: none; }
-        .admin-section.show { display: block; }
-        .btn-admin-reset { width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-family: 'Cinzel', serif; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="planet-symbol" id="planetSymbol">&#9737;</div>
+        <div class="planet-symbol" id="planetSymbol">☉</div>
         <h1 id="squareTitle">QUADRATO</h1>
         <div class="subtitle">Giorno <span id="currentDay">1</span> di <span id="totalDays">36</span></div>
     </div>
     
-    <div class="planet-hour-bar" id="planetHourBar">
-        <div class="lbl">Ora Planetaria Inizio</div>
-        <div class="planet" id="startPlanetHour">Calcolo...</div>
+    <div class="view-only-banner" id="viewOnlyBanner">✅ GIORNO <span id="completedDayNum">1</span> COMPLETATO</div>
+    
+    <!-- SEZIONE ORE PLANETARIE -->
+    <div class="planetary-hours-section" id="planetaryHoursSection">
+        <div class="time-row">
+            <span class="time-icon">🕐</span>
+            <span class="time-label">Ora:</span>
+            <span class="time-value" id="currentTime">--:--</span>
+        </div>
+        <div class="planetary-row">
+            <span class="planetary-icon" id="currentPlanetaryIcon">☉</span>
+            <span class="planetary-label">Ora di:</span>
+            <span class="planetary-value" id="currentPlanetaryHour">--</span>
+            <span class="planetary-end">(fino alle <span id="planetaryHourEnd">--:--</span>)</span>
+        </div>
     </div>
     
-    <div class="view-only-banner" id="viewOnlyBanner">GIORNO <span id="completedDayNum">1</span> COMPLETATO</div>
-    
     <div class="step-indicator" id="stepIndicator">
-        <div class="step active" id="step1">Vibrazioni</div>
-        <div class="step" id="step2">Affermazioni</div>
+        <div class="step active" id="step1">📊 Vibrazioni</div>
+        <div class="step" id="step2">✏️ Affermazioni</div>
     </div>
     
     <div class="square-container"><div class="square-grid" id="squareGrid"></div></div>
     
     <div class="view-only-info" id="viewOnlyInfo">
-        <div class="info-row"><span class="info-label">Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
-        <div class="info-row"><span class="info-label">Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
-        <div class="info-row"><span class="info-label">Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
+        <div class="info-row"><span class="info-label">📅 Giorni Completati:</span><span class="info-value" id="infoCompleted">0 / 36</span></div>
+        <div class="info-row"><span class="info-label">⏳ Giorni Rimanenti:</span><span class="info-value" id="infoRemaining">36</span></div>
+        <div class="info-row"><span class="info-label">🏁 Data Fine Stimata:</span><span class="info-value" id="infoEndDate">--</span></div>
         <div class="progress-visual"><div class="progress-visual-fill" id="progressVisual" style="width: 0%">0%</div></div>
         <div class="view-mantra" id="viewMantra">
             <div class="view-mantra-label">MANTRA</div>
@@ -156,32 +139,29 @@
         <div class="mantra-pronunciation" id="mantraPronunciation"></div>
     </div>
     
+    <!-- SEZIONE VIBRAZIONI -->
     <div class="counter-section" id="vibrationSection">
         <div class="counter-display">
             <div class="counter-number" id="vibCounterDisplay">0</div>
             <span class="vibration-label">di <span id="vibCounterTotal">0</span> vibrazioni</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="vibProgressFill" style="width: 0%"></div></div>
-        <div class="avg-time" id="avgTimeText">Media: -- sec/rep</div>
         <div class="message" id="vibMessage"></div>
         <div class="counter-buttons">
             <button class="btn btn-add" id="btnVibAdd1">+1</button>
             <button class="btn btn-add" id="btnVibAdd5">+5</button>
             <button class="btn btn-add" id="btnVibAdd10">+10</button>
-            <button class="btn btn-vibra" id="btnVibMain">VIBRA</button>
-        </div>
-        <div class="extra-controls">
-            <button class="ctrl-btn" id="btnHistory">Storico</button>
-            <button class="ctrl-btn" id="btnCorrect">Correggi</button>
+            <button class="btn btn-vibra" id="btnVibMain">⚡ VIBRA ⚡</button>
         </div>
         <div class="settings-row">
-            <span>Suoni</span>
+            <span>🔊 Suoni</span>
             <label class="toggle"><input type="checkbox" id="soundToggle" checked><span class="toggle-slider"></span></label>
         </div>
     </div>
     
+    <!-- SEZIONE AFFERMAZIONI (separata) -->
     <div class="affirmation-section" id="affirmationSection">
-        <div class="affirmation-title">AFFERMAZIONI</div>
+        <div class="affirmation-title">✏️ AFFERMAZIONI</div>
         <div class="affirmation-text" id="affirmationText">Affermazione</div>
         <div class="counter-display">
             <div class="counter-number" id="affCounterDisplay">0</div>
@@ -193,48 +173,25 @@
             <button class="btn btn-add" id="btnAffAdd1">+1</button>
             <button class="btn btn-add" id="btnAffAdd5">+5</button>
             <button class="btn btn-add" id="btnAffAdd10">+10</button>
-            <button class="btn btn-vibra" id="btnAffMain">RECITA</button>
-            <button class="btn btn-save" id="btnAffSave">SALVA E CHIUDI</button>
+            <button class="btn btn-vibra" id="btnAffMain">✏️ RECITA ✏️</button>
+            <button class="btn btn-save" id="btnAffSave">✅ SALVA E CHIUDI</button>
         </div>
     </div>
     
-    <div class="admin-section" id="adminSection">
-        <button class="btn-admin-reset" id="btnAdminReset">RESET ADMIN (Test)</button>
-    </div>
-    
+    <!-- PULSANTE SALVA -->
     <div id="saveSection" style="display: none; padding: 0 10px;">
-        <button class="btn btn-save" id="btnSave" style="width: 100%;">SALVA E CHIUDI</button>
+        <button class="btn btn-save" id="btnSave" style="width: 100%;">✅ SALVA E CHIUDI</button>
     </div>
     
+    <!-- PULSANTE CHIUDI (view only) -->
     <div id="closeSection" style="display: none; padding: 10px;">
-        <button class="btn btn-close" id="btnClose">CHIUDI</button>
+        <button class="btn btn-close" id="btnClose">← CHIUDI</button>
     </div>
     
     <div class="completed-overlay" id="completedOverlay">
-        <div class="completed-icon">&#10022;</div>
+        <div class="completed-icon">✧</div>
         <div class="completed-text">GIORNO COMPLETATO!</div>
         <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
-    </div>
-    
-    <div class="warning-popup" id="warningPopup">
-        <div class="warning-box">
-            <div class="icon">&#9888;</div>
-            <div class="title">Click troppo veloce!</div>
-            <div class="msg" id="warningMsg">Hai cliccato molto piu velocemente della tua media.</div>
-            <div class="detail" id="warningDetail">Media: 5.2s - Questo click: 1.3s</div>
-            <div class="btns">
-                <button class="btn-cancel" id="btnWarningCancel">Annulla</button>
-                <button class="btn-confirm" id="btnWarningConfirm">Conferma</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="history-popup" id="historyPopup">
-        <div class="history-box">
-            <div class="title">Storico Click</div>
-            <div class="history-list" id="historyList"></div>
-            <button class="btn btn-vibra" style="margin-top:15px" id="btnHistoryClose">CHIUDI</button>
-        </div>
     </div>
     
     <audio id="audio10" preload="auto"></audio>
@@ -257,7 +214,7 @@ var GRIDS = {
     moon: [[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
 };
 
-var PLANETS_INFO = {
+var PLANETS = {
     saturn: { symbol: "\u2644", name: "SATURNO", days: 15 },
     jupiter: { symbol: "\u2643", name: "GIOVE", days: 16 },
     mars: { symbol: "\u2642", name: "MARTE", days: 25 },
@@ -266,18 +223,6 @@ var PLANETS_INFO = {
     mercury: { symbol: "\u263F", name: "MERCURIO", days: 64 },
     moon: { symbol: "\u263D", name: "LUNA", days: 81 }
 };
-
-var PLANET_HOURS = { 
-    sun:{s:'\u2609',n:'Sole',c:'c-sun'}, 
-    moon:{s:'\u263D',n:'Luna',c:'c-moon'}, 
-    mars:{s:'\u2642',n:'Marte',c:'c-mars'}, 
-    mercury:{s:'\u263F',n:'Mercurio',c:'c-mercury'}, 
-    jupiter:{s:'\u2643',n:'Giove',c:'c-jupiter'}, 
-    venus:{s:'\u2640',n:'Venere',c:'c-venus'}, 
-    saturn:{s:'\u2644',n:'Saturno',c:'c-saturn'} 
-};
-var SEQ = ['saturn','jupiter','mars','sun','venus','mercury','moon'];
-var RULERS = {0:'moon',1:'mars',2:'mercury',3:'jupiter',4:'venus',5:'saturn',6:'sun'};
 
 var state = {
     phase: "vibrations",
@@ -295,542 +240,400 @@ var state = {
     sound: true,
     viewOnly: false,
     mantra: "",
-    affirmation: "",
-    isAdmin: false,
-    lat: 41.9028,
-    lon: 12.4964,
-    tz: 1
+    affirmation: ""
 };
 
-// ANTI-CLICK SYSTEM - Conta le AZIONI non i singoli click
-var actionHistory = [];
-var lastActionTime = null;
-var pendingAction = null;
-var MIN_ACTIONS_FOR_AVG = 5;  // Ridotto a 5 azioni
-var THRESHOLD_FACTOR = 0.4;
-var startPlanetHour = null;
-var startTime = Date.now();
+// ===== ORE PLANETARIE =====
+var PLANETARY_ORDER = ["saturn", "jupiter", "mars", "sun", "venus", "mercury", "moon"];
+var PLANETARY_NAMES = {
+    saturn: {symbol: "\u2644", name: "Saturno"},
+    jupiter: {symbol: "\u2643", name: "Giove"},
+    mars: {symbol: "\u2642", name: "Marte"},
+    sun: {symbol: "\u2609", name: "Sole"},
+    venus: {symbol: "\u2640", name: "Venere"},
+    mercury: {symbol: "\u263F", name: "Mercurio"},
+    moon: {symbol: "\u263D", name: "Luna"}
+};
+var DAY_RULERS = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
 
-function sunTimesMin(lat,lon,doy,tz) {
-    var latRad=lat*Math.PI/180,dec=-23.45*Math.cos(2*Math.PI/365*(doy+10)),decRad=dec*Math.PI/180,B=2*Math.PI/365*(doy-81),eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
-    var cosH=(Math.cos(90.833*Math.PI/180)-Math.sin(latRad)*Math.sin(decRad))/(Math.cos(latRad)*Math.cos(decRad));
-    cosH=Math.max(-1,Math.min(1,cosH));
-    var H=Math.acos(cosH)*180/Math.PI,noon=720-(lon*4)-eot;
-    return {sr:noon-(H*4)+(tz*60),ss:noon+(H*4)+(tz*60)};
+function getSunTimes(lat, lon, date) {
+    var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+    var declination = -23.45 * Math.cos(2 * Math.PI * (dayOfYear + 10) / 365);
+    var latRad = lat * Math.PI / 180;
+    var decRad = declination * Math.PI / 180;
+    var hourAngle = Math.acos(-Math.tan(latRad) * Math.tan(decRad));
+    var sunrise = 12 - (hourAngle * 180 / Math.PI) / 15;
+    var sunset = 12 + (hourAngle * 180 / Math.PI) / 15;
+    return {sunrise: sunrise, sunset: sunset};
 }
 
-function getCurrentPlanetaryHour() {
-    var now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),dow=now.getDay();
-    var times=sunTimesMin(state.lat,state.lon,doy,state.tz);
-    var nextTimes=sunTimesMin(state.lat,state.lon,doy+1,state.tz);
-    var pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]);
-    var hourIndex;
-    if(nowMin>=times.sr&&nowMin<times.ss){
-        hourIndex=Math.floor((nowMin-times.sr)/((times.ss-times.sr)/12));
-    }else{
-        var hourLen=((nextTimes.sr+1440)-times.ss)/12;
-        hourIndex=(nowMin>=times.ss?Math.floor((nowMin-times.ss)/hourLen):Math.floor((nowMin+1440-times.ss)/hourLen))+12;
-    }
-    return SEQ[(ri+hourIndex)%7];
-}
-
-function updatePlanetHourDisplay() {
-    if (!startPlanetHour) startPlanetHour = getCurrentPlanetaryHour();
-    var p = PLANET_HOURS[startPlanetHour];
-    document.getElementById('startPlanetHour').innerHTML = '<span class="'+p.c+'">'+p.s+' '+p.n+'</span>';
-}
-
-function getAverageActionTime() {
-    if(actionHistory.length < MIN_ACTIONS_FOR_AVG) return null;
-    var deltas = actionHistory.filter(function(a){return a.delta > 0;}).map(function(a){return a.delta;});
-    if(deltas.length < MIN_ACTIONS_FOR_AVG) return null;
-    var sum = 0;
-    for(var i=0; i<deltas.length; i++) sum += deltas[i];
-    return sum/deltas.length;
-}
-
-function updateAvgDisplay() {
-    var a = getAverageActionTime();
-    var el = document.getElementById('avgTimeText');
-    var remaining = MIN_ACTIONS_FOR_AVG - actionHistory.length;
-    if(a) {
-        el.textContent = 'Media: '+a.toFixed(1)+' sec/azione';
-    } else if(remaining > 0) {
-        el.textContent = 'Media: calcolo tra '+remaining+' azioni';
+function getCurrentPlanetaryHour(lat, lon) {
+    var now = new Date();
+    var localHours = now.getHours() + now.getMinutes() / 60;
+    var sunTimes = getSunTimes(lat || 51.5, lon || -0.1, now);
+    
+    var dayOfWeek = now.getDay();
+    var dayRuler = DAY_RULERS[dayOfWeek];
+    var rulerIndex = PLANETARY_ORDER.indexOf(dayRuler);
+    
+    var isDaytime = localHours >= sunTimes.sunrise && localHours < sunTimes.sunset;
+    var hourLength, hourNum, hourStart;
+    
+    if (isDaytime) {
+        var dayLength = sunTimes.sunset - sunTimes.sunrise;
+        hourLength = dayLength / 12;
+        hourNum = Math.floor((localHours - sunTimes.sunrise) / hourLength);
+        hourStart = sunTimes.sunrise + hourNum * hourLength;
     } else {
-        el.textContent = 'Media: --';
-    }
-}
-
-function showWarning(avg, actionTime) {
-    document.getElementById('warningMsg').textContent = 'Hai agito molto piu velocemente della tua media.';
-    document.getElementById('warningDetail').textContent = 'Media: '+avg.toFixed(1)+'s - Questa azione: '+actionTime.toFixed(1)+'s';
-    document.getElementById('warningPopup').className = 'warning-popup show';
-    if(navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
-}
-
-function hideWarning() {
-    document.getElementById('warningPopup').className = 'warning-popup';
-}
-
-function cancelAction() {
-    pendingAction = null;
-    hideWarning();
-}
-
-function confirmAction() {
-    if(pendingAction) {
-        applyVibration(pendingAction.amount, pendingAction.timestamp, pendingAction.delta, true);
-        pendingAction = null;
-    }
-    hideWarning();
-}
-
-function showHistory() {
-    var list = document.getElementById('historyList');
-    list.innerHTML = '';
-    if(actionHistory.length === 0) {
-        list.innerHTML = '<div style="text-align:center;color:#888;padding:20px">Nessuna azione registrata</div>';
-    } else {
-        for(var i=0; i<actionHistory.length; i++) {
-            var a = actionHistory[i];
-            var div = document.createElement('div');
-            div.className = 'history-item' + (a.confirmed ? ' warning' : '');
-            var t = new Date(a.timestamp).toTimeString().slice(0,8);
-            var dt = a.delta > 0 ? '+'+a.delta.toFixed(1)+'s' : '-';
-            var warn = a.confirmed ? ' [!]' : '';
-            div.innerHTML = '<span class="rep">+'+a.amount+' (tot:'+a.totalAfter+')</span><span class="time">'+t+'</span><span class="delta">'+dt+warn+'</span>';
-            list.appendChild(div);
+        var nightLength = 24 - sunTimes.sunset + sunTimes.sunrise;
+        hourLength = nightLength / 12;
+        if (localHours >= sunTimes.sunset) {
+            hourNum = Math.floor((localHours - sunTimes.sunset) / hourLength) + 12;
+            hourStart = sunTimes.sunset + (hourNum - 12) * hourLength;
+        } else {
+            var hoursFromSunset = (24 - sunTimes.sunset) + localHours;
+            hourNum = Math.floor(hoursFromSunset / hourLength) + 12;
+            hourStart = sunTimes.sunset + (hourNum - 12) * hourLength;
+            if (hourStart >= 24) hourStart -= 24;
         }
     }
-    document.getElementById('historyPopup').className = 'history-popup show';
+    
+    var planetIndex = (rulerIndex + hourNum) % 7;
+    var planet = PLANETARY_ORDER[planetIndex];
+    var hourEnd = hourStart + hourLength;
+    if (hourEnd >= 24) hourEnd -= 24;
+    
+    return { planet: planet, hourNum: hourNum + 1, hourEnd: hourEnd, isDaytime: isDaytime };
 }
 
-function hideHistory() {
-    document.getElementById('historyPopup').className = 'history-popup';
+function updatePlanetaryHours() {
+    var now = new Date();
+    document.getElementById("currentTime").textContent = 
+        now.getHours().toString().padStart(2, "0") + ":" + 
+        now.getMinutes().toString().padStart(2, "0");
+    
+    var ph = getCurrentPlanetaryHour();
+    var pInfo = PLANETARY_NAMES[ph.planet];
+    
+    document.getElementById("currentPlanetaryIcon").textContent = pInfo.symbol;
+    document.getElementById("currentPlanetaryHour").textContent = pInfo.name;
+    
+    var endH = Math.floor(ph.hourEnd);
+    var endM = Math.round((ph.hourEnd - endH) * 60);
+    document.getElementById("planetaryHourEnd").textContent = 
+        endH.toString().padStart(2, "0") + ":" + endM.toString().padStart(2, "0");
 }
 
+/**
+ * MATERIALE: Serpentina per COLONNE
+ * - Inizia da ALTO-DESTRA (row = 0, col = size-1)
+ * - Prima colonna: dall'ALTO verso il BASSO
+ * - Seconda colonna: dal BASSO verso l'ALTO
+ * - Alterna andando verso sinistra
+ * - Termina a BASSO-SINISTRA
+ */
 function getMaterialPath(size) {
     var path = [];
-    for (var col = size - 1; col >= 0; col--) {
-        var colFromRight = (size - 1) - col;
+    var col, row, colFromRight;
+    for (col = size - 1; col >= 0; col--) {
+        colFromRight = (size - 1) - col;
         if (colFromRight % 2 === 0) {
-            for (var row = 0; row < size; row++) path.push([row, col]);
+            for (row = 0; row < size; row++) {
+                path.push([row, col]);
+            }
         } else {
-            for (var row = size - 1; row >= 0; row--) path.push([row, col]);
+            for (row = size - 1; row >= 0; row--) {
+                path.push([row, col]);
+            }
         }
     }
     return path;
 }
 
+/**
+ * SPIRITUALE: Serpentina per RIGHE
+ * - Inizia da BASSO-DESTRA (row = size-1, col = size-1)
+ * - Prima riga: da DESTRA a SINISTRA
+ * - Seconda riga: da SINISTRA a DESTRA
+ * - Alterna salendo verso l'alto
+ * - Termina in ALTO-SINISTRA
+ */
 function getSpiritualPath(size) {
     var path = [];
-    for (var col = 0; col < size; col++) {
-        if (col % 2 === 0) {
-            for (var row = size - 1; row >= 0; row--) path.push([row, col]);
+    var row, col, rowFromBottom;
+    for (row = size - 1; row >= 0; row--) {
+        rowFromBottom = (size - 1) - row;
+        if (rowFromBottom % 2 === 0) {
+            for (col = size - 1; col >= 0; col--) {
+                path.push([row, col]);
+            }
         } else {
-            for (var row = 0; row < size; row++) path.push([row, col]);
+            for (col = 0; col < size; col++) {
+                path.push([row, col]);
+            }
         }
     }
     return path;
 }
 
-function applyVibration(amount, timestamp, delta, confirmed) {
-    var left = state.vibTotal - state.vibCount;
-    var actualAmount = Math.min(amount, left);
+function addVibration(n) {
+    if (state.viewOnly || state.phase !== "vibrations") return;
+    state.sound = document.getElementById("soundToggle").checked;
     
-    state.vibCount += actualAmount;
-    
-    // Registra l'AZIONE (non i singoli click)
-    actionHistory.push({
-        amount: actualAmount,
-        totalAfter: state.vibCount,
-        timestamp: timestamp || Date.now(),
-        delta: delta,
-        confirmed: confirmed || false
-    });
-    
+    if (state.vibCount >= state.vibTotal) return;
+    var prev = state.vibCount;
+    state.vibCount = Math.min(state.vibCount + n, state.vibTotal);
+    if (state.sound) checkMilestone(prev, state.vibCount, state.vibTotal);
     updateVibrationUI();
-    updateAvgDisplay();
-    checkMilestone(state.vibCount);
     
     if (state.vibCount >= state.vibTotal) {
         if (state.affTotal > 0) {
-            switchToAffirmations();
+            setTimeout(switchToAffirmations, 800);
         } else {
-            showComplete();
+            showSaveButton();
         }
     }
 }
 
-function addVibration(amount) {
-    if (state.viewOnly) return;
-    if (state.vibCount >= state.vibTotal) return;
+function addAffirmation(n) {
+    if (state.viewOnly || state.phase !== "affirmations") return;
+    state.sound = document.getElementById("soundToggle") ? document.getElementById("soundToggle").checked : true;
     
-    var now = Date.now();
-    var delta = lastActionTime ? (now - lastActionTime) / 1000 : 0;
-    var avg = getAverageActionTime();
+    if (state.affCount >= state.affTotal) return;
+    var prev = state.affCount;
+    state.affCount = Math.min(state.affCount + n, state.affTotal);
+    if (state.sound) checkMilestone(prev, state.affCount, state.affTotal);
+    updateAffirmationUI();
     
-    // Check anti-click per tutte le azioni
-    if (avg && delta > 0 && delta < avg * THRESHOLD_FACTOR) {
-        pendingAction = { amount: amount, timestamp: now, delta: delta };
-        showWarning(avg, delta);
-        return;
-    }
-    
-    lastActionTime = now;
-    applyVibration(amount, now, delta, false);
-}
-
-function correctVibration() {
-    if (state.vibCount > 0 && actionHistory.length > 0) {
-        var lastAction = actionHistory.pop();
-        state.vibCount -= lastAction.amount;
-        if (state.vibCount < 0) state.vibCount = 0;
-        updateVibrationUI();
-        updateAvgDisplay();
+    if (state.affCount >= state.affTotal) {
+        showCompletedOverlay();
     }
 }
 
 function switchToAffirmations() {
     state.phase = "affirmations";
-    document.getElementById("step1").className = "step completed";
-    document.getElementById("step2").className = "step active";
+    document.getElementById("step1").classList.remove("active");
+    document.getElementById("step1").classList.add("completed");
+    document.getElementById("step2").classList.add("active");
     document.getElementById("vibrationSection").style.display = "none";
+    document.getElementById("dayInfo").style.display = "none";
+    document.getElementById("mantraSection").style.display = "none";
     document.getElementById("affirmationSection").style.display = "block";
-    document.getElementById("saveSection").style.display = "none";
-}
-
-function addAffirmation(amount) {
-    if (state.viewOnly) return;
-    var left = state.affTotal - state.affCount;
-    var add = Math.min(amount, left);
-    state.affCount += add;
     updateAffirmationUI();
-    
-    if (state.affCount >= state.affTotal) {
-        showComplete();
-    }
 }
 
-function checkMilestone(count) {
-    if (!state.sound) return;
-    if (count === state.vibTotal - 1) {
-        playAudio("audioLast");
-    } else if (count % 100 === 0 && count > 0) {
-        playAudio("audio100");
-    } else if (count % 50 === 0 && count > 0) {
-        playAudio("audio50");
-    } else if (count % 40 === 0 && count > 0) {
-        playAudio("audio40");
-    } else if (count % 30 === 0 && count > 0) {
-        playAudio("audio30");
-    } else if (count % 20 === 0 && count > 0) {
-        playAudio("audio20");
-    } else if (count % 10 === 0 && count > 0) {
-        playAudio("audio10");
-    }
+function showSaveButton() {
+    document.getElementById("saveSection").style.display = "block";
+}
+
+function showCompletedOverlay() {
+    document.getElementById("completedOverlay").classList.add("show");
 }
 
 function updateVibrationUI() {
     document.getElementById("vibCounterDisplay").textContent = state.vibCount;
     document.getElementById("vibCounterTotal").textContent = state.vibTotal;
-    var pct = Math.round((state.vibCount / state.vibTotal) * 100);
+    var pct = state.vibTotal > 0 ? (state.vibCount / state.vibTotal * 100) : 0;
     document.getElementById("vibProgressFill").style.width = pct + "%";
-    
-    var left = state.vibTotal - state.vibCount;
-    var msg = document.getElementById("vibMessage");
-    if (left === 0) {
-        msg.textContent = state.affTotal > 0 ? "Vibrazioni complete! Ora le affermazioni..." : "COMPLETATO";
-    } else if (left === 1) {
-        msg.textContent = "ULTIMA!";
-    } else if (left <= 5) {
-        msg.textContent = "ULTIME " + left + "!";
-    } else {
-        msg.textContent = "";
-    }
-    
-    var btn5 = document.getElementById("btnVibAdd5");
-    var btn10 = document.getElementById("btnVibAdd10");
-    btn5.disabled = left < 5;
-    btn5.style.opacity = left < 5 ? "0.4" : "1";
-    btn10.disabled = left < 10;
-    btn10.style.opacity = left < 10 ? "0.4" : "1";
 }
 
 function updateAffirmationUI() {
     document.getElementById("affCounterDisplay").textContent = state.affCount;
     document.getElementById("affCounterTotal").textContent = state.affTotal;
-    var pct = Math.round((state.affCount / state.affTotal) * 100);
+    var pct = state.affTotal > 0 ? (state.affCount / state.affTotal * 100) : 0;
     document.getElementById("affProgressFill").style.width = pct + "%";
-    
-    var left = state.affTotal - state.affCount;
-    var msg = document.getElementById("affMessage");
-    if (left === 0) {
-        msg.textContent = "COMPLETATO";
-    } else if (left === 1) {
-        msg.textContent = "ULTIMA!";
-    } else if (left <= 5) {
-        msg.textContent = "ULTIME " + left + "!";
-    } else {
-        msg.textContent = "";
+}
+
+function checkMilestone(prev, curr, total) {
+    var milestones = [10, 20, 30, 40, 50, 100];
+    for (var i = 0; i < milestones.length; i++) {
+        var m = milestones[i];
+        if (prev < m && curr >= m && m < total) {
+            playAudio("audio" + m);
+            return;
+        }
     }
-    
-    var btn5 = document.getElementById("btnAffAdd5");
-    var btn10 = document.getElementById("btnAffAdd10");
-    btn5.disabled = left < 5;
-    btn5.style.opacity = left < 5 ? "0.4" : "1";
-    btn10.disabled = left < 10;
-    btn10.style.opacity = left < 10 ? "0.4" : "1";
+    if (curr === total - 1) {
+        playAudio("audioLast");
+    } else if (curr === total) {
+        playAudio("audioComplete");
+    }
 }
 
 function playAudio(id) {
-    var a = document.getElementById(id);
-    if (a && a.src) {
-        a.currentTime = 0;
-        a.play().catch(function(e) { console.log("[AUDIO] Error:", e); });
+    var audio = document.getElementById(id);
+    if (audio && audio.src) {
+        audio.currentTime = 0;
+        audio.play().catch(function() {});
     }
-}
-
-function showComplete() {
-    if (state.sound) playAudio("audioComplete");
-    document.getElementById("completedOverlay").className = "completed-overlay show";
 }
 
 function saveAndClose() {
-    var elapsed = Math.floor((Date.now() - startTime) / 1000);
     var data = {
-        action: "counter_complete",
         work_id: state.workId,
-        vibrations: state.vibCount,
-        affirmations: state.affCount,
-        total_vibrations: state.vibTotal,
-        total_affirmations: state.affTotal,
-        planetary_hour: startPlanetHour,
-        duration_seconds: elapsed
+        vibrations_done: state.vibCount,
+        affirmations_done: state.affCount,
+        completed: state.vibCount >= state.vibTotal && (state.affTotal === 0 || state.affCount >= state.affTotal)
     };
-    console.log("[SQUARE] Saving:", JSON.stringify(data));
+    
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify(data));
-    } else {
-        alert("Dati: " + JSON.stringify(data));
-    }
-}
-
-function closeWebApp() {
-    if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.close();
+    } else {
+        alert("Dati salvati: " + JSON.stringify(data));
     }
 }
 
-function adminReset() {
-    if (confirm('ADMIN: Vuoi resettare completamente questo contatore?')) {
-        state.vibCount = 0;
-        state.affCount = 0;
-        actionHistory = [];
-        lastActionTime = null;
-        updateVibrationUI();
-        updateAffirmationUI();
-        updateAvgDisplay();
-        alert('Reset completato!');
-    }
-}
-
-function loadAudio() {
-    if (!state.audioUrl) return;
-    var base = state.audioUrl + "/" + state.lang + "/";
-    var milestones = [10, 20, 30, 40, 50, 100];
-    for (var i = 0; i < milestones.length; i++) {
-        var el = document.getElementById("audio" + milestones[i]);
-        if (el) el.src = base + milestones[i] + ".mp3";
-    }
-    var elLast = document.getElementById("audioLast");
-    if (elLast) elLast.src = base + "last.mp3";
-    var elComp = document.getElementById("audioComplete");
-    if (elComp) elComp.src = base + "complete.mp3";
-}
-
-function buildGrid() {
+function renderGrid() {
     var grid = GRIDS[state.planet];
     if (!grid) return;
+    
     var size = grid.length;
     var container = document.getElementById("squareGrid");
     container.innerHTML = "";
-    var maxWidth = Math.min(window.innerWidth - 40, 350);
-    var cellSize = Math.floor((maxWidth - 16 - (size - 1) * 2) / size);
+    
+    var cellSize = Math.min(Math.floor((window.innerWidth - 60) / size), 45);
     container.style.gridTemplateColumns = "repeat(" + size + ", " + cellSize + "px)";
-    container.style.gridTemplateRows = "repeat(" + size + ", " + cellSize + "px)";
     
     var path = state.direction === "material" ? getMaterialPath(size) : getSpiritualPath(size);
-    var posMap = {};
-    for (var i = 0; i < path.length; i++) {
-        posMap[path[i][0] + "," + path[i][1]] = i;
-    }
+    var currentIdx = state.day - 1;
     
     for (var r = 0; r < size; r++) {
         for (var c = 0; c < size; c++) {
             var cell = document.createElement("div");
             cell.className = "cell";
+            cell.style.width = cellSize + "px";
+            cell.style.height = cellSize + "px";
+            cell.style.fontSize = (cellSize * 0.35) + "px";
             cell.textContent = grid[r][c];
-            cell.style.fontSize = (cellSize * 0.4) + "px";
-            var posIdx = posMap[r + "," + c];
-            if (posIdx !== undefined) {
-                if (state.viewOnly) {
-                    if (posIdx < state.completed - 1) {
-                        cell.className = "cell completed";
-                    } else if (posIdx === state.completed - 1) {
-                        cell.className = "cell completed-today";
-                    }
-                } else {
-                    if (posIdx < state.completed) {
-                        cell.className = "cell completed";
-                    } else if (posIdx === state.completed) {
-                        cell.className = "cell current";
-                    }
+            
+            var cellIdx = -1;
+            for (var i = 0; i < path.length; i++) {
+                if (path[i][0] === r && path[i][1] === c) {
+                    cellIdx = i;
+                    break;
                 }
             }
+            
+            if (cellIdx < state.completed) {
+                cell.classList.add("completed");
+            } else if (cellIdx === currentIdx) {
+                cell.classList.add("current");
+            }
+            
             container.appendChild(cell);
         }
     }
 }
 
-function setupViewOnlyMode(planetInfo) {
-    document.getElementById("viewOnlyBanner").style.display = "block";
-    document.getElementById("completedDayNum").textContent = state.completed;
-    document.getElementById("viewOnlyInfo").style.display = "block";
-    document.getElementById("stepIndicator").style.display = "none";
-    document.getElementById("dayInfo").style.display = "none";
-    document.getElementById("mantraSection").style.display = "none";
-    document.getElementById("vibrationSection").style.display = "none";
-    document.getElementById("affirmationSection").style.display = "none";
-    document.getElementById("saveSection").style.display = "none";
-    document.getElementById("closeSection").style.display = "block";
-    document.getElementById("planetHourBar").style.display = "none";
-    
-    var totalDays = planetInfo.days;
-    var remaining = totalDays - state.completed;
-    var pctDone = Math.round((state.completed / totalDays) * 100);
-    document.getElementById("infoCompleted").textContent = state.completed + " / " + totalDays;
-    document.getElementById("infoRemaining").textContent = remaining;
-    document.getElementById("progressVisual").style.width = pctDone + "%";
-    document.getElementById("progressVisual").textContent = pctDone + "%";
-    
-    var endDate = new Date();
-    endDate.setDate(endDate.getDate() + remaining);
-    document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString('it-IT');
-    
-    if (state.mantra) {
-        document.getElementById("viewMantraText").textContent = state.mantra;
-    }
-    if (state.affirmation) {
-        document.getElementById("viewAffirmation").style.display = "block";
-        document.getElementById("viewAffirmationText").textContent = '"' + state.affirmation + '"';
-    }
-}
-
 function init() {
     if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.ready();
     }
     
-    var params = new URLSearchParams(window.location.search);
-    state.planet = params.get("planet") || "sun";
-    state.day = parseInt(params.get("day")) || 1;
-    state.completed = parseInt(params.get("completed")) || 0;
-    state.direction = params.get("direction") || "material";
-    state.vibTotal = parseInt(params.get("vibrations")) || 100;
-    state.affTotal = parseInt(params.get("affirmations")) || 0;
-    state.workId = params.get("work_id") || "";
-    state.audioUrl = params.get("audio_url") || "";
-    state.lang = params.get("lang") || "it";
-    state.viewOnly = params.get("view_only") === "true";
-    state.isAdmin = params.get("is_admin") === "1";
-    state.lat = parseFloat(params.get("lat")) || 41.9028;
-    state.lon = parseFloat(params.get("lon")) || 12.4964;
-    state.tz = parseFloat(params.get("tz")) || 1;
+    var p = new URLSearchParams(window.location.search);
     
-    var soundParam = params.get("sound");
-    if (soundParam !== null) {
-        state.sound = soundParam !== "false";
-        document.getElementById("soundToggle").checked = state.sound;
+    state.workId = p.get("work_id") || "";
+    state.planet = p.get("planet") || "sun";
+    state.day = parseInt(p.get("day")) || 1;
+    state.completed = parseInt(p.get("completed")) || 0;
+    state.direction = p.get("direction") || "material";
+    state.vibTotal = parseInt(p.get("vibrations")) || parseInt(p.get("total")) || 111;
+    state.affTotal = parseInt(p.get("aff_reps")) || 0;
+    state.lang = p.get("lang") || "it";
+    state.viewOnly = p.get("view_only") === "1" || p.get("view_only") === "true";
+    state.mantra = decodeURIComponent(p.get("mantra") || "");
+    state.affirmation = decodeURIComponent(p.get("affirmation") || "");
+    
+    var rawAudioUrl = p.get("audio_url") || "";
+    state.audioUrl = rawAudioUrl ? decodeURIComponent(rawAudioUrl) : "https://odin66666.github.io/audio";
+    
+    // Setup audio
+    var lang = state.lang || "it";
+    var milestones = [10, 20, 30, 40, 50, 100];
+    for (var i = 0; i < milestones.length; i++) {
+        var el = document.getElementById("audio" + milestones[i]);
+        if (el) el.src = state.audioUrl + "/" + lang + "/" + milestones[i] + ".mp3";
     }
+    document.getElementById("audioLast").src = state.audioUrl + "/" + lang + "/last.mp3";
+    document.getElementById("audioComplete").src = state.audioUrl + "/" + lang + "/complete.mp3";
     
-    var affText = params.get("affirmation") || "";
-    var mantra = params.get("mantra") || "";
-    var pron = params.get("pronunciation") || "";
-    try { if (affText) affText = decodeURIComponent(affText); } catch(e) {}
-    try { if (mantra) mantra = decodeURIComponent(mantra); } catch(e) {}
-    try { if (pron) pron = decodeURIComponent(pron); } catch(e) {}
-    
-    state.mantra = mantra;
-    state.affirmation = affText;
-    
-    var planetInfo = PLANETS_INFO[state.planet] || PLANETS_INFO.sun;
-    document.getElementById("planetSymbol").textContent = planetInfo.symbol;
-    document.getElementById("squareTitle").textContent = "QUADRATO " + planetInfo.name;
+    // Update UI
+    var planetData = PLANETS[state.planet] || PLANETS.sun;
+    document.getElementById("planetSymbol").textContent = planetData.symbol;
+    document.getElementById("squareTitle").textContent = "QUADRATO DEL " + planetData.name;
     document.getElementById("currentDay").textContent = state.day;
-    document.getElementById("totalDays").textContent = planetInfo.days;
+    document.getElementById("totalDays").textContent = GRIDS[state.planet] ? GRIDS[state.planet].length * GRIDS[state.planet].length : 36;
     document.getElementById("todayVibrations").textContent = state.vibTotal;
     document.getElementById("vibCounterTotal").textContent = state.vibTotal;
-    document.getElementById("mantraText").textContent = mantra || "MANTRA";
-    if (pron) document.getElementById("mantraPronunciation").textContent = "(" + pron + ")";
     
-    if (affText) {
-        document.getElementById("affirmationText").textContent = '"' + affText + '"';
-        document.getElementById("affCounterTotal").textContent = state.affTotal;
+    if (state.mantra) {
+        document.getElementById("mantraText").textContent = state.mantra;
+    }
+    if (state.affirmation) {
+        document.getElementById("affirmationText").textContent = state.affirmation;
     }
     
-    if (state.isAdmin) {
-        document.getElementById("adminSection").className = "admin-section show";
-    }
-    
-    updatePlanetHourDisplay();
-    
+    // View only mode
     if (state.viewOnly) {
-        setupViewOnlyMode(planetInfo);
-    } else {
-        if (state.affTotal <= 0) {
-            document.getElementById("step2").style.display = "none";
+        document.getElementById("viewOnlyBanner").style.display = "block";
+        document.getElementById("completedDayNum").textContent = state.day;
+        document.getElementById("stepIndicator").style.display = "none";
+        document.getElementById("dayInfo").style.display = "none";
+        document.getElementById("mantraSection").style.display = "none";
+        document.getElementById("vibrationSection").style.display = "none";
+        document.getElementById("viewOnlyInfo").style.display = "block";
+        document.getElementById("closeSection").style.display = "block";
+        
+        var totalDays = GRIDS[state.planet] ? GRIDS[state.planet].length * GRIDS[state.planet].length : 36;
+        var remaining = totalDays - state.completed;
+        var pct = Math.round((state.completed / totalDays) * 100);
+        
+        document.getElementById("infoCompleted").textContent = state.completed + " / " + totalDays;
+        document.getElementById("infoRemaining").textContent = remaining;
+        document.getElementById("progressVisual").style.width = pct + "%";
+        document.getElementById("progressVisual").textContent = pct + "%";
+        
+        if (state.mantra) {
+            document.getElementById("viewMantraText").textContent = state.mantra;
         }
-        document.getElementById("saveSection").style.display = "block";
-        loadAudio();
-        updateVibrationUI();
-        updateAvgDisplay();
+        if (state.affirmation) {
+            document.getElementById("viewAffirmation").style.display = "block";
+            document.getElementById("viewAffirmationText").textContent = state.affirmation;
+        }
+        
+        var endDate = new Date();
+        endDate.setDate(endDate.getDate() + remaining);
+        document.getElementById("infoEndDate").textContent = endDate.toLocaleDateString("it-IT");
     }
     
-    buildGrid();
-    
-    document.getElementById("btnVibAdd1").onclick = function() { addVibration(1); };
-    document.getElementById("btnVibAdd5").onclick = function() { addVibration(5); };
-    document.getElementById("btnVibAdd10").onclick = function() { addVibration(10); };
-    document.getElementById("btnVibMain").onclick = function() { addVibration(1); };
-    
-    document.getElementById("btnAffAdd1").onclick = function() { addAffirmation(1); };
-    document.getElementById("btnAffAdd5").onclick = function() { addAffirmation(5); };
-    document.getElementById("btnAffAdd10").onclick = function() { addAffirmation(10); };
-    document.getElementById("btnAffMain").onclick = function() { addAffirmation(1); };
-    document.getElementById("btnAffSave").onclick = saveAndClose;
-    
-    document.getElementById("btnSave").onclick = saveAndClose;
-    document.getElementById("btnClose").onclick = closeWebApp;
-    document.getElementById("btnOverlayClose").onclick = saveAndClose;
-    
-    document.getElementById("btnHistory").onclick = showHistory;
-    document.getElementById("btnHistoryClose").onclick = hideHistory;
-    document.getElementById("btnCorrect").onclick = correctVibration;
-    
-    document.getElementById("btnWarningCancel").onclick = cancelAction;
-    document.getElementById("btnWarningConfirm").onclick = confirmAction;
-    
-    document.getElementById("btnAdminReset").onclick = adminReset;
-    
-    document.getElementById("soundToggle").onchange = function() {
-        state.sound = this.checked;
-    };
+    renderGrid();
+    updateVibrationUI();
+    updatePlanetaryHours();
+    setInterval(updatePlanetaryHours, 60000);
 }
 
-init();
+// Event listeners
+document.getElementById("btnVibAdd1").addEventListener("click", function() { addVibration(1); });
+document.getElementById("btnVibAdd5").addEventListener("click", function() { addVibration(5); });
+document.getElementById("btnVibAdd10").addEventListener("click", function() { addVibration(10); });
+document.getElementById("btnVibMain").addEventListener("click", function() { addVibration(1); });
+document.getElementById("btnAffAdd1").addEventListener("click", function() { addAffirmation(1); });
+document.getElementById("btnAffAdd5").addEventListener("click", function() { addAffirmation(5); });
+document.getElementById("btnAffAdd10").addEventListener("click", function() { addAffirmation(10); });
+document.getElementById("btnAffMain").addEventListener("click", function() { addAffirmation(1); });
+document.getElementById("btnAffSave").addEventListener("click", saveAndClose);
+document.getElementById("btnSave").addEventListener("click", saveAndClose);
+document.getElementById("btnClose").addEventListener("click", function() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.close();
+    }
+});
+document.getElementById("btnOverlayClose").addEventListener("click", saveAndClose);
+
+// Init on load
+document.addEventListener("DOMContentLoaded", init);
 </script>
 </body>
 </html>
