@@ -604,8 +604,8 @@ function addVibration(n) {
     
     if (state.vibCount >= state.vibTotal) return;
     
-    // Anti-click: solo per +1 (non per +5/+10)
-    if (n === 1) {
+    // Anti-click: solo per +1, solo dopo 10 ripetizioni
+    if (n === 1 && state.vibCount >= 10) {
         var now = Date.now();
         var delta = lastClickTime ? (now - lastClickTime) / 1000 : 0;
         var avg = getAverageClickTime();
@@ -617,6 +617,12 @@ function addVibration(n) {
             return;
         }
         
+        lastClickTime = now;
+        clickHistory.push({rep: state.vibCount + 1, timestamp: now, delta: delta});
+    } else if (n === 1) {
+        // Prima di 10 ripetizioni, registra solo per calcolare la media
+        var now = Date.now();
+        var delta = lastClickTime ? (now - lastClickTime) / 1000 : 0;
         lastClickTime = now;
         clickHistory.push({rep: state.vibCount + 1, timestamp: now, delta: delta});
     }
@@ -660,23 +666,6 @@ function addAffirmation(n) {
     if (state.viewOnly || state.phase !== "affirmations") return;
     
     if (state.affCount >= state.affTotal) return;
-    
-    // Anti-click: solo per +1 (non per +5/+10)
-    if (n === 1) {
-        var now = Date.now();
-        var delta = lastClickTime ? (now - lastClickTime) / 1000 : 0;
-        var avg = getAverageClickTime();
-        
-        // Se click troppo veloce rispetto alla media
-        if (avg && delta > 0 && delta < avg * THRESHOLD_FACTOR) {
-            pendingClick = {timestamp: now, delta: delta, n: n, type: 'aff'};
-            showClickWarning(avg, delta);
-            return;
-        }
-        
-        lastClickTime = now;
-        clickHistory.push({rep: state.affCount + 1, timestamp: now, delta: delta});
-    }
     
     var prev = state.affCount;
     state.affCount = Math.min(state.affCount + n, state.affTotal);
@@ -963,12 +952,7 @@ function setupViewOnlyMode(planetInfo) {
     }
     
     if (workStartPlanetary) {
-        var pName = PLANETARY_NAMES[workStartPlanetary];
-        if (pName) {
-            document.getElementById("infoStartPlanetary").textContent = pName.symbol + " " + pName.name;
-        } else {
-            document.getElementById("infoStartPlanetary").textContent = workStartPlanetary;
-        }
+        document.getElementById("infoStartPlanetary").textContent = workStartPlanetary;
     } else {
         document.getElementById("infoPlanetaryRow").style.display = "none";
     }
