@@ -83,8 +83,9 @@
         .progress-visual-fill { height: 100%; background: linear-gradient(90deg, #10b981, #d4af37); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #1a1a1a; font-weight: bold; }
         
         /* Info planetaria e media */
-        .session-info { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(212,175,55,0.1); border-radius: 8px; margin: 8px 0; font-size: 0.75rem; }
+        .session-info { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(212,175,55,0.1); border-radius: 8px; margin: 8px 0; font-size: 0.7rem; }
         .planetary-hour { color: #d4af37; }
+        .moon-sign { color: #9d4edd; }
         .avg-time { color: #888; }
         
         /* Warning popup */
@@ -134,9 +135,10 @@
             <div class="vibration-label">vibrazioni per oggi</div>
         </div>
         
-        <!-- Info sessione: ora planetaria e media -->
+        <!-- Info sessione: ora planetaria, luna e media -->
         <div class="session-info" id="sessionInfo">
             <span class="planetary-hour">🪐 <span id="planetaryHourText">--</span></span>
+            <span class="moon-sign">☽ <span id="moonSignText">--</span></span>
             <span class="avg-time" id="avgTimeText">Media: calcolo...</span>
         </div>
         
@@ -204,6 +206,20 @@
         <button class="close-btn" id="btnOverlayClose">Salva e Chiudi</button>
     </div>
     
+    <!-- Warning popup anti-click -->
+    <div class="warning-popup" id="warningPopup">
+        <div class="warning-box">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-title">Click troppo veloce!</div>
+            <div class="warning-msg" id="warningMsg">Hai cliccato molto più velocemente della tua media.</div>
+            <div class="warning-detail" id="warningDetail">Media: --s - Questo click: --s</div>
+            <div class="warning-btns">
+                <button class="btn-warn btn-warn-cancel" id="btnWarnCancel">Annulla</button>
+                <button class="btn-warn btn-warn-confirm" id="btnWarnConfirm">Conferma</button>
+            </div>
+        </div>
+    </div>
+    
     <audio id="audio10" preload="auto"></audio>
     <audio id="audio20" preload="auto"></audio>
     <audio id="audio30" preload="auto"></audio>
@@ -245,6 +261,7 @@ var THRESHOLD_FACTOR = 0.4;
 var startPlanetaryHour = null;
 var startTimeISO = null;
 var currentPlanet = null;
+var startMoonSign = null;
 
 var PLANETARY_ORDER = ["saturn", "jupiter", "mars", "sun", "venus", "mercury", "moon"];
 var PLANETARY_NAMES = {
@@ -257,6 +274,36 @@ var PLANETARY_NAMES = {
     moon: {symbol: "☽", name: "Luna"}
 };
 var DAY_RULERS = ["sun", "moon", "mars", "mercury", "jupiter", "venus", "saturn"];
+
+var ZODIAC_SIGNS = [
+    {name: "Ariete", symbol: "♈"},
+    {name: "Toro", symbol: "♉"},
+    {name: "Gemelli", symbol: "♊"},
+    {name: "Cancro", symbol: "♋"},
+    {name: "Leone", symbol: "♌"},
+    {name: "Vergine", symbol: "♍"},
+    {name: "Bilancia", symbol: "♎"},
+    {name: "Scorpione", symbol: "♏"},
+    {name: "Sagittario", symbol: "♐"},
+    {name: "Capricorno", symbol: "♑"},
+    {name: "Acquario", symbol: "♒"},
+    {name: "Pesci", symbol: "♓"}
+];
+
+function getMoonSign() {
+    // Calcolo semplificato basato su ciclo lunare di ~27.32 giorni attraverso lo zodiaco
+    // Ogni segno dura circa 2.28 giorni
+    var now = new Date();
+    // Epoca di riferimento: 1 Gennaio 2000, Luna in Ariete
+    var epoch = new Date(2000, 0, 6, 18, 0, 0);
+    var msPerDay = 86400000;
+    var daysSinceEpoch = (now - epoch) / msPerDay;
+    var lunarCycle = 27.321661;
+    var daysPerSign = lunarCycle / 12;
+    var positionInCycle = daysSinceEpoch % lunarCycle;
+    var signIndex = Math.floor(positionInCycle / daysPerSign) % 12;
+    return ZODIAC_SIGNS[signIndex];
+}
 
 function getSunTimes(lat, lon, date) {
     var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
@@ -329,6 +376,14 @@ function updatePlanetaryDisplay() {
     if (el && PLANETARY_NAMES[currentPlanet]) {
         var p = PLANETARY_NAMES[currentPlanet];
         el.textContent = p.symbol + " " + p.name;
+    }
+}
+
+function updateMoonDisplay() {
+    var moonSign = getMoonSign();
+    var el = document.getElementById("moonSignText");
+    if (el && moonSign) {
+        el.textContent = moonSign.symbol + " " + moonSign.name;
     }
 }
 
@@ -581,6 +636,7 @@ function saveAndClose() {
         total_vibrations: state.vibTotal,
         total_affirmations: state.affTotal,
         start_planetary_hour: startPlanetaryHour,
+        start_moon_sign: startMoonSign ? startMoonSign.name : null,
         start_time: startTimeISO,
         end_time: endTimeISO
     };
@@ -650,12 +706,13 @@ function setupViewOnlyMode() {
 }
 
 function init() {
-    console.log("[COUNTER] Init v3 - with planetary hours and anti-click...");
+    console.log("[COUNTER] Init v4 - with planetary hours, moon sign and anti-click...");
     
-    // Salva ora planetaria e timestamp di inizio (non cambieranno durante la sessione)
+    // Salva ora planetaria, segno luna e timestamp di inizio (non cambieranno durante la sessione)
     startTimeISO = new Date().toISOString();
     currentPlanet = getCurrentPlanetaryHour();
     startPlanetaryHour = currentPlanet;
+    startMoonSign = getMoonSign();
     
     if (window.Telegram && window.Telegram.WebApp) {
         window.Telegram.WebApp.expand();
@@ -756,28 +813,14 @@ function init() {
     document.getElementById("btnWarnCancel").onclick = cancelPendingClick;
     document.getElementById("btnWarnConfirm").onclick = confirmPendingClick;
     
-    // Aggiorna display ora planetaria e media
+    // Aggiorna display ora planetaria, luna e media
     updatePlanetaryDisplay();
+    updateMoonDisplay();
     updateAvgDisplay();
     setInterval(updatePlanetaryDisplay, 60000);
 }
 
 init();
 </script>
-
-<!-- Warning popup anti-click -->
-<div class="warning-popup" id="warningPopup">
-    <div class="warning-box">
-        <div class="warning-icon">⚠️</div>
-        <div class="warning-title">Click troppo veloce!</div>
-        <div class="warning-msg" id="warningMsg">Hai cliccato molto più velocemente della tua media.</div>
-        <div class="warning-detail" id="warningDetail">Media: --s - Questo click: --s</div>
-        <div class="warning-btns">
-            <button class="btn-warn btn-warn-cancel" id="btnWarnCancel">Annulla</button>
-            <button class="btn-warn btn-warn-confirm" id="btnWarnConfirm">Conferma</button>
-        </div>
-    </div>
-</div>
-
 </body>
 </html>
