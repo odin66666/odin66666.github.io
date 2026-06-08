@@ -396,18 +396,29 @@ function init() {
 
 function pad2(n) { return n.toString().padStart(2, '0'); }
 
+// Fine dell'ora corrente = primo inizio-ora DOPO adesso, sulla timeline continua
+// di epoch (ieri + oggi + domani). Usa i confini reali (alba/tramonto, DST),
+// senza arrotondamenti al minuto né hack della mezzanotte.
+function nextHourStartEpoch() {
+  const now = realNowMs();
+  const starts = [];
+  for (const off of [-1, 0, 1]) for (const h of planetaryDayAbs(off)) starts.push(h.epoch);
+  starts.sort((a, b) => a - b);
+  for (const e of starts) if (e > now) return e;
+  return null;
+}
+
 function updateCD() {
   if (!DATA) return;
-  const nowSec = getNowSeconds();
-  const nowMin = Math.floor(nowSec / 60);
-  const cur = getCur(DATA.hrs, nowMin);
+  const nowMin = getNowMinutes();
 
-  if (cur) {
-    const endSec = Math.floor(cur.en * 60);
-    let rem = endSec - nowSec;
-    if (rem < 0) rem += 86400;
+  // "Termina tra": fine dell'ora corrente dagli EPOCH precisi (non da cur.en al minuto).
+  const endEpoch = nextHourStartEpoch();
+  if (endEpoch) {
+    let rem = Math.floor((endEpoch - realNowMs()) / 1000);
+    if (rem < 0) rem = 0;
     const m = Math.floor(rem / 60);
-    const s = Math.floor(rem % 60);
+    const s = rem % 60;
     document.getElementById('cdText').textContent = m + 'm ' + s + 's';
   }
   document.getElementById('localTime').textContent = '🕐 Ora: ' + minToStr(nowMin);
