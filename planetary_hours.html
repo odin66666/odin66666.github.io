@@ -18,7 +18,7 @@
     .header h1 { font-size: 18px; color: var(--gold); }
     .header .loc { font-size: 12px; color: var(--dim); margin-top: 4px; }
     .header .date { font-size: 13px; margin-top: 2px; }
-    
+
     .banner { background: linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05)); border: 1px solid var(--gold); border-radius: 10px; padding: 14px; margin-bottom: 12px; text-align: center; }
     .banner .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 6px; }
     .banner .row { display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -27,21 +27,21 @@
     .banner .time { font-size: 12px; color: var(--dim); }
     .banner .cd { margin-top: 8px; font-size: 13px; color: var(--gold); }
     .banner .cd b { font-size: 16px; }
-    
+
     .info { display: flex; justify-content: space-around; background: var(--card); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
     .info-item { text-align: center; }
     .info-item .ic { font-size: 18px; }
     .info-item .t { font-size: 14px; font-weight: bold; }
     .info-item .l { font-size: 10px; color: var(--dim); }
-    
+
     .ruler { text-align: center; background: var(--card); border-radius: 8px; padding: 8px; margin-bottom: 10px; }
     .ruler .l { font-size: 10px; color: var(--dim); }
     .ruler .p { font-size: 16px; font-weight: bold; margin-top: 2px; }
-    
+
     .tabs { display: flex; background: var(--card); border-radius: 8px; padding: 3px; margin-bottom: 10px; }
     .tab { flex: 1; padding: 10px; border: none; background: transparent; color: var(--dim); font-size: 13px; cursor: pointer; border-radius: 6px; }
     .tab.on { background: rgba(212,175,55,0.2); color: var(--gold); }
-    
+
     .grid { display: flex; flex-direction: column; gap: 5px; }
     .hrow { display: grid; grid-template-columns: 32px 36px 1fr 60px 60px; align-items: center; padding: 8px 10px; background: var(--card); border-radius: 8px; gap: 6px; }
     .hrow.cur { background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08)); border: 1px solid var(--gold); }
@@ -51,13 +51,23 @@
     .hrow .s { font-size: 20px; text-align: center; }
     .hrow .nm { font-size: 13px; }
     .hrow .tm { font-size: 12px; color: var(--dim); text-align: center; font-family: monospace; }
-    
+
     .c-sun { color: var(--sun); } .c-moon { color: var(--moon); } .c-mars { color: var(--mars); }
     .c-mercury { color: var(--mercury); } .c-jupiter { color: var(--jupiter); }
     .c-venus { color: var(--venus); } .c-saturn { color: var(--saturn); }
-    
+
     .hide { display: none !important; }
     .localtime { font-size: 11px; color: var(--gold); margin-top: 4px; }
+
+    /* ===== AGGIUNTE v22 (solo nuove regole, stile coerente con l'esistente) ===== */
+    .hrow.follow { box-shadow: inset 3px 0 0 var(--gold); }
+    .hrow.follow .nm { font-weight: bold; }
+    .hrow .badge { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+    .banner.next .lbl { color: var(--gold); }
+    .badge-premium { display: inline-block; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(212,175,55,0.5); border-radius: 6px; padding: 2px 6px; margin-top: 6px; }
+    .locked { text-align: center; padding: 40px 16px; }
+    .locked h2 { color: var(--gold); font-size: 18px; margin-bottom: 10px; }
+    .locked p { color: var(--dim); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -68,30 +78,43 @@
     <div class="date" id="dateText"></div>
     <div class="localtime" id="localTime"></div>
   </div>
-  
+
+  <!-- AGGIUNTA v22: countdown alla prossima ora del pianeta seguito (solo con ?planet=) -->
+  <div class="banner next hide" id="nextBanner">
+    <div class="lbl">Prossima ora di <span id="nextPlanetName"></span></div>
+    <div class="row"><span class="sym" id="nextSym"></span><div><div class="time" id="nextStart"></div></div></div>
+    <div class="cd">tra <b id="nextCd">--:--:--</b></div>
+  </div>
+
   <div class="ruler">
     <div class="l">Giorno di</div>
     <div class="p" id="rulerText"></div>
   </div>
-  
+
   <div class="info">
     <div class="info-item"><div class="ic">🌅</div><div class="t" id="srText">--:--</div><div class="l">Alba</div></div>
     <div class="info-item"><div class="ic">🌇</div><div class="t" id="ssText">--:--</div><div class="l">Tramonto</div></div>
   </div>
-  
+
   <div class="banner" id="curBanner">
     <div class="lbl">Ora Corrente</div>
     <div class="row"><span class="sym" id="curSym"></span><div><div class="name" id="curName"></div><div class="time" id="curTime"></div></div></div>
     <div class="cd">Termina tra <b id="cdText">--:--</b></div>
   </div>
-  
+
   <div class="tabs">
     <button class="tab on" id="tabDay" onclick="showTab('day')">☀️ Diurne (1-12)</button>
     <button class="tab" id="tabNight" onclick="showTab('night')">🌙 Notturne (13-24)</button>
   </div>
-  
+
   <div class="grid" id="gridDay"></div>
   <div class="grid hide" id="gridNight"></div>
+
+  <!-- AGGIUNTA v22: nota giornata planetaria + badge Premium -->
+  <div style="text-align:center; margin-top:10px;">
+    <span class="badge-premium">Premium</span>
+    <div class="l" style="font-size:10px; color:var(--dim); margin-top:6px;">Le ore di oggi arrivano fino alla prossima alba.</div>
+  </div>
 </div>
 
 <script>
@@ -106,6 +129,13 @@ const LON = parseFloat(P.get('lon')) || 12.4964;
 // FIX: check esplicito per null
 const tzParam = P.get('tz');
 const TZ = tzParam !== null ? parseFloat(tzParam) : 1;
+
+// ===== AGGIUNTE v22 =====
+const FOLLOW = (P.get('planet') || '').toLowerCase();              // pianeta da evidenziare
+const srvnowParam = P.get('srvnow');
+const SRVNOW = srvnowParam !== null ? parseInt(srvnowParam) : null; // epoch UTC (sec) dal server
+const TOK = P.get('tok') || '';                                    // token HMAC a scadenza (soft-gate)
+const ANCHOR = Date.now();                                         // ancora monotonica al caricamento
 
 document.getElementById('locText').textContent = '📍 ' + CITY;
 
@@ -131,26 +161,46 @@ function minToStr(min) {
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// USA DIRETTAMENTE L'ORA DEL BROWSER
-// L'utente seleziona la città in cui si trova, quindi l'ora è già corretta
+// ===== AGGIUNTA v22: sorgente tempo DST-corretta =====
+// Se il server passa srvnow (epoch UTC), "adesso" è l'orologio da parete della
+// CITTÀ (srvnow + offset città), avanzato con un'ancora monotonica: così non
+// dipende dall'orologio del telefono. Senza srvnow -> fallback all'ora del browser.
+function realNowMs() {
+  return SRVNOW !== null ? (SRVNOW * 1000 + (Date.now() - ANCHOR)) : Date.now();
+}
+function cityDate() {
+  // Date i cui componenti getUTC* sono l'orologio da parete della città
+  if (SRVNOW !== null) return new Date(realNowMs() + TZ * 3600000);
+  return new Date();
+}
+function _useUTC() { return SRVNOW !== null; }
+
+// USA L'ORA CORRETTA (città via server, o browser come fallback)
 function getNowMinutes() {
-  const now = new Date();
-  return now.getHours() * 60 + now.getMinutes();
+  const d = cityDate();
+  return _useUTC() ? (d.getUTCHours() * 60 + d.getUTCMinutes())
+                   : (d.getHours() * 60 + d.getMinutes());
 }
 
 function getNowSeconds() {
-  const now = new Date();
-  return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const d = cityDate();
+  return _useUTC() ? (d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds())
+                   : (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds());
 }
 
 function getDayOfYear() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.floor((now - start) / 86400000);
+  const d = cityDate();
+  if (_useUTC()) {
+    const start = Date.UTC(d.getUTCFullYear(), 0, 0);
+    return Math.floor((d.getTime() - start) / 86400000);
+  }
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000);
 }
 
 function getDayOfWeek() {
-  return new Date().getDay();
+  const d = cityDate();
+  return _useUTC() ? d.getUTCDay() : d.getDay();
 }
 
 function sunTimesMin(lat, lon, doy, tz) {
@@ -160,34 +210,34 @@ function sunTimesMin(lat, lon, doy, tz) {
   const B = 2 * Math.PI / 365 * (doy - 81);
   const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
   const zenith = 90.833 * Math.PI / 180;
-  
+
   let cosH = (Math.cos(zenith) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
   cosH = Math.max(-1, Math.min(1, cosH));
   const H = Math.acos(cosH) * 180 / Math.PI;
-  
+
   const noon = 720 - (lon * 4) - eot;
   const srUTC = noon - (H * 4);
   const ssUTC = noon + (H * 4);
-  
+
   const sr = srUTC + (tz * 60);
   const ss = ssUTC + (tz * 60);
-  
+
   return { sr, ss };
 }
 
 function calcHours(lat, lon, doy, tz, dayOfWeek) {
   const { sr, ss } = sunTimesMin(lat, lon, doy, tz);
   const { sr: nextSr } = sunTimesMin(lat, lon, doy + 1, tz);
-  
+
   const dayLen = (ss - sr) / 12;
   const nightLen = ((nextSr + 1440) - ss) / 12;
-  
+
   const pyDay = (dayOfWeek + 6) % 7;
   const ruler = RULERS[pyDay];
   const ri = SEQ.indexOf(ruler);
-  
+
   const hrs = [];
-  
+
   let t = sr;
   for (let i = 0; i < 12; i++) {
     const p = SEQ[(ri + i) % 7];
@@ -195,7 +245,7 @@ function calcHours(lat, lon, doy, tz, dayOfWeek) {
     hrs.push({ num: i + 1, p, st: t, en: e, day: true });
     t = e;
   }
-  
+
   t = ss;
   for (let i = 0; i < 12; i++) {
     const p = SEQ[(ri + 12 + i) % 7];
@@ -203,20 +253,20 @@ function calcHours(lat, lon, doy, tz, dayOfWeek) {
     hrs.push({ num: i + 13, p, st: t, en: e, day: false });
     t = e;
   }
-  
+
   return { hrs, sr, ss, ruler };
 }
 
 function getCur(hrs, nowMin) {
   while (nowMin < 0) nowMin += 1440;
   while (nowMin >= 1440) nowMin -= 1440;
-  
+
   for (const h of hrs) {
     let st = h.st;
     let en = h.en;
     while (st < 0) st += 1440;
     while (en < 0) en += 1440;
-    
+
     if (en > 1440) {
       if (nowMin >= st || nowMin < (en - 1440)) return h;
     } else {
@@ -230,37 +280,96 @@ function mkRow(h, nowMin, cur) {
   const pl = PLANETS[h.p];
   const isCur = cur && h.num === cur.num;
   let isPast = h.en <= 1440 && nowMin >= h.en;
-  
+  const isFollow = FOLLOW && h.p === FOLLOW;
+
   let cls = 'hrow';
   if (isCur) cls += ' cur';
   else if (isPast) cls += ' past';
-  
-  return `<div class="${cls}"><div class="n">${h.num}</div><div class="s ${pl.c}">${pl.s}</div><div class="nm ${pl.c}">${pl.n}</div><div class="tm">${minToStr(h.st)}</div><div class="tm">${minToStr(h.en)}</div></div>`;
+  if (isFollow) cls += ' follow';  // AGGIUNTA v22: evidenza pianeta seguito
+
+  // AGGIUNTA v22: badge "ADESSO" sull'ora corrente
+  const badge = isCur ? '<span class="badge">adesso</span>' : '';
+  return `<div class="${cls}"><div class="n">${h.num}</div><div class="s ${pl.c}">${pl.s}</div><div class="nm ${pl.c}">${pl.n} ${badge}</div><div class="tm">${minToStr(h.st)}</div><div class="tm">${minToStr(h.en)}</div></div>`;
 }
 
 let DATA = null;
+
+// ===== AGGIUNTA v22: prossima ora del pianeta seguito (epoch reali, oggi+domani) =====
+function doyOfUTC(ms) {
+  const d = new Date(ms);
+  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
+  return Math.floor((d.getTime() - start) / 86400000);
+}
+function planetaryDayAbs(dayOffset) {
+  const c = cityDate();
+  const localMidnightWall = _useUTC()
+    ? Date.UTC(c.getUTCFullYear(), c.getUTCMonth(), c.getUTCDate())
+    : Date.UTC(c.getFullYear(), c.getMonth(), c.getDate());
+  const midnightRealUTC = localMidnightWall - TZ * 3600000 + dayOffset * 86400000;
+  const doy = doyOfUTC(midnightRealUTC + TZ * 3600000);
+  const dow = new Date(midnightRealUTC + TZ * 3600000).getUTCDay();
+  const t0 = sunTimesMin(LAT, LON, doy, TZ);
+  const t1 = sunTimesMin(LAT, LON, doy + 1, TZ);
+  const srE = midnightRealUTC + t0.sr * 60000;
+  const ssE = midnightRealUTC + t0.ss * 60000;
+  const nextSrE = midnightRealUTC + (t1.sr + 1440) * 60000;
+  const dayLen = (ssE - srE) / 12, nightLen = (nextSrE - ssE) / 12;
+  const pyDay = (dow + 6) % 7, ruler = RULERS[pyDay], ri = SEQ.indexOf(ruler);
+  const out = [];
+  for (let i = 0; i < 12; i++) out.push({ p: SEQ[(ri + i) % 7], epoch: srE + i * dayLen });
+  for (let i = 0; i < 12; i++) out.push({ p: SEQ[(ri + 12 + i) % 7], epoch: ssE + i * nightLen });
+  return out;
+}
+function nextFollowEpoch() {
+  if (!FOLLOW) return null;
+  const now = realNowMs();
+  const cand = [];
+  for (const off of [0, 1]) for (const h of planetaryDayAbs(off)) if (h.p === FOLLOW && h.epoch > now) cand.push(h.epoch);
+  cand.sort((a, b) => a - b);
+  return cand.length ? cand[0] : null;
+}
+function wallClockFromEpoch(epoch) {
+  const d = new Date(epoch + TZ * 3600000);
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+
+function renderNextBanner() {
+  if (!FOLLOW || !PLANETS[FOLLOW]) return;
+  const pl = PLANETS[FOLLOW];
+  document.getElementById('nextPlanetName').textContent = pl.n;
+  document.getElementById('nextSym').textContent = pl.s;
+  document.getElementById('nextSym').className = 'sym ' + pl.c;
+  const ep = nextFollowEpoch();
+  if (ep) {
+    document.getElementById('nextStart').textContent = 'inizia alle ' + minToStr(wallClockFromEpoch(ep));
+  }
+  document.getElementById('nextBanner').classList.remove('hide');
+}
 
 function init() {
   const nowMin = getNowMinutes();
   const doy = getDayOfYear();
   const dow = getDayOfWeek();
-  
+
   DATA = calcHours(LAT, LON, doy, TZ, dow);
   const cur = getCur(DATA.hrs, nowMin);
-  
-  // Mostra ora corrente direttamente dal browser
+
+  // Ora corrente (città via server, o browser in fallback)
   document.getElementById('localTime').textContent = '🕐 Ora: ' + minToStr(nowMin);
-  
+
   const days = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
-  const now = new Date();
-  document.getElementById('dateText').textContent = days[dow] + ' ' + now.getDate() + '/' + (now.getMonth()+1) + '/' + now.getFullYear();
-  
+  const cd = cityDate();
+  const dd = _useUTC() ? cd.getUTCDate() : cd.getDate();
+  const mo = (_useUTC() ? cd.getUTCMonth() : cd.getMonth()) + 1;
+  const yy = _useUTC() ? cd.getUTCFullYear() : cd.getFullYear();
+  document.getElementById('dateText').textContent = days[dow] + ' ' + dd + '/' + mo + '/' + yy;
+
   const rl = PLANETS[DATA.ruler];
   document.getElementById('rulerText').innerHTML = `<span class="${rl.c}">${rl.s} ${rl.n}</span>`;
-  
+
   document.getElementById('srText').textContent = minToStr(DATA.sr);
   document.getElementById('ssText').textContent = minToStr(DATA.ss);
-  
+
   if (cur) {
     const pl = PLANETS[cur.p];
     document.getElementById('curSym').textContent = pl.s;
@@ -272,19 +381,27 @@ function init() {
   } else {
     document.getElementById('curBanner').style.display = 'none';
   }
-  
+
   const dayH = DATA.hrs.filter(h => h.day);
   const nightH = DATA.hrs.filter(h => !h.day);
   document.getElementById('gridDay').innerHTML = dayH.map(h => mkRow(h, nowMin, cur)).join('');
   document.getElementById('gridNight').innerHTML = nightH.map(h => mkRow(h, nowMin, cur)).join('');
+
+  // AGGIUNTA v22: con un pianeta seguito mostra il banner e apri la tab dell'ora corrente
+  if (FOLLOW) {
+    renderNextBanner();
+    if (cur && !cur.day) showTab('night');
+  }
 }
+
+function pad2(n) { return n.toString().padStart(2, '0'); }
 
 function updateCD() {
   if (!DATA) return;
   const nowSec = getNowSeconds();
   const nowMin = Math.floor(nowSec / 60);
   const cur = getCur(DATA.hrs, nowMin);
-  
+
   if (cur) {
     const endSec = Math.floor(cur.en * 60);
     let rem = endSec - nowSec;
@@ -294,6 +411,21 @@ function updateCD() {
     document.getElementById('cdText').textContent = m + 'm ' + s + 's';
   }
   document.getElementById('localTime').textContent = '🕐 Ora: ' + minToStr(nowMin);
+
+  // AGGIUNTA v22: countdown LIVE alla prossima ora del pianeta seguito (HH:MM:SS)
+  if (FOLLOW) {
+    const ep = nextFollowEpoch();
+    if (ep) {
+      let rem = Math.floor((ep - realNowMs()) / 1000);
+      if (rem < 0) rem = 0;
+      const h = Math.floor(rem / 3600);
+      const m = Math.floor((rem % 3600) / 60);
+      const s = rem % 60;
+      const el = document.getElementById('nextCd');
+      if (el) el.textContent = pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+      if (rem === 0) { init(); }  // l'ora del pianeta è appena iniziata: ricalcola
+    }
+  }
 }
 
 function showTab(which) {
@@ -303,8 +435,30 @@ function showTab(which) {
   document.getElementById('tabNight').classList.toggle('on', which === 'night');
 }
 
-init();
-setInterval(updateCD, 1000);
+// ===== AGGIUNTA v22: soft-gate sul token (senza backend: scadenza + match uid) =====
+function showLocked() {
+  document.querySelector('.container').innerHTML =
+    '<div class="locked"><h2>🔒 Riservato agli abbonati</h2>' +
+    '<p>Le Ore Planetarie sono una funzione Premium. Riapri il link dal bot ' +
+    'con un abbonamento attivo.</p></div>';
+}
+function gateOk() {
+  if (!TOK) return true; // link senza token (legacy): non bloccare; il bottone è già dato solo agli abbonati
+  const parts = TOK.split('.'); // uid.entitlement.exp.sig
+  if (parts.length < 4) return true;
+  const exp = parseInt(parts[2]);
+  if (!isNaN(exp) && (exp * 1000) < Date.now()) { showLocked(); return false; }
+  try {
+    const u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+    if (u && String(u) !== parts[0]) { showLocked(); return false; }
+  } catch (e) {}
+  return true;
+}
+
+if (gateOk()) {
+  init();
+  setInterval(updateCD, 1000);
+}
 </script>
 </body>
 </html>
