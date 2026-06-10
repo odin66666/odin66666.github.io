@@ -309,8 +309,11 @@ function sunTimesMin(lat,lon,doy,tz) {
   return {sr:noon-(H*4)+(tz*60),ss:noon+(H*4)+(tz*60)}; 
 }
 
-function getCurrentPlanetaryHour() { 
-  const now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),dow=now.getDay(),{sr,ss}=sunTimesMin(LAT,LON,doy,TZ),{sr:nextSr}=sunTimesMin(LAT,LON,doy+1,TZ),pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]); 
+function getCurrentPlanetaryHour() {
+  const now=new Date(),doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),nowMin=now.getHours()*60+now.getMinutes(),{sr,ss}=sunTimesMin(LAT,LON,doy,TZ),{sr:nextSr}=sunTimesMin(LAT,LON,doy+1,TZ);
+  // dopo mezzanotte e prima dell'alba il giorno PLANETARIO è ancora ieri
+  let dow=now.getDay(); if(nowMin<sr){dow=(dow+6)%7;}
+  const pyDay=(dow+6)%7,ri=SEQ.indexOf(RULERS[pyDay]);
   let hourIndex; 
   if(nowMin>=sr&&nowMin<ss){hourIndex=Math.floor((nowMin-sr)/((ss-sr)/12));}
   else{const hourLen=((nextSr+1440)-ss)/12;hourIndex=(nowMin>=ss?Math.floor((nowMin-ss)/hourLen):Math.floor((nowMin+1440-ss)/hourLen))+12;} 

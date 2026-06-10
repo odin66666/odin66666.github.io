@@ -310,8 +310,17 @@ function getMoonSign() {
     return ZODIAC_SIGNS[signIndex];
 }
 
+// Posizione/fuso REALI dalla URL (il bot li passa); fallback Roma + fuso device.
+// Prima: coordinate ignorate (sempre Roma) e alba UTC confrontata con
+// l'orologio locale del telefono -> ora planetaria sbagliata.
+var _QGEO = new URLSearchParams(window.location.search);
+var G_LAT = parseFloat(_QGEO.get("lat")) || 41.9028;
+var G_LON = parseFloat(_QGEO.get("lon")) || 12.4964;
+var G_TZ = _QGEO.get("tz") !== null ? parseFloat(_QGEO.get("tz")) : -new Date().getTimezoneOffset() / 60;
+
 function getSunTimes(lat, lon, date) {
-    var dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+    // Alba/tramonto in ORE UTC (NOAA semplificato + equazione del tempo)
+    var dayOfYear = Math.floor((Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - Date.UTC(date.getUTCFullYear(), 0, 0)) / 86400000);
     var latRad = lat * Math.PI / 180;
     var dec = -23.45 * Math.cos(2 * Math.PI / 365 * (dayOfYear + 10));
     var decRad = dec * Math.PI / 180;
@@ -324,11 +333,24 @@ function getSunTimes(lat, lon, date) {
     return { sunrise: (noon - H * 4) / 60, sunset: (noon + H * 4) / 60 };
 }
 
-function getCurrentPlanetaryHour(lat, lon) {
+function getCurrentPlanetaryHour(lat, lon, tzOff) {
+    // Frame della LOCALITÀ: UTC del device + offset del bot (alba/tramonto e
+    // "adesso" nello stesso frame, qualunque sia il fuso del telefono).
+    lat = (lat !== undefined && lat !== null) ? lat : G_LAT;
+    lon = (lon !== undefined && lon !== null) ? lon : G_LON;
+    tzOff = (tzOff !== undefined && tzOff !== null) ? tzOff : G_TZ;
+    function w24(x) { return ((x % 24) + 24) % 24; }
     var now = new Date();
-    var localHours = now.getHours() + now.getMinutes() / 60;
-    var sunTimes = getSunTimes(lat || 41.9, lon || 12.5, now);
-    var dayOfWeek = now.getDay();
+    var loc = new Date(now.getTime() + tzOff * 3600000);
+    var localHours = loc.getUTCHours() + loc.getUTCMinutes() / 60;
+    var _st = getSunTimes(lat, lon, loc);
+    var sunTimes = { sunrise: w24(_st.sunrise + tzOff), sunset: w24(_st.sunset + tzOff) };
+    var dayOfWeek = loc.getUTCDay();
+    // Dopo mezzanotte e prima dell'alba il giorno PLANETARIO è ancora ieri:
+    // senza questo, il reggente del giorno (e quindi il pianeta) era sbagliato
+    if (localHours < sunTimes.sunrise) {
+        dayOfWeek = (dayOfWeek + 6) % 7;
+    }
     var dayRuler = DAY_RULERS[dayOfWeek];
     var rulerIndex = PLANETARY_ORDER.indexOf(dayRuler);
     var isDaytime = localHours >= sunTimes.sunrise && localHours < sunTimes.sunset;
