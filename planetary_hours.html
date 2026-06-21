@@ -238,19 +238,21 @@ function minToStr(min) {
   return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
 }
 
-// ===== AGGIUNTA v22: sorgente tempo DST-corretta =====
-// Se il server passa srvnow (epoch UTC), "adesso" è l'orologio da parete della
-// CITTÀ (srvnow + offset città), avanzato con un'ancora monotonica: così non
-// dipende dall'orologio del telefono. Senza srvnow -> fallback all'ora del browser.
+// ===== Sorgente tempo (v26): SEMPRE l'istante reale corrente =====
+// realNowMs = Date.now(): l'epoch UTC del dispositivo è corretto a prescindere
+// dal fuso impostato sul telefono. Lo convertiamo nel fuso della CITTÀ con TZ
+// (offset live, ricalcolato da tzname → DST-aware).
+// BUG v22-v25 (corretto qui): si ancorava a SRVNOW = ora di CREAZIONE del
+// bottone, così aprendolo più tardi la pagina mostrava lo stato di ALLORA —
+// ora planetaria sbagliata e countdown errato. SRVNOW non si usa più per "adesso".
 function realNowMs() {
-  return SRVNOW !== null ? (SRVNOW * 1000 + (Date.now() - ANCHOR)) : Date.now();
+  return Date.now();
 }
 function cityDate() {
   // Date i cui componenti getUTC* sono l'orologio da parete della città
-  if (SRVNOW !== null) return new Date(realNowMs() + TZ * 3600000);
-  return new Date();
+  return new Date(realNowMs() + TZ * 3600000);
 }
-function _useUTC() { return SRVNOW !== null; }
+function _useUTC() { return true; }
 
 // USA L'ORA CORRETTA (città via server, o browser come fallback)
 function getNowMinutes() {
